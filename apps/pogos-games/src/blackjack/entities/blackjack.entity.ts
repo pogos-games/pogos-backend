@@ -4,10 +4,11 @@ import { BlackJackAction } from '../enum/black-jack-action.enum';
 import { BlackjackType } from '../enum/blackjack-type.enum';
 import { BlackjackResponse } from '../dto/response/blackjack-response.interface';
 import { BlackjackPlayerResponse } from '../dto/response/blackjack-player-response.interface';
+import { Expose, Type } from 'class-transformer';
 
-export interface BlackJackPlayer {
-  id:string;
-  username:string
+export class BlackJackPlayer {
+  id: string;
+  username: string;
   hand: Card[];
   balance: number;
   bet: number;
@@ -16,19 +17,36 @@ export interface BlackJackPlayer {
 }
 
 export class Blackjack {
-
+  @Expose()
   private readonly _id: string;
-  private readonly _deck: Card[];
-  private readonly _leaderId: string;
-  private _status:BlackJackStatus
-  private _dealerHand: Card[];
-  private _players: BlackJackPlayer[];
-  private readonly _type:BlackjackType;
 
-  constructor(deck: Card[], leaderId: string,type:BlackjackType) {
+  @Expose()
+  @Type(() => Card)
+  private readonly _deck: Card[];
+
+  @Expose()
+  private readonly _leaderId: string;
+
+  @Expose()
+  private _status: BlackJackStatus;
+
+  @Expose()
+  @Type(() => Card)
+  private _dealerHand: Card[];
+
+  @Expose()
+  @Type(() => BlackJackPlayer)
+  private readonly _players: BlackJackPlayer[];
+
+  @Expose()
+  private readonly _type: BlackjackType;
+
+  constructor(id:string,deck: Card[], leaderId: string, type: BlackjackType) {
+    this._id = id;
     this._status = BlackJackStatus.WAITING;
     this._deck = deck;
     this._dealerHand = [];
+    this._players = [];
     this._leaderId = leaderId;
     this._type = type;
   }
@@ -37,7 +55,7 @@ export class Blackjack {
     return this._id;
   }
 
-  public get type() : BlackjackType {
+  public get type(): BlackjackType {
     return this._type;
   }
 
@@ -69,8 +87,8 @@ export class Blackjack {
     return this._leaderId;
   }
 
-  public addUser(userId:string){
-    if(this.status !== BlackJackStatus.WAITING) {
+  public addUser(userId: string) {
+    if (this.status !== BlackJackStatus.WAITING) {
       throw new Error('Cannot add user to a game that has already started');
     }
     this._players.push({
@@ -80,11 +98,9 @@ export class Blackjack {
       balance: 1000,
       bet: 0,
       roundPlayed: false,
-      isStanding: false
+      isStanding: false,
     });
   }
-
-
 
   public drawCard(deck: Card[]): Card {
     return deck.pop();
@@ -93,21 +109,21 @@ export class Blackjack {
   public startGame() {
     this._status = BlackJackStatus.IN_PROGRESS;
     this.clearHands();
-    this._players.forEach(player => {
+    this._players.forEach((player) => {
       player.hand.push(this.drawCard(this.deck), this.drawCard(this.deck));
     });
     this.dealerHand.push(this.drawCard(this.deck), this.drawCard(this.deck));
   }
 
-  public clearHands(){
+  public clearHands() {
     this.dealerHand = [];
-    this._players.forEach(player => {
+    this._players.forEach((player) => {
       player.hand = [];
     });
   }
 
   public play(player: BlackJackPlayer, action: BlackJackAction) {
-    if(player.roundPlayed) {
+    if (player.roundPlayed) {
       return;
     }
     switch (action) {
@@ -118,7 +134,7 @@ export class Blackjack {
         this.stand(player);
         break;
       default:
-        console.log("No more actions available for the moment");
+        console.log('No more actions available for the moment');
         console.log('Invalid action');
     }
     player.roundPlayed = true;
@@ -133,7 +149,7 @@ export class Blackjack {
   }
 
   public toResponse(): BlackjackResponse {
-    const players: BlackjackPlayerResponse[] = this._players.map(player => ({
+    const players: BlackjackPlayerResponse[] = this._players.map((player) => ({
       playerId: player.id,
       hand: player.hand,
       balance: player.balance,
@@ -148,9 +164,6 @@ export class Blackjack {
       status: this._status,
     };
   }
-
-
-
 
   private calculateHandValue(hand: Card[]): number {
     let value = 0;
@@ -172,5 +185,4 @@ export class Blackjack {
     }
     return value;
   }
-
 }

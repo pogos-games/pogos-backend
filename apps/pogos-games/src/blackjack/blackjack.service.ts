@@ -25,11 +25,12 @@ export class BlackjackService {
   private readonly BLACKJACK_KEY_PREFIX = 'blackjack';
   private readonly LEADER_KEY_PREFIX = 'leaderId';
 
-  private async saveGame(blackjack: Blackjack): Promise<string> {
-    const id = blackjack.id || await this.idGeneratorService.generateUniqueId('#', this.BLACKJACK_KEY_PREFIX);
-    const key = this.BLACKJACK_KEY_PREFIX + ":" +id;
-    await this.redisService.set(key, blackjack);
-    return id;
+  private async saveGame(blackjack: Blackjack): Promise<void> {
+
+    console.log("blackjack id in save : ",blackjack.id);
+    const key = this.BLACKJACK_KEY_PREFIX + ":" +blackjack.id;
+    await this.redisService.set<Blackjack>(key, blackjack);
+    return;
   }
 
   async createGame(leaderId: string,type:BlackjackType) {
@@ -37,11 +38,12 @@ export class BlackjackService {
     if(leaderBlackjacks.length > 0) {
       throw new UnauthorizedException(`Leader ${leaderId} already has an active game`);
     }
-
     const deck = this.cardsService.createBlackjackDeck();
-    const blackjack = new Blackjack(deck, leaderId,type);
-    const gameId =  await this.saveGame(blackjack);
-    await this.redisService.sadd(`${this.BLACKJACK_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`,[gameId]);
+    const gameId =  await this.idGeneratorService.generateUniqueId('#', this.BLACKJACK_KEY_PREFIX);
+    const blackjack = new Blackjack(gameId,deck, leaderId,type);
+    blackjack.addUser(leaderId);
+    await this.saveGame(blackjack);
+    await this.redisService.sAdd(`${this.BLACKJACK_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`,[gameId]);
     return gameId;
   }
 
@@ -50,14 +52,14 @@ export class BlackjackService {
     const gameIds =  await this.redisService.getSet(leaderKey)
 
     return await Promise.all(
-      gameIds.map(gameId => this.redisService.get<Blackjack>(`${this.BLACKJACK_KEY_PREFIX}:${gameId}`)),
+      gameIds.map(gameId => this.redisService.get<Blackjack>(`${this.BLACKJACK_KEY_PREFIX}:${gameId}`,Blackjack)),
     );
   }
 
 
   async joinGame(gameId: string, playerId: string) {
     const key = `blackjack:${gameId}`;
-    const blackjack: Blackjack = await this.redisService.get(key);
+    const blackjack: Blackjack = await this.redisService.get<Blackjack>(key,Blackjack);
     if (!blackjack) {
       throw new NotFoundException(`Game id ${gameId} not found`);
     }
@@ -73,7 +75,7 @@ export class BlackjackService {
    */
   async endGame(client: Socket, gameId: string): Promise<string[]> {
     const key = `blackjack:${gameId}`;
-    const blackjack: Blackjack = await this.redisService.get(key);
+    const blackjack: Blackjack = await this.redisService.get<Blackjack>(key,Blackjack);
     if (!blackjack) {
       throw new NotFoundException(`Game id ${gameId} not found`);
     }
@@ -86,7 +88,7 @@ export class BlackjackService {
 
   async play(client: Socket, blackjackAction: BlackjackActionRequest) : Promise<{ players: string[], response: BlackjackPlayerResponse }> {
     return this.redisService
-      .get(`blackjack:${blackjackAction.gameId}`)
+      .get<Blackjack>(`blackjack:${blackjackAction.gameId}`,Blackjack)
       .then((blackjack: Blackjack) => {
         if (!blackjack) {
           throw new NotFoundException(
@@ -115,7 +117,7 @@ export class BlackjackService {
 
   async startGame(clientId: string, gameId:string) : Promise<BlackjackResponse> {
     const key = `blackjack:${gameId}`;
-    const blackjack: Blackjack = await this.redisService.get(key);
+    const blackjack: Blackjack = await this.redisService.get<Blackjack>(key,Blackjack);
     if (!blackjack) {
       throw new NotFoundException(`Game id ${gameId} not found`);
     }
@@ -132,6 +134,8 @@ export class BlackjackService {
     return blackjack.toResponse();
 
   }
+
+
 
   // endGame(client: Socket) {
   //   this.games.delete(client.id);
