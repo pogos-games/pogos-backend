@@ -14,16 +14,17 @@ export class RedisService {
     await this.redis.set(key, JSON.stringify(value));
   }
 
-  async getList(key: string): Promise<string[]> {
-    return await this.redis.lRange(key, 0, -1);
-  }
-
   async getSet(key: string): Promise<string[]> {
     return this.redis.sMembers(key);
   }
 
   async sadd(key: string, members: string[]): Promise<number> {
     return this.redis.sAdd(key, members);
+  }
+
+  async exists(key: string): Promise<boolean> {
+    const result = await this.redis.exists(key);
+    return result > 0;
   }
 
 }

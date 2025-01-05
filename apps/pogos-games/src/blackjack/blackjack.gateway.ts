@@ -12,6 +12,8 @@ import { BlackjackActionRequest } from './dto/request/blackjack-action-request.i
 import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
 import { GatewayEventsListener } from './enum/gateway/gateway-events-listener.enum';
 import { GatewayEventEmitter } from './enum/gateway/gateway-event-emitter.enum';
+import { BlackjackCreationRequest } from './dto/request/blackjack-creation-request.class';
+import { BlackjackType } from './enum/blackjack-type.enum';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'blackjack', cors: 'http://localhost:4200' })
@@ -57,10 +59,17 @@ export class BlackjackGateway
   }
 
   @SubscribeMessage(GatewayEventsListener.CREATE_GAME)
-  async handleCreateGame(client: Socket) {
-    const gameId = await this.blackjackService.createGame(client.id);
+  async handleCreateGame(client: Socket, request: BlackjackCreationRequest) {
+    const gameId = await this.blackjackService.createGame(
+      client.id,
+      request.type,
+    );
     console.log('Game created:', gameId);
-    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+    if (request.type == BlackjackType.SOLO) {
+      const response = await this.blackjackService.startGame(client.id,gameId)
+      client.emit(GatewayEventEmitter.GAME_UPDATE, response);
+    }
+    else { client.emit(GatewayEventEmitter.GAME_UPDATE, gameId); }
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)

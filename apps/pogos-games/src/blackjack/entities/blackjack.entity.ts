@@ -1,6 +1,9 @@
 import { Card } from '../../cards/model/card.interface';
 import { BlackJackStatus } from '../enum/black-jack-status.enum';
 import { BlackJackAction } from '../enum/black-jack-action.enum';
+import { BlackjackType } from '../enum/blackjack-type.enum';
+import { BlackjackResponse } from '../dto/response/blackjack-response.interface';
+import { BlackjackPlayerResponse } from '../dto/response/blackjack-player-response.interface';
 
 export interface BlackJackPlayer {
   id:string;
@@ -20,16 +23,22 @@ export class Blackjack {
   private _status:BlackJackStatus
   private _dealerHand: Card[];
   private _players: BlackJackPlayer[];
+  private readonly _type:BlackjackType;
 
-  constructor(deck: Card[], leaderId: string) {
+  constructor(deck: Card[], leaderId: string,type:BlackjackType) {
     this._status = BlackJackStatus.WAITING;
     this._deck = deck;
     this._dealerHand = [];
     this._leaderId = leaderId;
+    this._type = type;
   }
 
   public get id(): string {
     return this._id;
+  }
+
+  public get type() : BlackjackType {
+    return this._type;
   }
 
   public get status(): BlackJackStatus {
@@ -122,6 +131,25 @@ export class Blackjack {
   private stand(player: BlackJackPlayer) {
     player.isStanding = true;
   }
+
+  public toResponse(): BlackjackResponse {
+    const players: BlackjackPlayerResponse[] = this._players.map(player => ({
+      playerId: player.id,
+      hand: player.hand,
+      balance: player.balance,
+      bet: player.bet,
+      roundPlayed: player.roundPlayed,
+    }));
+
+    return {
+      gameId: this._id,
+      dealerHand: this._dealerHand,
+      players: players,
+      status: this._status,
+    };
+  }
+
+
 
 
   private calculateHandValue(hand: Card[]): number {

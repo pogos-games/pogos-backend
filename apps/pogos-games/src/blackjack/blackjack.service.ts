@@ -6,37 +6,40 @@ import {
 import { Socket } from 'socket.io';
 import { CardsService } from '../cards/cards.service';
 import { Blackjack } from './entities/blackjack.entity';
-import { v4 as uuidv4 } from 'uuid';
-import { RedisService } from '../redis/redis.service';
+import { RedisService } from '../../../../libs/tools/src/redis/redis.service';
 import { BlackJackStatus } from './enum/black-jack-status.enum';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
 import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
+import { IdGeneratorService } from '../../../../libs/tools/src/id-generator.service';
+import { BlackjackType } from './enum/blackjack-type.enum';
+import { BlackjackResponse } from './dto/response/blackjack-response.interface';
 
 @Injectable()
 export class BlackjackService {
   constructor(
     private readonly redisService: RedisService,
     private readonly cardsService: CardsService,
+    private readonly idGeneratorService:IdGeneratorService
   ) {}
 
   private readonly BLACKJACK_KEY_PREFIX = 'blackjack';
   private readonly LEADER_KEY_PREFIX = 'leaderId';
 
   private async saveGame(blackjack: Blackjack): Promise<string> {
-    const id = blackjack.id || uuidv4();
+    const id = blackjack.id || await this.idGeneratorService.generateUniqueId('#', this.BLACKJACK_KEY_PREFIX);
     const key = this.BLACKJACK_KEY_PREFIX + ":" +id;
     await this.redisService.set(key, blackjack);
     return id;
   }
 
-  async createGame(leaderId: string) {
+  async createGame(leaderId: string,type:BlackjackType) {
     const leaderBlackjacks = await this.findByLeaderId(leaderId);
     if(leaderBlackjacks.length > 0) {
       throw new UnauthorizedException(`Leader ${leaderId} already has an active game`);
     }
 
     const deck = this.cardsService.createBlackjackDeck();
-    const blackjack = new Blackjack(deck, leaderId);
+    const blackjack = new Blackjack(deck, leaderId,type);
     const gameId =  await this.saveGame(blackjack);
     await this.redisService.sadd(`${this.BLACKJACK_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`,[gameId]);
     return gameId;
@@ -110,19 +113,25 @@ export class BlackjackService {
         } as BlackjackPlayerResponse }});
   }
 
-  async startGame(clientId: string, gameId:string) {
+  async startGame(clientId: string, gameId:string) : Promise<BlackjackResponse> {
     const key = `blackjack:${gameId}`;
     const blackjack: Blackjack = await this.redisService.get(key);
     if (!blackjack) {
       throw new NotFoundException(`Game id ${gameId} not found`);
     }
+    console.log("blackjack : ",blackjack);
+    console.log("blackjack leader id : ",blackjack.leaderId);
     if (blackjack.leaderId !== clientId) {
       throw new UnauthorizedException(`Only the leader can start the game`);
     }
+
     blackjack.startGame();
     await this.saveGame(blackjack);
-  }
 
+    // map to blackjackResponse :
+    return blackjack.toResponse();
+
+  }
 
   // endGame(client: Socket) {
   //   this.games.delete(client.id);
