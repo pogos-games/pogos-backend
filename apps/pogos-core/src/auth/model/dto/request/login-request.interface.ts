@@ -1,6 +1,6 @@
 import { IsEmail, MinLength } from 'class-validator';
 
-export class LoginRequestDto {
+export class LoginRequest {
   @IsEmail()
   email: string;
 

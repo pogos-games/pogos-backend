@@ -6,9 +6,10 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../../user/user.service';
 import * as bcrypt from 'bcrypt';
-import { LoginRequestDto } from '../model/dto/request/login-request.dto';
+import { LoginRequest } from '../model/dto/request/login-request.interface';
 import { TokenService } from './token.service';
-import { SignupRequestDto } from '../model/dto/request/signup-request.dto';
+import { SignupRequest } from '../model/dto/request/signup-request.interface';
+import { AuthResponse } from '../model/dto/client/response/auth-response.interface';
 
 @Injectable()
 export class AuthService {
@@ -17,16 +18,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOne(username);
-    if (user && user.password === pass) {
-      const { password, ...result } = user;
-      return result;
-    }
-    return null;
-  }
-
-  async login(loginRequest: LoginRequestDto) {
+  async login(loginRequest: LoginRequest): Promise<AuthResponse> {
     const user = await this.usersService.findOneByEmail(loginRequest.email);
     if (!user) {
       throw new NotFoundException('Email not found !');
@@ -38,13 +30,20 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
     }
-    return this.tokenService.generateTokens({
+
+    const { accessToken, refreshToken } = this.tokenService.generateTokens({
       sub: user.id,
       email: user.email,
     });
+
+    return {
+      message: 'User successfully logged in',
+      accessToken,
+      refreshToken,
+    };
   }
 
-  async signup(user: SignupRequestDto) {
+  async signup(user: SignupRequest): Promise<AuthResponse> {
     if (await this.usersService.existsByEmail(user.email)) {
       throw new ConflictException('Email already exists');
     }
@@ -62,20 +61,16 @@ export class AuthService {
     };
   }
 
-  async refreshToken(refreshToken: string) {
-    try {
-      const decoded = this.tokenService.verifyToken(refreshToken);
+  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+      const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
       const payload = { sub: decoded.sub, email: decoded.email };
-      const { accessToken, refreshToken: newRefreshToken } =
-        this.tokenService.generateTokens(payload);
+      const { accessToken, refreshToken: newRefreshToken } = this.tokenService.generateTokens(payload);
 
       return {
+        message: 'Token refreshed',
         accessToken,
         refreshToken: newRefreshToken,
       };
-    } catch (err) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
   }
 }
 

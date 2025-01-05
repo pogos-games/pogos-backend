@@ -2,7 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './model/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SignupRequestDto } from '../auth/model/dto/request/signup-request.dto';
+import { SignupRequest } from '../auth/model/dto/request/signup-request.interface';
 
 @Injectable()
 export class UserService {
@@ -24,7 +24,7 @@ export class UserService {
     return !!user;
   }
 
-  async create(signupRequestDto: SignupRequestDto): Promise<User> {
+  async create(signupRequestDto: SignupRequest): Promise<User> {
     if (await this.existsByEmail(signupRequestDto.email)) {
       throw new HttpException('Email already exists', 409);
     }
