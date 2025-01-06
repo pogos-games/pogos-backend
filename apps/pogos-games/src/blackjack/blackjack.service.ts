@@ -26,8 +26,6 @@ export class BlackjackService {
   private readonly LEADER_KEY_PREFIX = 'leaderId';
 
   private async saveGame(blackjack: Blackjack): Promise<void> {
-
-    console.log("blackjack id in save : ",blackjack.id);
     const key = this.BLACKJACK_KEY_PREFIX + ":" +blackjack.id;
     await this.redisService.set<Blackjack>(key, blackjack);
     return;
