@@ -1,6 +1,10 @@
+import { ApiProperty } from '@nestjs/swagger';
 
-export interface AuthResponse {
+export class AuthResponse {
+  @ApiProperty()
   message: string;
+  @ApiProperty()
   accessToken: string;
+  @ApiProperty()
   refreshToken: string;
 }

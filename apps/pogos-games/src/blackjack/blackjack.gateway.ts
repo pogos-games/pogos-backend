@@ -66,10 +66,11 @@ export class BlackjackGateway
     );
     console.log('Game created:', gameId);
     if (request.type == BlackjackType.SOLO) {
-      const response = await this.blackjackService.startGame(client.id,gameId)
+      const response = await this.blackjackService.startGame(client.id, gameId);
       client.emit(GatewayEventEmitter.GAME_UPDATE, response);
+    } else {
+      client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
     }
-    else { client.emit(GatewayEventEmitter.GAME_UPDATE, gameId); }
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
