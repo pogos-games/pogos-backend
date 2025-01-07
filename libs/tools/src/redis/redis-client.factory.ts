@@ -1,15 +1,16 @@
 import { FactoryProvider } from '@nestjs/common';
 import { createClient } from 'redis';
 import { REDIS_CLIENT, RedisClient } from './redis-client.type';
-import * as process from 'node:process';
+import { ConfigService } from '@nestjs/config';
 
 export const redisClientFactory: FactoryProvider<Promise<RedisClient>> = {
   provide: REDIS_CLIENT,
-  useFactory: async () => {
+  useFactory: async (configService: ConfigService) => {
     const client = createClient({
-      url: process.env.REDIS_URL,
+      url: configService.get<string>('REDIS_URL'),
     });
     await client.connect();
     return client;
   },
+  inject: [ConfigService],
 };

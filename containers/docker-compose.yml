@@ -16,31 +16,6 @@ services:
     networks:
       - keycloak-and-mysql-network
 
-  keycloak-w:
-    image: quay.io/keycloak/keycloak:25.0.0
-    command: start-dev --import-realm
-    ports:
-      - 8180:8080
-    restart: unless-stopped
-    build: ../pogos-app/src/main/resources/keycloak
-    environment:
-      KEYCLOAK_ADMIN : admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: mysql
-      KC_DB_USERNAME: root
-      KC_DB_PASSWORD: password
-      KC_HTTP_RELATIVE_PATH: /keycloak
-      KC_DB_URL: jdbc:mysql://mysql-kc:3306/keycloak
-      KC_FEATURES: token-exchange,admin-fine-grained-authz
-#      PROXY_ADDRESS_FORWARDING:
-#      KC_PROXY: edge
-      KC_HOSTNAME: localhost
-#      KC_HOSTNAME_STRICT_HTTPS: 'true'
-    networks:
-      - keycloak-and-mysql-network
-    volumes:
-      - ./keycloak/realms:/opt/keycloak/data/import
-
   redis:
     image: redis:latest
     container_name: redis

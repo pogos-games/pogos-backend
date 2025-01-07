@@ -62,15 +62,16 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-      const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
-      const payload = { sub: decoded.sub, email: decoded.email };
-      const { accessToken, refreshToken: newRefreshToken } = this.tokenService.generateTokens(payload);
+    const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
+    const payload = { sub: decoded.sub, email: decoded.email };
+    const { accessToken, refreshToken: newRefreshToken } =
+      this.tokenService.generateTokens(payload);
 
-      return {
-        message: 'Token refreshed',
-        accessToken,
-        refreshToken: newRefreshToken,
-      };
+    return {
+      message: 'Token refreshed',
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 }
 
