@@ -1,12 +1,13 @@
 import { Card } from '../../cards/model/card.interface';
-import { BlackJackStatus } from '../enum/black-jack-status.enum';
 import { BlackJackAction } from '../enum/black-jack-action.enum';
 import { BlackjackType } from '../enum/blackjack-type.enum';
 import { BlackjackResponse } from '../dto/response/blackjack-response.interface';
 import { BlackjackPlayerResponse } from '../dto/response/blackjack-player-response.interface';
 import { Expose, Type } from 'class-transformer';
+import { Game, Player } from 'libs/tools/src/game/entities/game.entity';
+import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 
-export class BlackJackPlayer {
+export class BlackJackPlayer extends Player {
   id: string;
   username: string;
   hand: Card[];
@@ -16,64 +17,32 @@ export class BlackJackPlayer {
   roundPlayed: boolean;
 }
 
-export class Blackjack {
-  @Expose()
-  private readonly _id: string;
-
-  @Expose()
-  @Type(() => Card)
-  private readonly _deck: Card[];
-
-  @Expose()
-  private readonly _leaderId: string;
-
-  @Expose()
-  private _status: BlackJackStatus;
-
+export class Blackjack extends Game {
   @Expose()
   @Type(() => Card)
   private _dealerHand: Card[];
 
   @Expose()
   @Type(() => BlackJackPlayer)
-  private readonly _players: BlackJackPlayer[];
+  protected readonly _players: BlackJackPlayer[];
 
   @Expose()
   private readonly _type: BlackjackType;
 
   constructor(id:string,deck: Card[], leaderId: string, type: BlackjackType) {
-    this._id = id;
-    this._status = BlackJackStatus.WAITING;
-    this._deck = deck;
+    super(id,deck,leaderId)
     this._dealerHand = [];
     this._players = [];
-    this._leaderId = leaderId;
     this._type = type;
-  }
-
-  public get id(): string {
-    return this._id;
   }
 
   public get type(): BlackjackType {
     return this._type;
   }
 
-  public get status(): BlackJackStatus {
-    return this._status;
-  }
-
-  public set status(value: BlackJackStatus) {
-    this._status = value;
-  }
-
   public get players(): BlackJackPlayer[] {
     return this._players;
-  }
-
-  public get deck(): Card[] {
-    return this._deck;
-  }
+}
 
   public get dealerHand() {
     return this._dealerHand;
@@ -83,12 +52,9 @@ export class Blackjack {
     this._dealerHand = value;
   }
 
-  public get leaderId(): string {
-    return this._leaderId;
-  }
 
   public addUser(userId: string) {
-    if (this.status !== BlackJackStatus.WAITING) {
+    if (this.status !== GameStatus.WAITING) {
       throw new Error('Cannot add user to a game that has already started');
     }
     this._players.push({
@@ -102,13 +68,8 @@ export class Blackjack {
     });
   }
 
-  public drawCard(deck: Card[]): Card {
-    return deck.pop();
-  }
-
   public startGame() {
-    this._status = BlackJackStatus.IN_PROGRESS;
-    this.clearHands();
+    super.startGame()
     this._players.forEach((player) => {
       player.hand.push(this.drawCard(this.deck), this.drawCard(this.deck));
     });
@@ -117,9 +78,7 @@ export class Blackjack {
 
   public clearHands() {
     this.dealerHand = [];
-    this._players.forEach((player) => {
-      player.hand = [];
-    });
+    super.clearHands();
   }
 
   public play(player: BlackJackPlayer, action: BlackJackAction) {

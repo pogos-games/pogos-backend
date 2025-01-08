@@ -4,28 +4,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { CardsService } from '../cards/cards.service';
 import { Blackjack } from './entities/blackjack.entity';
-import { RedisService } from '../../../../libs/tools/src/redis/redis.service';
-import { BlackJackStatus } from './enum/black-jack-status.enum';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
 import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
-import { IdGeneratorService } from '../../../../libs/tools/src/id-generator.service';
 import { BlackjackType } from './enum/blackjack-type.enum';
 import { BlackjackResponse } from './dto/response/blackjack-response.interface';
+import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
+import { GameService } from 'libs/tools/src/game/game.service';
 
 @Injectable()
-export class BlackjackService {
-  constructor(
-    private readonly redisService: RedisService,
-    private readonly cardsService: CardsService,
-    private readonly idGeneratorService:IdGeneratorService
-  ) {}
+export class BlackjackService extends GameService{
+  protected readonly BLACKJACK_KEY_PREFIX = 'blackjack';
+  protected readonly LEADER_KEY_PREFIX = 'leaderId';
 
-  private readonly BLACKJACK_KEY_PREFIX = 'blackjack';
-  private readonly LEADER_KEY_PREFIX = 'leaderId';
-
-  private async saveGame(blackjack: Blackjack): Promise<void> {
+  protected async saveGame(blackjack: Blackjack): Promise<void> {
     const key = this.BLACKJACK_KEY_PREFIX + ":" +blackjack.id;
     await this.redisService.set<Blackjack>(key, blackjack);
     return;
@@ -45,7 +37,7 @@ export class BlackjackService {
     return gameId;
   }
 
-  private async findByLeaderId(leaderId: string): Promise<Blackjack[]> {
+  protected async findByLeaderId(leaderId: string): Promise<Blackjack[]> {
     const leaderKey = `${this.BLACKJACK_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`;
     const gameIds =  await this.redisService.getSet(leaderKey)
 
@@ -80,7 +72,7 @@ export class BlackjackService {
     if (blackjack.leaderId !== client.id) {
       throw new UnauthorizedException(`Only the leader can end the game`);
     }
-    blackjack.status = BlackJackStatus.ENDED;
+    blackjack.status = GameStatus.ENDED;
     return blackjack.players.map((player) => player.id);
   }
 
