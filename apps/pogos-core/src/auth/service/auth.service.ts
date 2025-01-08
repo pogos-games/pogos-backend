@@ -34,6 +34,7 @@ export class AuthService {
     const { accessToken, refreshToken } = this.tokenService.generateTokens({
       sub: user.id,
       email: user.email,
+      username:user.username
     });
 
     return {
@@ -50,7 +51,7 @@ export class AuthService {
     user.password = await bcrypt.hash(user.password, 10);
 
     const savedUser = await this.usersService.create(user);
-    const payload = { sub: savedUser.id, email: savedUser.email };
+    const payload = { sub: savedUser.id, email: savedUser.email, username: user.username };
     const { accessToken, refreshToken } =
       this.tokenService.generateTokens(payload);
 
@@ -63,7 +64,8 @@ export class AuthService {
 
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
-    const payload = { sub: decoded.sub, email: decoded.email };
+    const user = await this.usersService.findOneByEmail(decoded.email);
+    const payload = { sub: decoded.sub, email: decoded.email, username: user.username };
     const { accessToken, refreshToken: newRefreshToken } =
       this.tokenService.generateTokens(payload);
 
