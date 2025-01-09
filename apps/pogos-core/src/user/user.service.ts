@@ -24,9 +24,19 @@ export class UserService {
     return !!user;
   }
 
+  async existsByUsername(username: string): Promise<boolean> {
+    const user = await this.userRepository.findOneBy({ username });
+    return !!user;
+  }
+
+
+
   async create(signupRequestDto: SignupRequest): Promise<User> {
     if (await this.existsByEmail(signupRequestDto.email)) {
       throw new HttpException('Email already exists', 409);
+    }
+    if (await this.existsByUsername(signupRequestDto.username)) {
+      throw new HttpException('Username already exists', 409);
     }
     const newUser = new User();
     newUser.username = signupRequestDto.username;

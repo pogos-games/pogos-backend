@@ -7,7 +7,7 @@ import {
 import { UserService } from '../../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { LoginRequest } from '../model/dto/request/login-request.interface';
-import { TokenService } from './token.service';
+import { TokenService } from '@app/auth-library/service/token.service';
 import { SignupRequest } from '../model/dto/request/signup-request.interface';
 import { AuthResponse } from '../model/dto/client/response/auth-response.interface';
 

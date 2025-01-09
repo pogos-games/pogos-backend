@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { HttpModule } from '@nestjs/axios';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
+import { FriendshipModule } from './friendship/friendship.module';
 
 @Module({
   imports: [
@@ -11,7 +12,9 @@ import { ConfigModule } from '@nestjs/config';
     }),
     AuthModule,
     HttpModule,
-    UserModule],
+    UserModule,
+    FriendshipModule,
+  ],
   controllers: [],
   providers: [],
 })

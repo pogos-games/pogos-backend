@@ -6,11 +6,11 @@ import {
 import { Socket } from 'socket.io';
 import { CardsService } from '../cards/cards.service';
 import { Blackjack } from './entities/blackjack.entity';
-import { RedisService } from '../../../../libs/tools/src/redis/redis.service';
+import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
 import { BlackJackStatus } from './enum/black-jack-status.enum';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
 import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
-import { IdGeneratorService } from '../../../../libs/tools/src/id-generator.service';
+import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { BlackjackType } from './enum/blackjack-type.enum';
 import { BlackjackResponse } from './dto/response/blackjack-response.interface';
 

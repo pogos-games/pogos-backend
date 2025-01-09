@@ -25,11 +25,29 @@
     },
     "auth": {
       "type": "library",
-      "root": "libs/auth",
+      "root": "libs/tools-library",
       "entryFile": "index",
-      "sourceRoot": "libs/auth/src",
+      "sourceRoot": "libs/tools-library/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/auth/tsconfig.lib.json"
+        "tsConfigPath": "libs/tools-library/tsconfig.lib.json"
+      }
+    },
+    "database": {
+      "type": "library",
+      "root": "libs/database-library",
+      "entryFile": "index",
+      "sourceRoot": "libs/database-library/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/database-library/tsconfig.lib.json"
+      }
+    },
+    "auth-library": {
+      "type": "library",
+      "root": "libs/auth-library",
+      "entryFile": "index",
+      "sourceRoot": "libs/auth-library/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/auth-library/tsconfig.lib.json"
       }
     }
   },
