@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { User } from '../user/model/entity/user.entity';
@@ -20,7 +24,7 @@ export class FriendshipService {
   ): Promise<Friendship> {
     const friendship = this.friendshipRepository.create({
       requesterId,
-      friendId,
+      requestedId: friendId,
       status: FriendshipStatus.PENDING,
     });
 
@@ -28,35 +32,38 @@ export class FriendshipService {
   }
 
   async acceptFriendRequest(
-    requesterId: string,
-    friendId: string,
+    friendshipId: string,
+    requestedId: string,
   ): Promise<Friendship> {
-    const friendship = await this.friendshipRepository.findOne({
-      where: [
-        { requesterId, friendId },
-        { requesterId: friendId, friendId: requesterId },
-      ],
+    const friendship: Friendship = await this.friendshipRepository.findOne({
+      where: { id: friendshipId },
     });
 
-    if (friendship) {
-      friendship.status = FriendshipStatus.ACCEPTED;
-      return this.friendshipRepository.save(friendship);
+    if (!friendship) {
+      throw new NotFoundException(
+        `Friendship request: ${friendshipId} not found !`,
+      );
     }
 
-    throw new Error('Friendship request not found');
+    if (friendship.requestedId !== requestedId) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    friendship.status = FriendshipStatus.ACCEPTED;
+    return this.friendshipRepository.save(friendship);
   }
 
   async findFriends(userId: string): Promise<User[]> {
-    const friendships = await this.friendshipRepository.find({
+    const friendships: Friendship[] = await this.friendshipRepository.find({
       where: [
         { requesterId: userId, status: FriendshipStatus.ACCEPTED },
-        { friendId: userId, status: FriendshipStatus.ACCEPTED },
+        { requestedId: userId, status: FriendshipStatus.ACCEPTED },
       ],
     });
 
-    const friendIds = friendships.map((friendship) =>
+    const friendIds: string[] = friendships.map((friendship) =>
       friendship.requesterId === userId
-        ? friendship.friendId
+        ? friendship.requestedId
         : friendship.requesterId,
     );
 

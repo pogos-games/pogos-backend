@@ -1,14 +1,17 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../../user/model/entity/user.entity';
 import { FriendshipStatus } from '../enum/friendship-status.enum';
 
 @Entity()
 export class Friendship {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
   requesterId: string;
 
-  @PrimaryColumn()
-  friendId: string;
+  @Column()
+  requestedId: string;
 
   @Column({ type: 'enum', enum: FriendshipStatus, default: FriendshipStatus.PENDING })
   status: FriendshipStatus;
@@ -24,6 +27,6 @@ export class Friendship {
   requester: User;
 
   @ManyToOne(() => User, (user) => user.receivedFriendRequests)
-  @JoinColumn({ name: 'friendId' })
+  @JoinColumn({ name: 'requestedId' })
   friend: User;
 }
