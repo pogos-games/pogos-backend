@@ -1,6 +1,6 @@
-import { Card } from 'apps/pogos-games/src/cards/model/card.interface';
 import { GamePlayerResponse } from './game-player-response.interface';
-import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
+import { GameStatus } from '../../enum/game-status.enum';
+import { Card } from '../../../../../../apps/pogos-games/src/cards/model/card.interface';
 
 export interface GameResponse {
   gameId:string,

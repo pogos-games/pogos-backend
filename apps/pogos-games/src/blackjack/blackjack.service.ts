@@ -9,8 +9,8 @@ import { BlackjackActionRequest } from './dto/request/blackjack-action-request.i
 import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
 import { BlackjackType } from './enum/blackjack-type.enum';
 import { BlackjackResponse } from './dto/response/blackjack-response.interface';
-import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
-import { GameService } from 'libs/tools/src/game/game.service';
+import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
+import { GameService } from '../../../../libs/tools/src/game/game.service';
 
 @Injectable()
 export class BlackjackService extends GameService{
