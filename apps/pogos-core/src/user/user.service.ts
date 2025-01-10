@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './model/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,7 +12,13 @@ export class UserService {
   ) {}
 
   async findOne(username: string): Promise<User> {
-    return this.userRepository.findOneBy({ username });
+    const user: User | undefined = await this.userRepository.findOneBy({
+      username,
+    });
+    if (!user) {
+      throw new NotFoundException(`User: ${username} not found !`);
+    }
+    return user;
   }
 
   async findOneByEmail(email: string): Promise<User> {
@@ -29,8 +35,6 @@ export class UserService {
     return !!user;
   }
 
-
-
   async create(signupRequestDto: SignupRequest): Promise<User> {
     if (await this.existsByEmail(signupRequestDto.email)) {
       throw new HttpException('Email already exists', 409);
@@ -43,9 +47,5 @@ export class UserService {
     newUser.email = signupRequestDto.email;
     newUser.password = signupRequestDto.password;
     return this.userRepository.save(newUser);
-  }
-
-  async update(user: User): Promise<User> {
-    return this.userRepository.save(user);
   }
 }
