@@ -3,22 +3,25 @@ import { Repository } from 'typeorm';
 import { User } from './model/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupRequest } from '../auth/model/dto/request/signup-request.interface';
+import { UserProfile } from './profile/user.profile';
+import { UserResponse } from './model/dto/response/user-response.interface';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
+    private readonly userProfile:UserProfile,
   ) {}
 
-  async findOne(username: string): Promise<User> {
+  async findOne(username: string): Promise<UserResponse> {
     const user: User | undefined = await this.userRepository.findOneBy({
       username,
     });
     if (!user) {
       throw new NotFoundException(`User: ${username} not found !`);
     }
-    return user;
+    return this.userProfile.profile(user, UserResponse, User);
   }
 
   async findOneByEmail(email: string): Promise<User> {
