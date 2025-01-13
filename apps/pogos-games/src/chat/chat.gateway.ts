@@ -1,7 +1,12 @@
-import { SubscribeMessage } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 
 export class ChatGateway  {
+
+
+  @WebSocketServer()
+  server: Server;
+
 
   @SubscribeMessage('CHAT')
   async handleChat(client: Socket, payload: string) {

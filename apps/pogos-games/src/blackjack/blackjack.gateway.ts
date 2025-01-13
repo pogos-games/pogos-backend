@@ -3,9 +3,8 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Socket } from 'socket.io';
 import { BlackjackService } from './blackjack.service';
 import { ChatGateway } from '../chat/chat.gateway';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
@@ -24,9 +23,6 @@ export class BlackjackGateway
   constructor(private readonly blackjackService: BlackjackService) {
     super();
   }
-
-  @WebSocketServer()
-  server: Server;
 
   handleConnection(client: Socket) {
     console.log('Client connected:', client.id);

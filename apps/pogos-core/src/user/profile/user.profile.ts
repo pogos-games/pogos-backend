@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
-import {
-  createMap,
-  extend,
-  Mapper,
-  MappingConfiguration,
-} from '@automapper/core';
+import { createMap, Mapper } from '@automapper/core';
 import { User } from '../model/entity/user.entity';
 import { UserResponse } from '../model/dto/response/user-response.interface';
 
@@ -19,10 +14,5 @@ export class UserProfile extends AutomapperProfile {
     return (mapper: Mapper) => {
       createMap(mapper, User, UserResponse);
     };
-  }
-
-  protected get mappingConfigurations(): MappingConfiguration[] {
-    // the 3 createMap() above will get this `extend()`
-    return [extend(User, UserResponse)];
   }
 }
