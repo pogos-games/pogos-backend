@@ -1,11 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Friendship } from '../../../friendship/model/entity/friendship.entity';
+import { AutoMap } from '@automapper/classes';
 
 @Entity()
 export class User {
+  @AutoMap()
   @PrimaryGeneratedColumn('uuid')
   id: number;
 
-  @Column()
+  @AutoMap()
+  @Column({ unique: true })
   username: string;
 
   @Column()
@@ -13,4 +17,10 @@ export class User {
 
   @Column()
   password: string;
+
+  @OneToMany(() => Friendship, (friendship) => friendship.requester)
+  sentFriendRequests: Friendship[];
+
+  @OneToMany(() => Friendship, (friendship) => friendship.friend)
+  receivedFriendRequests: Friendship[];
 }

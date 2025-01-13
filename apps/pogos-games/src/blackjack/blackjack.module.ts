@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BlackjackService } from './blackjack.service';
 import { BlackjackGateway } from './blackjack.gateway';
 import { CardsModule } from '../cards/cards.module';
-import { ToolsModule } from '../../../../libs/tools/src';
+import { ToolsModule } from '../../../../libs/tools-library/src';
 
 @Module({
   imports: [CardsModule, ToolsModule ],

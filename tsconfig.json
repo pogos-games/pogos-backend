@@ -18,11 +18,23 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "lib/auth": [
-        "libs/auth/src"
+//      "lib/auth": [
+//        "libs/auth/src"
+//      ],
+//      "lib/auth/*": [
+//        "libs/auth/src/*"
+//      ],
+      "@app/database": [
+        "libs/database-library/src"
       ],
-      "lib/auth/*": [
-        "libs/auth/src/*"
+      "@app/database/*": [
+        "libs/database-library/src/*"
+      ],
+      "@app/auth-library": [
+        "libs/auth-library/src"
+      ],
+      "@app/auth-library/*": [
+        "libs/auth-library/src/*"
       ]
     }
   }

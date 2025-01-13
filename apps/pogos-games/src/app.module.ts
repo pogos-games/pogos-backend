@@ -3,7 +3,7 @@ import { ChatModule } from './chat/chat.module';
 import { BlackjackModule } from './blackjack/blackjack.module';
 import { CardsModule } from './cards/cards.module';
 import { ConfigModule } from '@nestjs/config';
-import { ToolsModule } from '../../../libs/tools/src';
+import { ToolsModule } from '../../../libs/tools-library/src';
 
 @Module({
   imports: [
