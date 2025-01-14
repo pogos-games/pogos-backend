@@ -8,11 +8,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
-import { JwtAuthGuard } from '../jwt/jwt-auth.guard';
+import { JwtAuthGuard } from '@app/auth-library/jwt/jwt-auth.guard';
 import { SignupRequest } from '../model/dto/request/signup-request.interface';
 import { LoginRequest } from '../model/dto/request/login-request.interface';
 import { AuthResponse } from '../model/dto/client/response/auth-response.interface';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -64,7 +65,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req) {
-    console.log(req.user);
+  getProfile(@Req() request:Request) {
+    return request.user;
   }
 }

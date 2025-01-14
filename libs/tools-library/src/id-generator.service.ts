@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RedisService } from './redis/redis.service';
+import { randomInt } from 'crypto';
 
 @Injectable()
 export class IdGeneratorService {
@@ -10,7 +11,7 @@ export class IdGeneratorService {
     let exists: boolean;
 
     do {
-      uniqueId = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+      uniqueId = `${prefix}${randomInt(1000, 10000)}`;
       exists = await this.redisService.exists(`${keyPrefix}:${uniqueId}`);
     } while (exists);
 

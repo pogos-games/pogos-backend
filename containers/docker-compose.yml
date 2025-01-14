@@ -1,6 +1,6 @@
 version: '3.9'
 services:
-  mysql-kc:
+  mysql:
     image: mysql:9.0
     ports:
       - 3306:3306
@@ -11,10 +11,8 @@ services:
       MYSQL_DATABASE: keycloak
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - keycloak-and-mysql-volume:/var/lib/mysql
+      - mysql-volume:/var/lib/mysql
       - ./init-db:/docker-entrypoint-initdb.d
-    networks:
-      - keycloak-and-mysql-network
 
   redis:
     image: redis:latest
@@ -24,11 +22,7 @@ services:
     volumes:
       - redis-data:/data
 
-networks:
-  keycloak-and-mysql-network:
-
 volumes:
-  keycloak-and-mysql-volume:
-
+  mysql-volume:
   redis-data:
     driver: local

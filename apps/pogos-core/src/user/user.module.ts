@@ -1,24 +1,21 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './model/entity/user.entity';
+import { DatabaseModule } from '@app/database';
+import { UserController } from './user.controller';
+import { AutomapperModule } from '@automapper/nestjs';
+import { UserProfile } from './profile/user.profile';
+import { classes } from '@automapper/classes';
 
 @Module({
   imports: [
-  TypeOrmModule.forRoot({
-    type: 'mysql', // or your database type
-    host: 'localhost',
-    port: 3306,
-    username: 'pogos',
-    password: 'pogos',
-    database: 'pogos',
-    entities: [User],
-    synchronize: true,
-  }),
-  TypeOrmModule.forFeature([User]),
+    DatabaseModule,
+    AutomapperModule.forRoot({
+      strategyInitializer: classes()
+    }),
   ],
-  providers: [UserService],
-  exports: [UserService,TypeOrmModule],
+  providers: [UserService, UserProfile],
+  exports: [UserService],
+  controllers: [UserController],
 })
 export class UserModule {}
 
