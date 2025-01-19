@@ -1,6 +1,8 @@
 import { Expose, Type } from 'class-transformer';
 import { GameStatus } from '../enum/game-status.enum';
 import { Card } from 'apps/pogos-games/src/cards/model/card.interface';
+import { GameResponse } from '../dto/response/game-response.interface';
+import { GamePlayerResponse } from '../dto/response/game-player-response.interface';
 
 export abstract class Player {
     id: string;
@@ -8,7 +10,10 @@ export abstract class Player {
     hand: Card[];
 }
 
-export abstract class Game {
+export abstract class Game<TResponse extends GameResponse,
+  TPlayer extends Player,
+  TPlayerResponse extends GamePlayerResponse
+> {
     
     @Expose()
     protected readonly _id: string;
@@ -22,7 +27,7 @@ export abstract class Game {
 
     @Expose()
     @Type(() => Player)
-    protected readonly _players: Player[];
+    protected readonly _players: TPlayer[];
     
     @Expose()
     protected _status: GameStatus;
@@ -47,7 +52,7 @@ export abstract class Game {
         this._status = value;
     }
     
-    public get players(): Player[] {
+    public get players(): TPlayer[] {
         return this._players;
     }
     
@@ -67,7 +72,7 @@ export abstract class Game {
           id: userId,
           username: 'not defined',
           hand: [],
-        });
+        } as TPlayer);
     }
     
     public drawCard(deck: Card[]): Card {
@@ -85,5 +90,13 @@ export abstract class Game {
         });
     }
     
-    public abstract play(player: Player, action: string);
+    play(player: TPlayer, action: string){
+        switch (action) {
+            default:
+                console.log('No more actions available for the moment');
+                console.log('Invalid action');
+        }
+    }
+
+    public abstract toResponse() : TResponse;
 }

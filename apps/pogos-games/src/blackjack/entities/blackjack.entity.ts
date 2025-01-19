@@ -17,7 +17,7 @@ export class BlackJackPlayer extends Player {
   roundPlayed: boolean;
 }
 
-export class Blackjack extends Game {
+export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, BlackjackPlayerResponse> {
   @Expose()
   @Type(() => Card)
   private _dealerHand: Card[];
@@ -44,7 +44,7 @@ export class Blackjack extends Game {
     return this._players;
 }
 
-  public get dealerHand() {
+  private get dealerHand() {
     return this._dealerHand;
   }
 
@@ -121,7 +121,7 @@ export class Blackjack extends Game {
       dealerHand: this._dealerHand,
       players: players,
       status: this._status,
-    };
+    } as BlackjackResponse;
   }
 
   private calculateHandValue(hand: Card[]): number {

@@ -1,8 +1,6 @@
 import {
   OnGatewayConnection,
-  OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
+  OnGatewayDisconnect, SubscribeMessage,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
@@ -13,13 +11,21 @@ import { GatewayEventsListener } from './enum/gateway/gateway-events-listener.en
 import { GatewayEventEmitter } from './enum/gateway/gateway-event-emitter.enum';
 import { GameCreationRequest } from './dto/request/game-creation-request.class';
 import { GameType } from './enum/game-type.enum';
+import { Game, Player } from './entities/game.entity';
+import { GameResponse } from './dto/response/game-response.interface';
 
 // process.env.FRONTEND_URL
-export class GameGateway
+export class GameGateway<
+  TResponse extends GameResponse,
+  TPlayerResponse extends GamePlayerResponse,
+  TPlayer extends Player,
+  TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
+  TGameService extends GameService<TGame, TResponse, TPlayerResponse, TPlayer>
+>
   extends ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(protected readonly gameService: GameService) {
+  constructor(protected readonly gameService: TGameService) {
     super();
   }
 
@@ -46,8 +52,9 @@ export class GameGateway
   }
 
   @SubscribeMessage(GatewayEventsListener.END_GAME)
-  async handleEndGame(client: Socket, gameId: string) {
-    const gameClients = await this.gameService.endGame(client, gameId);
+  async handleEndGame<TGame>(client: Socket, gameId: string,
+                      GameClass: { new(...args: any[]) }) {
+    const gameClients = await this.gameService.endGame(client, gameId, GameClass);
     gameClients.forEach((clientId) => {
       this.server
         .to(clientId)
@@ -72,8 +79,9 @@ export class GameGateway
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
-  async handleJoinGame(client: Socket, gameId: string) {
-    await this.gameService.joinGame(gameId, client.id);
+  async handleJoinGame<TGame>(client: Socket, gameId: string,
+                       GameClass: { new(...args: any[]) }) {
+    await this.gameService.joinGame(gameId, client.id, GameClass);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
   }
 }

@@ -21,7 +21,7 @@ export class CardsService {
     }
   }
 
-  public createBlackjackDeck(): Card[] {
+  public createDeck(): Card[] {
     const suits = ['H', 'D', 'C', 'S'];
     const ranks = [
       '2',
