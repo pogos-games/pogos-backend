@@ -1,0 +1,9 @@
+
+export enum PokerMessage {
+  PLAYER_BUST = "PLAYER_BUST",
+  DEALER_BUST = "DEALER_BUST",
+  PLAYER_WIN = "PLAYER_WIN",
+  DEALER_WIN = "DEALER_WIN",
+  TIE = "TIE",
+  CONTINUE = "CONTINUE",
+}
