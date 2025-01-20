@@ -34,6 +34,6 @@ export class User {
   @OneToMany(() => Friendship, (friendship) => friendship.friend)
   receivedFriendRequests: Friendship[];
 
-  @OneToMany(() => Notification, (notification : Notification) => notification.recipient)
+  @OneToMany(() => Notification, (notification : Notification) => notification.recipient,{ eager: true })
   notifications: Notification[];
 }

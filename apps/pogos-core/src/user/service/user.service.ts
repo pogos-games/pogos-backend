@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  BadRequestException, ConflictException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -16,6 +16,7 @@ import { PageOptions } from '../../../../../libs/commons-core-library/src/dto/pa
 import { PageMeta } from '../../../../../libs/commons-core-library/src/dto/page/page-meta.interface';
 import { Principal } from '../model/dto/principal.interface';
 import { SelfUserResponse } from '../model/dto/response/self-user-response.interface';
+import { UserRequest } from '../model/dto/request/user-request.class';
 
 @Injectable()
 export class UserService {
@@ -26,6 +27,10 @@ export class UserService {
     private readonly mapper: Mapper,
   ) {}
 
+  /**
+   * Return special self profile
+   * @param principal principal id to get
+   */
   async findSelfProfile(principal: Principal): Promise<SelfUserResponse> {
     const user: User = await this.userRepository.findOne({
       where: { id: principal.userId },
@@ -35,7 +40,11 @@ export class UserService {
     return this.mapper.map(user, User, SelfUserResponse);
   }
 
-  async findOne(id: string): Promise<UserResponse> {
+  /**
+   * Find user by id
+   * @param id
+   */
+  async findOneById(id: string): Promise<UserResponse> {
     const user: User | undefined = await this.userRepository.findOneBy({
       id,
     });
@@ -45,15 +54,27 @@ export class UserService {
     return this.mapper.map(user, User, UserResponse);
   }
 
+  /**
+   * find one by email
+   * @param email
+   */
   async findOneByEmail(email: string): Promise<User> {
     return this.userRepository.findOneBy({ email });
   }
 
+  /**
+   * Check if a user exists with a given email
+   * @param email email to check
+   */
   async existsByEmail(email: string): Promise<boolean> {
     const user = await this.userRepository.findOneBy({ email });
     return !!user;
   }
 
+  /**
+   * Check if user exists with username
+   * @param username username to search
+   */
   async existsByUsername(username: string): Promise<boolean> {
     if (!username) {
       throw new BadRequestException('username is null');
@@ -62,6 +83,11 @@ export class UserService {
     return !!user;
   }
 
+  /**
+   * Find users that contains given string
+   * @param substring string to search
+   * @param pageOptions search criteria
+   */
   async findByUsernameContaining(
     substring: string,
     pageOptions: PageOptions,
@@ -84,6 +110,10 @@ export class UserService {
     return new Page(mappedEntities, pageMeta);
   }
 
+  /**
+   * Create a new user
+   * @param signupRequestDto dto containing user fields
+   */
   async create(signupRequestDto: SignupRequest): Promise<User> {
     if (await this.existsByEmail(signupRequestDto.email)) {
       throw new HttpException('Email already exists', 409);
@@ -97,4 +127,29 @@ export class UserService {
     newUser.password = signupRequestDto.password;
     return this.userRepository.save(newUser);
   }
+
+  /**
+   * Update user
+   * @param userId id of user to update
+   * @param userRequest dto of user to update
+   */
+  async updateUser(userId: string, userRequest: UserRequest): Promise<UserResponse> {
+
+    const user: User = await this.userRepository.findOneBy({id:userId});
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if(user.username !== userRequest.username) {
+     if( await this.existsByUsername(userRequest.username)){
+       throw new ConflictException(`Username ${userRequest.username} is already taken !`);
+     }
+    }
+    user.username = userRequest.username;
+    user.avatar = userRequest.avatar;
+
+    const updatedUser = await this.userRepository.save(user);
+    return this.mapper.map(updatedUser, User, SelfUserResponse);
+  }
+
 }

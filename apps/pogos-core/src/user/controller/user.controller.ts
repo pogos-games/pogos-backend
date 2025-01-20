@@ -1,4 +1,14 @@
-import { Controller, Get, HttpCode, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  Param,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { PageOptions } from '../../../../../libs/commons-core-library/src/dto/page/page-options.interface';
 import { JwtAuthGuard } from '@app/auth-library/jwt/jwt-auth.guard';
@@ -7,46 +17,72 @@ import { Page } from '../../../../../libs/commons-core-library/src/dto/page/page
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthenticationPrincipal } from '@app/auth-library/authentication-principal.decorator';
 import { Principal } from '../model/dto/principal.interface';
+import { UserRequest } from '../model/dto/request/user-request.class';
+import { SelfUserResponse } from '../model/dto/response/self-user-response.interface';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({summary: 'return authenticated user'})
+  @ApiOperation({ summary: 'return authenticated user' })
   @ApiBearerAuth()
   @Get('self')
   @HttpCode(200)
   @ApiResponse({
-    status:200,
-    type: UserResponse
+    status: 200,
+    type: SelfUserResponse,
   })
-  async findSelfProfile(@AuthenticationPrincipal() principal:Principal) {
+  async findSelfProfile(
+    @AuthenticationPrincipal() principal: Principal,
+  ): Promise<SelfUserResponse> {
     return this.userService.findSelfProfile(principal);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'update user' })
   @ApiBearerAuth()
-  @ApiOperation({summary: 'find user by id'})
+  @Put(':userId')
+  @HttpCode(200)
   @ApiResponse({
-    status:200,
+    status: 200,
     type: UserResponse,
-    description: 'dto of user'
+  })
+  async updateUser(
+    @AuthenticationPrincipal() principal: Principal,
+    @Param('userId') userId: string,
+    @Body() userRequest: UserRequest,
+  ) {
+    if (principal.userId !== userId) {
+      throw new ForbiddenException('You can only update your own profile.');
+    }
+    return this.userService.updateUser(userId, userRequest);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'find user by id' })
+  @ApiResponse({
+    status: 200,
+    type: UserResponse,
+    description: 'dto of user',
   })
   @Get('/:userId')
   async findOneById(@Param('userId') userId: string): Promise<UserResponse> {
-    return this.userService.findOne(userId);
+    return this.userService.findOneById(userId);
   }
 
   @Get('/username/:username')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(200)
-  @ApiOperation({summary: 'find a page of users that username contains given string'})
+  @ApiOperation({
+    summary: 'find a page of users that username contains given string',
+  })
   @ApiResponse({
-    status:200,
+    status: 200,
     type: Page<UserResponse>,
-    description: 'dto of user'
+    description: 'dto of user',
   })
   async findByUsername(
     @Param('username') username: string,
@@ -56,12 +92,12 @@ export class UserController {
   }
 
   @Get('/exists/:username')
-  @ApiOperation({summary: 'check if username is already taken'})
+  @ApiOperation({ summary: 'check if username is already taken' })
   @HttpCode(200)
   @ApiResponse({
-    status:200,
-    type:Boolean,
-    })
+    status: 200,
+    type: Boolean,
+  })
   async existsByUsername(
     @Param('username') username: string,
   ): Promise<boolean> {
