@@ -1,78 +1,21 @@
 import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { BlackjackService } from './blackjack.service';
-import { ChatGateway } from '../chat/chat.gateway';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
+import { GatewayEventsListener } from '../../../../libs/tools/src/game/enum/gateway/gateway-events-listener.enum';
+import { GameGateway } from '../../../../libs/tools/src/game/game.gateway';
+import { Blackjack, BlackJackPlayer } from './entities/blackjack.entity';
+import { BlackjackResponse } from './dto/response/blackjack-response.interface';
 import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
-import { GatewayEventsListener } from './enum/gateway/gateway-events-listener.enum';
-import { GatewayEventEmitter } from './enum/gateway/gateway-event-emitter.enum';
-import { BlackjackCreationRequest } from './dto/request/blackjack-creation-request.class';
-import { BlackjackType } from './enum/blackjack-type.enum';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'blackjack', cors: 'http://localhost:4200' })
-export class BlackjackGateway
-  extends ChatGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class BlackjackGateway extends GameGateway<BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, Blackjack, BlackjackService> {
   constructor(private readonly blackjackService: BlackjackService) {
-    super();
-  }
-
-  handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
-  }
-
-  handleDisconnect(client: Socket) {
-    console.log('Client disconnected:', client.id);
-  }
-
-  private async sendBlackjackAction(
-    players: string[],
-    blackjackAction: BlackjackPlayerResponse,
-  ) {
-    players.forEach((playerId) => {
-      this.server
-        .to(playerId)
-        .emit(GatewayEventEmitter.PLAYER_UPDATE, blackjackAction);
-    });
-  }
-
-  @SubscribeMessage(GatewayEventsListener.END_GAME)
-  async handleEndGame(client: Socket, gameId: string) {
-    const gameClients = await this.blackjackService.endGame(client, gameId);
-    gameClients.forEach((clientId) => {
-      this.server
-        .to(clientId)
-        .emit(GatewayEventEmitter.GAME_UPDATE, 'game ended');
-      this.server.sockets.sockets.get(clientId).disconnect();
-    });
-  }
-
-  @SubscribeMessage(GatewayEventsListener.CREATE_GAME)
-  async handleCreateGame(client: Socket, request: BlackjackCreationRequest) {
-    const gameId = await this.blackjackService.createGame(
-      client.id,
-      request.type,
-    );
-    console.log('Game created:', gameId);
-    if (request.type == BlackjackType.SOLO) {
-      const response = await this.blackjackService.startGame(client.id, gameId);
-      client.emit(GatewayEventEmitter.GAME_UPDATE, response);
-    } else {
-      client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
-    }
-  }
-
-  @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
-  async handleJoinGame(client: Socket, gameId: string) {
-    await this.blackjackService.joinGame(gameId, client.id);
-    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+    super(blackjackService);
   }
 
   @SubscribeMessage(GatewayEventsListener.ACTION)
@@ -81,6 +24,6 @@ export class BlackjackGateway
       client,
       blackjackAction,
     );
-    await this.sendBlackjackAction(players, response);
+    await this.sendGameAction(players, response);
   }
 }

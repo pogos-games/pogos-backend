@@ -1,10 +1,11 @@
+import { GameResponse } from 'libs/tools/src/game/dto/response/game-response.interface';
 import { Card } from '../../../cards/model/card.interface';
 import { BlackjackPlayerResponse } from './blackjack-player-response.interface';
-import { BlackJackStatus } from '../../enum/black-jack-status.enum';
+import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 
-export interface BlackjackResponse {
+export interface BlackjackResponse extends GameResponse {
   gameId:string,
   dealerHand: Card[],
   players:BlackjackPlayerResponse[],
-  status:BlackJackStatus,
+  status:GameStatus,
 }
