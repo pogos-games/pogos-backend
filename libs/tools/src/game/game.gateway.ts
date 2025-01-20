@@ -13,6 +13,7 @@ import { GameCreationRequest } from './dto/request/game-creation-request.class';
 import { GameType } from './enum/game-type.enum';
 import { Game, Player } from './entities/game.entity';
 import { GameResponse } from './dto/response/game-response.interface';
+import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 
 // process.env.FRONTEND_URL
 export class GameGateway<
@@ -80,7 +81,10 @@ export class GameGateway<
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
   async handleJoinGame(client: Socket, gameId: string,
-                       GameClass: { new():  TGame }) {
+                       GameClass: new(id?: string,
+                                        deck?: Card[],
+                                        leaderId?: string,
+                                        type?: string) => TGame ) {
     await this.gameService.joinGame(gameId, client.id, GameClass);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
   }

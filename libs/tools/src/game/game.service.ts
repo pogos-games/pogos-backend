@@ -35,10 +35,10 @@ export abstract class GameService<
   protected async create(
     leaderId: string,
     type: string,
-    GameClass: { new(id?: string,
+    GameClass: new(id?: string,
                      deck?: Card[],
                      leaderId?: string,
-                     type?: string):  TGame }
+                     type?: string) => TGame
   ) {
     const leaderPokers = await this.findByLeaderId(leaderId, GameClass);
     if(leaderPokers.length > 0) {
@@ -54,7 +54,10 @@ export abstract class GameService<
   }
 
   protected async findByLeaderId(leaderId: string,
-                                 GameClass: { new():  TGame }){
+                                 GameClass: new(id?: string,
+                                                  deck?: Card[],
+                                                  leaderId?: string,
+                                                  type?: string) => TGame ){
     const leaderKey = `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`;
     const gameIds =  await this.redisService.getSet(leaderKey)
 
@@ -66,10 +69,10 @@ export abstract class GameService<
   }
 
   async joinGame(gameId: string, playerId: string,
-                 GameClass: { new(id?: string,
+                 GameClass: new(id?: string,
                                   deck?: Card[],
                                   leaderId?: string,
-                                  type?: string):  TGame }){
+                                  type?: string) =>  TGame){
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game: TGame = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {
@@ -85,10 +88,10 @@ export abstract class GameService<
   abstract mapResponse(player : TPlayer, players: string[]): { players: string[], response: TPlayerResponse };
 
   protected async playAction(client: Socket, gameAction: GameActionRequest,
-                             GameClass: { new(id?: string,
+                             GameClass: new(id?: string,
                                               deck?: Card[],
                                               leaderId?: string,
-                                              type?: string):  TGame },
+                                              type?: string) => TGame,
                              mapResponse: (player: TPlayer, players: string[]) => {players: string[], response: TPlayerResponse}
   ): Promise<{ players: string[], response: TPlayerResponse }> {
     return this.redisService
@@ -118,10 +121,10 @@ export abstract class GameService<
 
 
   protected async start(clientId: string, gameId:string,
-                                      GameClass: { new(id?: string,
+                                      GameClass: new(id?: string,
                                                        deck?: Card[],
                                                        leaderId?: string,
-                                                       type?: string):  TGame }) {
+                                                       type?: string) => TGame ) {
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game: TGame = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {
@@ -148,10 +151,10 @@ export abstract class GameService<
    * @returns list of player ids
    */
   async endGame(client: Socket, gameId: string,
-                                GameClass: { new(id?: string,
+                                GameClass: new(id?: string,
                                                  deck?: Card[],
                                                  leaderId?: string,
-                                                 type?: string):  TGame }): Promise<string[]> {
+                                                 type?: string) => TGame ): Promise<string[]> {
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {
