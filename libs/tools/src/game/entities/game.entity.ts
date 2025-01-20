@@ -91,10 +91,11 @@ export abstract class Game<TResponse extends GameResponse,
     }
     
     play(player: TPlayer, action: string){
-        switch (action) {
-            default:
-                console.log('No more actions available for the moment');
-                console.log('Invalid action');
+        if (action) {
+            console.log('No more actions available for the moment');
+        }
+        else{
+            console.log('Invalid action');
         }
     }
 

@@ -10,7 +10,7 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { GameStatus } from './enum/game-status.enum';
 
 export abstract class GameService<
-  TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
+  TGame extends Game<TResponse, TPlayer, TPlayerResponse> & { new (...args: any[])},
   TResponse extends GameResponse,
   TPlayerResponse extends GamePlayerResponse,
   TPlayer extends Player
@@ -27,7 +27,6 @@ export abstract class GameService<
   protected async saveGame(game: TGame): Promise<void> {
     const key = `${this.GAME_KEY_PREFIX}:${game.id}`;
     await this.redisService.set<TGame>(key, game);
-    return;
   }
 
   abstract createGame(leaderId: string, type: string);
@@ -35,7 +34,7 @@ export abstract class GameService<
   protected async create(
     leaderId: string,
     type: string,
-    GameClass: { new (...args: any[]): TGame }
+    GameClass: TGame
   ) {
     const leaderPokers = await this.findByLeaderId(leaderId, GameClass);
     if(leaderPokers.length > 0) {
@@ -51,7 +50,7 @@ export abstract class GameService<
   }
 
   protected async findByLeaderId(leaderId: string,
-                                 GameClass: { new(...args: any[]): TGame }){
+                                 GameClass: TGame){
     const leaderKey = `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`;
     const gameIds =  await this.redisService.getSet(leaderKey)
 
@@ -63,7 +62,7 @@ export abstract class GameService<
   }
 
   async joinGame(gameId: string, playerId: string,
-                 GameClass: { new(...args: any[]): TGame }){
+                 GameClass: TGame){
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game: TGame = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {
@@ -79,7 +78,7 @@ export abstract class GameService<
   abstract mapResponse(player : TPlayer, players: string[]): { players: string[], response: TPlayerResponse };
 
   protected async playAction(client: Socket, gameAction: GameActionRequest,
-                             GameClass: { new(...args: any[]): TGame },
+                             GameClass: TGame,
                              mapResponse: (player: TPlayer, players: string[]) => {players: string[], response: TPlayerResponse}
   ): Promise<{ players: string[], response: TPlayerResponse }> {
     return this.redisService
@@ -109,7 +108,7 @@ export abstract class GameService<
 
 
   protected async start(clientId: string, gameId:string,
-                                      GameClass: { new(...args: any[]): TGame }) {
+                                      GameClass: TGame) {
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game: TGame = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {
@@ -136,7 +135,7 @@ export abstract class GameService<
    * @returns list of player ids
    */
   async endGame(client: Socket, gameId: string,
-                                GameClass: { new(...args: any[]): TGame }): Promise<string[]> {
+                                GameClass: TGame): Promise<string[]> {
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {

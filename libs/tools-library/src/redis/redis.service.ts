@@ -5,13 +5,13 @@ import { REDIS_CLIENT, RedisClient } from './redis-client.type';
 export class RedisService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClient) {}
 
-  async get<TGame>(key: string, type: { new(...args: any[]): TGame }): Promise<TGame> {
+  async get<TGame>(key: string, type: TGame ): Promise<TGame> {
     const value = await this.redis.get(key);
     if (!value) {
       return null;
     }
     const parsedValue = JSON.parse(value);
-    return Object.assign(new type(), parsedValue);
+    return Object.assign(type, parsedValue);
   }
 
   async set<T>(key: string, value: T, expiration?: number) {

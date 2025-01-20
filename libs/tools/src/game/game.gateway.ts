@@ -52,8 +52,8 @@ export class GameGateway<
   }
 
   @SubscribeMessage(GatewayEventsListener.END_GAME)
-  async handleEndGame<TGame>(client: Socket, gameId: string,
-                      GameClass: { new(...args: any[]) }) {
+  async handleEndGame(client: Socket, gameId: string,
+                      GameClass: { new(...args: any[]) : TGame }) {
     const gameClients = await this.gameService.endGame(client, gameId, GameClass);
     gameClients.forEach((clientId) => {
       this.server
