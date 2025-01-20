@@ -26,18 +26,10 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
   @Type(() => BlackJackPlayer)
   protected readonly _players: BlackJackPlayer[];
 
-  @Expose()
-  private readonly _type: BlackjackType;
-
   constructor(id:string,deck: Card[], leaderId: string, type: BlackjackType) {
-    super(id,deck,leaderId)
+    super(id,deck,leaderId, type)
     this._dealerHand = [];
     this._players = [];
-    this._type = type;
-  }
-
-  public get type(): BlackjackType {
-    return this._type;
   }
 
   public get players(): BlackJackPlayer[] {

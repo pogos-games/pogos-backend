@@ -26,18 +26,27 @@ export abstract class Game<TResponse extends GameResponse,
     protected readonly _leaderId: string;
 
     @Expose()
+    protected readonly _type: string;
+
+    @Expose()
     @Type(() => Player)
     protected readonly _players: TPlayer[];
     
     @Expose()
     protected _status: GameStatus;
 
-    constructor(id:string,deck: Card[], leaderId: string) {
-    this._id = id;
-    this._status = GameStatus.WAITING;
-    this._deck = deck;
-    this._players = [];
-    this._leaderId = leaderId;
+    constructor(
+      id?: string,
+      deck?: Card[],
+      leaderId?: string,
+      type?: string
+    ) {
+        this._id = id ?? '';
+        this._status = GameStatus.WAITING;
+        this._deck = deck ?? [];
+        this._players = [];
+        this._leaderId = leaderId ?? '';
+        this._type = type ?? '';
     }
 
     public get id(): string {
@@ -62,6 +71,10 @@ export abstract class Game<TResponse extends GameResponse,
     
     public get leaderId(): string {
         return this._leaderId;
+    }
+
+    public get type(): string {
+        return this._type;
     }
 
     public addUser(userId: string) {

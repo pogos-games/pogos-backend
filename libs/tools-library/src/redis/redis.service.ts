@@ -1,11 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { REDIS_CLIENT, RedisClient } from './redis-client.type';
+import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 
 @Injectable()
 export class RedisService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClient) {}
 
-  async get<TGame>(key: string, type: TGame ): Promise<TGame> {
+  async get<TGame>(key: string, type: { new(id?: string,
+                                            deck?: Card[],
+                                            leaderId?: string,
+                                            type?: string): TGame} ): Promise<TGame> {
     const value = await this.redis.get(key);
     if (!value) {
       return null;

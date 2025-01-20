@@ -53,7 +53,7 @@ export class GameGateway<
 
   @SubscribeMessage(GatewayEventsListener.END_GAME)
   async handleEndGame(client: Socket, gameId: string,
-                      GameClass: { new(...args: any[]) : TGame }) {
+                      GameClass: new() => TGame) {
     const gameClients = await this.gameService.endGame(client, gameId, GameClass);
     gameClients.forEach((clientId) => {
       this.server
@@ -79,8 +79,8 @@ export class GameGateway<
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
-  async handleJoinGame<TGame>(client: Socket, gameId: string,
-                       GameClass: { new(...args: any[]) }) {
+  async handleJoinGame(client: Socket, gameId: string,
+                       GameClass: { new():  TGame }) {
     await this.gameService.joinGame(gameId, client.id, GameClass);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
   }
