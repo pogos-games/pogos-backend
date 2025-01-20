@@ -81,7 +81,7 @@ export class FriendshipService {
   }
 
   async rejectFriendRequest(friendShipId: string, requestedId: string) {
-    void this.friendshipRepository
+    this.friendshipRepository
       .delete({
         id: friendShipId,
         requestedId: requestedId,

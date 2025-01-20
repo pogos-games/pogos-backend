@@ -32,7 +32,6 @@ export class FriendshipController {
     @AuthenticationPrincipal() principal: Principal,
   ): Promise<void> {
     await this.friendShipService.sendFriendRequest(principal.userId, userId);
-    return;
   }
 
   @Post(':action/:friendRequestId')
