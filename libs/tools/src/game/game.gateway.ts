@@ -1,8 +1,4 @@
-import {
-  OnGatewayConnection,
-  OnGatewayDisconnect, SubscribeMessage,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { ChatGateway } from '../chat/chat.gateway';
@@ -14,6 +10,7 @@ import { GameType } from './enum/game-type.enum';
 import { Game, Player } from './entities/game.entity';
 import { GameResponse } from './dto/response/game-response.interface';
 import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
+import { GameActionRequest } from './dto/request/game-action-request.interface';
 
 // process.env.FRONTEND_URL
 export class GameGateway<
@@ -87,5 +84,15 @@ export class GameGateway<
                                         type?: string) => TGame ) {
     await this.gameService.joinGame(gameId, client.id, GameClass);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+  }
+
+
+  @SubscribeMessage(GatewayEventsListener.ACTION)
+  async handleAction(client: Socket, gameAction: GameActionRequest) {
+    const { players, response } = await this.gameService.play(
+      client,
+      gameAction,
+    );
+    await this.sendGameAction(players, response);
   }
 }
