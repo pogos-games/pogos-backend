@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
-import { createMap, Mapper } from '@automapper/core';
 import { User } from '../model/entity/user.entity';
-import { UserResponse } from '../model/dto/response/user-response.interface';
+import { UserResponse } from '../model/dto/response/user-response.class';
+import { SelfUserResponse } from '../model/dto/response/self-user-response.interface';
+import { createMap, forMember, mapFrom, Mapper } from '@automapper/core';
 
 @Injectable()
 export class UserProfile extends AutomapperProfile {
@@ -12,7 +13,14 @@ export class UserProfile extends AutomapperProfile {
 
   override get profile() {
     return (mapper: Mapper) => {
+      // Mapping User -> UserResponse
       createMap(mapper, User, UserResponse);
+      // Mapping User -> SelfUserResponse
+      createMap(mapper, User, SelfUserResponse,forMember(
+        (destination : SelfUserResponse) => destination.nbNotifications,
+        mapFrom((source : User) => source.notifications.length)
+      ));
     };
   }
 }
+

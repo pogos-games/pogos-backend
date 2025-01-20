@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../../../apps/pogos-core/src/user/model/entity/user.entity';
 import { Friendship } from '../../../apps/pogos-core/src/friendship/model/entity/friendship.entity';
+import {Notification} from '../../../apps/pogos-core/src/notification/model/entity/notification.entity';
 
 @Module({
   imports: [
@@ -12,18 +13,18 @@ import { Friendship } from '../../../apps/pogos-core/src/friendship/model/entity
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        type: 'mysql', // or your database type
+        type: 'mysql',
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, Friendship],
+        entities: [User, Friendship, Notification],
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, Friendship]),
+    //TypeOrmModule.forFeature([User, Friendship]),
   ],
   providers: [],
   exports: [TypeOrmModule],

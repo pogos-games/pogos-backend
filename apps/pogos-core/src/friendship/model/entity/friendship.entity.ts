@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../../user/model/entity/user.entity';
 import { FriendshipStatus } from '../enum/friendship-status.enum';
 
@@ -13,11 +20,12 @@ export class Friendship {
   @Column()
   requestedId: string;
 
-  @Column({ type: 'enum', enum: FriendshipStatus, default: FriendshipStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: FriendshipStatus,
+    default: FriendshipStatus.PENDING,
+  })
   status: FriendshipStatus;
-
-  @CreateDateColumn()
-  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;

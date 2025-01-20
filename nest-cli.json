@@ -49,6 +49,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/auth-library/tsconfig.lib.json"
       }
+    },
+    "commons-core-library": {
+      "type": "library",
+      "root": "libs/commons-core-library",
+      "entryFile": "index",
+      "sourceRoot": "libs/commons-core-library/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/commons-core-library/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {
