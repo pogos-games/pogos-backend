@@ -11,7 +11,7 @@ export class SelfUserResponse {
   @AutoMap()
   username:string;
 
-  @ApiProperty()
+  @ApiProperty({enum:Avatar})
   @AutoMap(() => String)
   avatar:Avatar;
 

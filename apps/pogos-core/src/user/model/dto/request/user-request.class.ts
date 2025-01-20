@@ -8,7 +8,7 @@ export class UserRequest {
   @MaxLength(15)
   username: string;
 
-  @ApiProperty()
+  @ApiProperty({enum:Avatar})
   @IsEnum(Avatar)
   avatar: Avatar;
 }
