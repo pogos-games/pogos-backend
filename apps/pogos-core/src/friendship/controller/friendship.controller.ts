@@ -1,6 +1,5 @@
 import {
   Controller,
-  Delete,
   Get,
   HttpCode,
   Param,
@@ -77,5 +76,4 @@ export class FriendshipController {
   async findFriends(@Param('userId') userId: string) {
     return this.friendShipService.findFriends(userId);
   }
-
 }

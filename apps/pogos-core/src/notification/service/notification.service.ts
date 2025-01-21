@@ -7,7 +7,6 @@ import { NotificationResponse } from '../model/dto/response/notification-respons
 import { InjectMapper } from '@automapper/nestjs';
 import { NotificationType } from '../model/enum/notification-type.enum';
 import { User } from '../../user/model/entity/user.entity';
-import { not } from 'rxjs/internal/util/not';
 
 @Injectable()
 export class NotificationService {
@@ -44,7 +43,7 @@ export class NotificationService {
     senderId: string,
     message: string,
     type: NotificationType,
-    requestId:string
+    requestId: string,
   ): Promise<Notification> {
     // save recipient to notification
     const recipient = new User();
@@ -73,7 +72,7 @@ export class NotificationService {
   }
 
   async deleteNotificationByRequestId(requestId: string) {
-    void this.notificationRepository.delete({
+    await this.notificationRepository.delete({
       requestId,
     });
   }
