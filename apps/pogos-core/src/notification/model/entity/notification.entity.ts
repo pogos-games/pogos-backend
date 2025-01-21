@@ -16,13 +16,13 @@ export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.receivedNotifications, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'recipientId' }) // recipientId as foreign key
   recipient: User;
 
-  @AutoMap()
-  @Column({ nullable: true })
-  senderId: string;
+  @ManyToOne(() => User, (user) => user.sentNotifications, { nullable: true, onDelete:'CASCADE' })
+  @JoinColumn({ name: 'senderId' }) // senderId as foreign key
+  sender: User;
 
   @AutoMap()
   @Column()
@@ -42,3 +42,4 @@ export class Notification {
   @CreateDateColumn()
   date: Date;
 }
+

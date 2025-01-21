@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
-import { User } from '../model/entity/user.entity';
-import { UserResponse } from '../model/dto/response/user-response.class';
-import { SelfUserResponse } from '../model/dto/response/self-user-response.interface';
+import { User } from '../../../../apps/pogos-core/src/user/model/entity/user.entity';
+import { UserResponse } from '../../../../apps/pogos-core/src/user/model/dto/response/user-response.class';
+import { SelfUserResponse } from '../../../../apps/pogos-core/src/user/model/dto/response/self-user-response.class';
 import { createMap, forMember, mapFrom, Mapper } from '@automapper/core';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class UserProfile extends AutomapperProfile {
       // Mapping User -> SelfUserResponse
       createMap(mapper, User, SelfUserResponse,forMember(
         (destination : SelfUserResponse) => destination.nbNotifications,
-        mapFrom((source : User) => source.notifications.length)
+        mapFrom((source : User) => source.receivedNotifications.length)
       ));
     };
   }

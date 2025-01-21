@@ -7,6 +7,7 @@ import { NotificationResponse } from '../model/dto/response/notification-respons
 import { InjectMapper } from '@automapper/nestjs';
 import { NotificationType } from '../model/enum/notification-type.enum';
 import { User } from '../../user/model/entity/user.entity';
+import { not } from 'rxjs/internal/util/not';
 
 @Injectable()
 export class NotificationService {
@@ -17,21 +18,13 @@ export class NotificationService {
     private readonly mapper: Mapper,
   ) {}
 
-  async deleteNotificationByRequestIdAndType(
-    requestId: string,
-    type: NotificationType,
-  ) {
-    await this.notificationRepository.delete({
-      requestId,
-      type,
-    });
-  }
-
   async findNotificationsByUserId(
     requestedId: string,
   ): Promise<NotificationResponse[]> {
     const notifications: Notification[] =
-      await this.notificationRepository.findBy({ recipient: { id: requestedId }});
+      await this.notificationRepository.findBy({
+        recipient: { id: requestedId },
+      });
     return this.mapper.mapArray(
       notifications,
       Notification,
@@ -42,24 +35,30 @@ export class NotificationService {
   async deleteNotificationById(notificationId: string, recipientId: string) {
     await this.notificationRepository.delete({
       id: notificationId,
-      recipient: { id: recipientId }
+      recipient: { id: recipientId },
     });
   }
 
   async createNotification(
-    requestedId: string,
+    recipientId: string,
     senderId: string,
     message: string,
     type: NotificationType,
+    requestId:string
   ): Promise<Notification> {
-
+    // save recipient to notification
     const recipient = new User();
-    recipient.id = requestedId;
+    recipient.id = recipientId;
+    // save sender to notification
+    const sender = new User();
+    sender.id = senderId;
+
     const notification = new Notification();
     notification.recipient = recipient;
-    notification.senderId = senderId;
+    notification.sender = sender;
     notification.message = message;
     notification.type = type;
+    notification.requestId = requestId;
     return await this.notificationRepository.save(notification);
   }
 
@@ -68,8 +67,14 @@ export class NotificationService {
     notificationIds: string[],
   ): Promise<void> {
     await this.notificationRepository.delete({
-      recipient: {id:recipientId},
+      recipient: { id: recipientId },
       id: In(notificationIds),
+    });
+  }
+
+  async deleteNotificationByRequestId(requestId: string) {
+    void this.notificationRepository.delete({
+      requestId,
     });
   }
 }

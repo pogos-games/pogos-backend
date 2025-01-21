@@ -1,6 +1,6 @@
 import {
-  BadRequestException,
-  Controller, Delete,
+  Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -12,7 +12,12 @@ import { JwtAuthGuard } from '@app/auth-library/jwt/jwt-auth.guard';
 import { Principal } from '../../user/model/dto/principal.interface';
 import { AuthenticationPrincipal } from '@app/auth-library/authentication-principal.decorator';
 import { FriendshipAction } from '../model/enum/friendship-action.enum';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @Controller('friendship')
@@ -60,20 +65,11 @@ export class FriendshipController {
     @Param('friendRequestId') friendRequestId: string,
     @AuthenticationPrincipal() principal: Principal,
   ) {
-    switch (action) {
-      case FriendshipAction.ACCEPT:
-        return this.friendShipService.acceptFriendRequest(
-          friendRequestId,
-          principal.userId,
-        );
-      case FriendshipAction.REJECT:
-        return this.friendShipService.rejectFriendRequest(
-          friendRequestId,
-          principal.userId,
-        );
-      default:
-        throw new BadRequestException(`Invalid action: ${action}`);
-    }
+    await this.friendShipService.handleFriendRequest(
+      principal,
+      friendRequestId,
+      action,
+    );
   }
 
   @Get(':userId')
@@ -82,11 +78,4 @@ export class FriendshipController {
     return this.friendShipService.findFriends(userId);
   }
 
-  @Delete(':friendshipId')
-  @ApiResponse({ status:204})
-  @HttpCode(204)
-  @ApiOperation({summary:'delete a friendship, ⚠️to use when friendship is accepted'})
-  async deleteFriendRequest(@AuthenticationPrincipal() principal:Principal,@Param('friendshipId') friendShipId:string) {
-    void this.friendShipService.deleteFriendship(principal,friendShipId)
-  }
 }
