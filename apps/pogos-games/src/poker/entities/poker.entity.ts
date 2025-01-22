@@ -6,13 +6,15 @@ import { PokerPlayerResponse } from '../dto/response/poker-player-response.inter
 import { Expose, Type } from 'class-transformer';
 import { Game, Player } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
+import { BadRequestException } from '@nestjs/common';
+import { PokerActionRequest } from '../dto/request/poker-action-request.interface';
 
 export class PokerPlayer extends Player {
   id: string;
   username: string;
   hand: Card[];
   balance: number;
-  bet: number;
+  roundBet: number
   hasFolded: boolean;
   roundPlayed: boolean;
   allIn: number;
@@ -45,6 +47,7 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     super(id,deck,leaderId,type)
     this._river = [];
     this._players = [];
+    this._pot = 0;
   }
 
   public get players(): PokerPlayer[] {
@@ -69,7 +72,7 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
       username: 'not defined',
       hand: [],
       balance: 1000,
-      bet: 0,
+      roundBet: 0,
       roundPlayed: false,
       hasFolded: false,
       allIn: 0,
@@ -88,13 +91,13 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     super.clearHands();
   }
 
-  public play(player: PokerPlayer, action: PokerAction) {
+  public play(player: PokerPlayer, action: PokerActionRequest) {
     if (player.roundPlayed) {
-      return;
+      throw new Error("Player already played")
     }
-    switch (action) {
+    switch (action.action) {
       case PokerAction.BET:
-        this.raise(player);
+        this.raise(player, action.bet);
         break;
       case PokerAction.ALL_IN:
         this.allIn(player);
@@ -109,7 +112,7 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
         this.check(player);
         break;
       case PokerAction.RAISE:
-        this.raise(player);
+        this.raise(player, action.bet);
         break;
       default:
         console.log('No more actions available for the moment');
@@ -118,22 +121,58 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     player.roundPlayed = true;
   }
 
-  private raise(player){}
+  private raise(player: PokerPlayer, bet: number){
+    if (player.hasFolded) {
+      throw new BadRequestException("Vous vous êtes déjà couché");
+    }
+    if (bet > player.balance){
+      throw new BadRequestException("Votre balance est insufisante");
+    }
+    if (bet == player.balance){
+      this.allIn(player)
+    }
+    if (bet <= 0){
+      throw new BadRequestException("Le bet doit être supérieur à 0");
+    }
+    if ((bet + player.roundBet) < this._lastBet){
+      throw new BadRequestException("Le bet doit être supérieur ou égal au last bet");
+    }
+    player.roundPlayed = true;
+    this._lastBet = bet + player.roundBet;
+    this._pot += bet;
+    player.roundBet += bet;
+    player.balance -= bet;
+    player.allIn += bet;
+    console.log(player)
+    console.log(this)
+  }
 
-  private allIn(player){}
+  private allIn(player: PokerPlayer){
+    player.allIn += player.balance;
+    player.balance = 0;
+    player.roundPlayed = true;
+  }
 
-  private call(player){}
+  private call(player: PokerPlayer){
+    this.raise(player,this._lastBet - player.roundBet)
+  }
 
-  private fold(player){}
+  private fold(player: PokerPlayer){
+    player.hasFolded = true
+    player.roundPlayed = true;
+  }
 
-  private check(player){}
+  private check(player: PokerPlayer){
+    this._lastBet = 0
+    player.roundPlayed = true;
+  }
 
   public toResponse(): PokerResponse {
-    const players: PokerPlayerResponse[] = this._players.map((player) => ({
+    const players: PokerPlayerResponse[] = this._players.map((player: PokerPlayer) => ({
       playerId: player.id,
       hand: player.hand,
       balance: player.balance,
-      bet: player.bet,
+      roundBet: player.roundBet,
       roundPlayed: player.roundPlayed,
       allIn: player.allIn,
     }));

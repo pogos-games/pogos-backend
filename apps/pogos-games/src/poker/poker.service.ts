@@ -6,14 +6,27 @@ import { PokerPlayerResponse } from './dto/response/poker-player-response.interf
 import { PokerType } from './enum/poker-type.enum';
 import { GameService } from '../../../../libs/tools/src/game/game.service';
 import { PokerResponse } from './dto/response/poker-response.interface';
+import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
+import { CardsService } from '../cards/cards.service';
+import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
+import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 
 @Injectable()
 export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerResponse, PokerPlayer> {
   protected GAME_KEY_PREFIX = 'poker';
 
+  constructor(
+    protected readonly redisService: RedisService,
+    protected readonly cardsService: CardsService,
+    protected readonly idGeneratorService: IdGeneratorService
+  ) {super(redisService,cardsService,idGeneratorService)}
   async createGame(leaderId: string,type:PokerType) {
     const game = await super.create(leaderId, type, Poker)
     return game.id;
+  }
+
+  async join(gameId: string, playerId: string){
+    await super.joinGame(gameId, playerId, Poker);
   }
 
   /**
@@ -43,15 +56,18 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
         playerId: player.id,
         hand: player.hand,
         balance: player.balance,
-        bet: player.bet,
         roundPlayed: player.roundPlayed,
         allIn: player.allIn,
       } as PokerPlayerResponse,
     };
   }
 
-  async startGame<PokerResponse>(clientId: string, gameId: string) {
-    return await this.start(clientId, gameId, Poker) as PokerResponse;
+  async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
+    if (Object.values(PokerType).includes(request.type as PokerType)) {
+      return await this.start(clientId, request.gameId, Poker) as PokerResponse;
+    } else {
+      throw new Error('Wrong game type');
+    }
   }
 
 

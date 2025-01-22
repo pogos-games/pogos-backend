@@ -5,7 +5,7 @@ export interface PokerPlayerResponse extends GamePlayerResponse{
   playerId:string,
   hand:Card[],
   balance:number,
-  bet:number,
+  roundBet:number,
   roundPlayed: boolean,
   allIn: number,
 }

@@ -15,7 +15,7 @@ export class RedisService {
       return null;
     }
     const parsedValue = JSON.parse(value);
-    return Object.assign(type, parsedValue);
+    return Object.assign(new type(), parsedValue);
   }
 
   async set<T>(key: string, value: T, expiration?: number) {

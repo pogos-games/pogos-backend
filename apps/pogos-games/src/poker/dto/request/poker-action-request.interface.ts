@@ -3,5 +3,6 @@ import { PokerAction } from '../../enum/poker-action.enum';
 
 export interface PokerActionRequest extends GameActionRequest {
   action: PokerAction,
+  bet: number,
   gameId: string,
 }

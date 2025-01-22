@@ -3,6 +3,7 @@ import { GameStatus } from '../enum/game-status.enum';
 import { Card } from 'apps/pogos-games/src/cards/model/card.interface';
 import { GameResponse } from '../dto/response/game-response.interface';
 import { GamePlayerResponse } from '../dto/response/game-player-response.interface';
+import { GameActionRequest } from '../dto/request/game-action-request.interface';
 
 export abstract class Player {
     id: string;
@@ -103,7 +104,7 @@ export abstract class Game<TResponse extends GameResponse,
         });
     }
     
-    play(player: TPlayer, action: string){
+    play(player: TPlayer, action: GameActionRequest){
         if (action) {
             console.log('No more actions available for the moment');
         }

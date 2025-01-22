@@ -6,16 +6,28 @@ import { BlackjackPlayerResponse } from './dto/response/blackjack-player-respons
 import { BlackjackType } from './enum/blackjack-type.enum';
 import { GameService } from '../../../../libs/tools/src/game/game.service';
 import { BlackjackResponse } from './dto/response/blackjack-response.interface';
+import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
+import { CardsService } from '../cards/cards.service';
+import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
+import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 
 @Injectable()
 export class BlackjackService extends GameService<Blackjack, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer> {
   protected GAME_KEY_PREFIX = 'blackjack';
 
+  constructor(
+    protected readonly redisService: RedisService,
+    protected readonly cardsService: CardsService,
+    protected readonly idGeneratorService: IdGeneratorService
+  ) {super(redisService,cardsService,idGeneratorService)}
   async createGame(leaderId: string,type:BlackjackType) {
     const game = await super.create(leaderId, type, Blackjack)
     return game.id;
   }
 
+  async join(gameId: string, playerId: string){
+    await super.joinGame(gameId, playerId, Blackjack);
+  }
   /**
    * End the game
    * @param client the client that is ending the game
@@ -49,8 +61,12 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
     };
   }
 
-  async startGame<BlackjackResponse>(clientId: string, gameId: string) {
-    return await this.start(clientId, gameId, Blackjack) as BlackjackResponse;
+  async startGame<BlackjackResponse>(clientId: string, request: GameStartRequest) {
+    if (Object.values(BlackjackType).includes(request.type as BlackjackType)) {
+      return await this.start(clientId, request.gameId, Blackjack) as BlackjackResponse;
+    } else {
+      throw new Error('Wrong game type');
+    }
   }
 
 
