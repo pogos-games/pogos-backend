@@ -79,7 +79,7 @@ export class FriendshipService {
         requesterId,
         `New Friend Request`,
         NotificationType.FRIENDSHIP_REQUEST,
-        savedFriendship.id
+        savedFriendship.id,
       )
       .then(() => {
         console.log('Friendship notification successfully sent');
@@ -110,29 +110,41 @@ export class FriendshipService {
     friendshipId: string,
     requestedId: string,
   ): Promise<Friendship> {
-    const friendship: Friendship = await this.friendshipRepository.findOne({
+    // check that friendship exists
+    const friendship = await this.friendshipRepository.findOne({
       where: { id: friendshipId },
     });
 
     if (!friendship) {
       throw new NotFoundException(
-        `Friendship request: ${friendshipId} not found !`,
+        `Friendship request with ID: ${friendshipId} not found.`,
       );
     }
 
+    // check that user is allowed to accept this request
     if (friendship.requested.id !== requestedId) {
-      throw new ForbiddenException('Forbidden');
+      throw new ForbiddenException('You are not allowed to accept this request.');
     }
 
+    // update friendship status
     friendship.status = FriendshipStatus.ACCEPTED;
-    return this.friendshipRepository
-      .save(friendship)
-      .then(
-        void this.notificationService.deleteNotificationByRequestId(
-          friendship.id,
-        ),
-      );
+    await this.friendshipRepository.save(friendship);
+
+    // Delete existing notifications
+    await this.notificationService.deleteNotificationByRequestId(friendship.id);
+
+    // Creating new notification to inform requester
+    await this.notificationService.createNotification(
+      friendship.requester.id,
+      requestedId,
+      `User ${requestedId} has accepted the friend request`,
+      NotificationType.FRIENDSHIP_ACCEPTED,
+      friendship.id,
+    );
+
+    return friendship;
   }
+
 
   async rejectFriendRequest(friendShipId: string, friendId: string) {
     await this.friendshipRepository
