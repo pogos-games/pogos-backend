@@ -16,6 +16,7 @@ async function bootstrap() {
     .setDescription('The core API description')
     .setVersion('1.0')
     .addTag('POGOS')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

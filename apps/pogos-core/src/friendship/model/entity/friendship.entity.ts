@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../../user/model/entity/user.entity';
 import { FriendshipStatus } from '../enum/friendship-status.enum';
 
@@ -7,26 +14,21 @@ export class Friendship {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  requesterId: string;
-
-  @Column()
-  requestedId: string;
-
-  @Column({ type: 'enum', enum: FriendshipStatus, default: FriendshipStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: FriendshipStatus,
+    default: FriendshipStatus.PENDING,
+  })
   status: FriendshipStatus;
-
-  @CreateDateColumn()
-  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.sentFriendRequests)
+  @ManyToOne(() => User, (user) => user.sentFriendRequests,{eager:true})
   @JoinColumn({ name: 'requesterId' })
   requester: User;
 
-  @ManyToOne(() => User, (user) => user.receivedFriendRequests)
+  @ManyToOne(() => User, (user) => user.receivedFriendRequests,{eager:true})
   @JoinColumn({ name: 'requestedId' })
-  friend: User;
+  requested: User;
 }

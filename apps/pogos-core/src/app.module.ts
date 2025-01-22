@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { FriendshipModule } from './friendship/friendship.module';
 import { AutomapperModule } from '@automapper/nestjs';
 import { classes } from '@automapper/classes';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { classes } from '@automapper/classes';
     HttpModule,
     UserModule,
     FriendshipModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [],
