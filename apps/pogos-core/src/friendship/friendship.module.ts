@@ -7,6 +7,7 @@ import { Friendship } from './model/entity/friendship.entity';
 import { UserModule } from '../user/user.module';
 import { User } from '../user/model/entity/user.entity';
 import { NotificationModule } from '../notification/notification.module';
+import { CommonsCoreLibraryModule } from '../../../../libs/commons-core-library/src';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { NotificationModule } from '../notification/notification.module';
     NotificationModule,
     DatabaseModule,
     TypeOrmModule.forFeature([Friendship,User])],
-  providers: [FriendshipService],
+  providers: [FriendshipService,CommonsCoreLibraryModule],
   controllers: [FriendshipController],
 })
 export class FriendshipModule {}

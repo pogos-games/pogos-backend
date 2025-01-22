@@ -14,12 +14,6 @@ export class Friendship {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  requesterId: string;
-
-  @Column()
-  requestedId: string;
-
   @Column({
     type: 'enum',
     enum: FriendshipStatus,
@@ -30,11 +24,11 @@ export class Friendship {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.sentFriendRequests)
+  @ManyToOne(() => User, (user) => user.sentFriendRequests,{eager:true})
   @JoinColumn({ name: 'requesterId' })
   requester: User;
 
-  @ManyToOne(() => User, (user) => user.receivedFriendRequests)
+  @ManyToOne(() => User, (user) => user.receivedFriendRequests,{eager:true})
   @JoinColumn({ name: 'requestedId' })
-  friend: User;
+  requested: User;
 }

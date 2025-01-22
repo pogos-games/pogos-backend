@@ -1,24 +1,30 @@
 import {
+  BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../../user/model/entity/user.entity';
 import { Friendship } from '../model/entity/friendship.entity';
 import { FriendshipStatus } from '../model/enum/friendship-status.enum';
 import { NotificationService } from '../../notification/service/notification.service';
 import { NotificationType } from '../../notification/model/enum/notification-type.enum';
 import { Principal } from '../../user/model/dto/principal.interface';
+import { FriendResponse } from '../model/dto/response/friendship-response.class';
+import { FriendshipAction } from '../model/enum/friendship-action.enum';
 
 @Injectable()
 export class FriendshipService {
   constructor(
+    // repositories
     @InjectRepository(Friendship)
     private readonly friendshipRepository: Repository<Friendship>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    // services
     private readonly notificationService: NotificationService,
   ) {}
 
@@ -28,27 +34,76 @@ export class FriendshipService {
   ): Promise<Friendship> {
     const friend: User = await this.userRepository.findOneBy({ id: friendId });
     if (!friend) {
-      throw new NotFoundException(`User ${friendId} not found !`);
+      throw new NotFoundException(`User ${friendId} not found!`);
+    }
+
+    const requester: User = await this.userRepository.findOneBy({
+      id: requesterId,
+    });
+    if (!requester) {
+      throw new NotFoundException(`User ${requesterId} not found!`);
+    }
+
+    const existingFriendship = await this.friendshipRepository.findOne({
+      where: [
+        {
+          requester: requester,
+          requested: friend,
+          status: FriendshipStatus.PENDING,
+        },
+        {
+          requester: friend,
+          requested: requester,
+          status: FriendshipStatus.PENDING,
+        },
+      ],
+    });
+
+    if (existingFriendship) {
+      throw new ConflictException(
+        'Friend request already exists between these users.',
+      );
     }
 
     const friendship = this.friendshipRepository.create({
-      requesterId,
-      requestedId: friendId,
+      requester,
+      requested: friend,
       status: FriendshipStatus.PENDING,
     });
 
-    const friendShip = this.friendshipRepository.save(friendship);
+    const savedFriendship = await this.friendshipRepository.save(friendship);
+
     this.notificationService
       .createNotification(
         friendId,
         requesterId,
         `New Friend Request`,
         NotificationType.FRIENDSHIP_REQUEST,
+        savedFriendship.id
       )
       .then(() => {
-        console.log('friendship notification successfully sent');
+        console.log('Friendship notification successfully sent');
+      })
+      .catch((error) => {
+        console.error('Error sending notification', error);
       });
-    return friendShip;
+
+    return savedFriendship;
+  }
+
+  handleFriendRequest(
+    principal: Principal,
+    friendRequestId: string,
+    friendshipAction: FriendshipAction,
+  ) {
+    switch (friendshipAction) {
+      case FriendshipAction.ACCEPT:
+        return this.acceptFriendRequest(friendRequestId, principal.userId);
+      case FriendshipAction.REJECT:
+        return this.rejectFriendRequest(friendRequestId, principal.userId);
+      default:
+        throw new BadRequestException(`Invalid action: ${friendshipAction}`);
+    }
   }
 
   async acceptFriendRequest(
@@ -65,7 +120,7 @@ export class FriendshipService {
       );
     }
 
-    if (friendship.requestedId !== requestedId) {
+    if (friendship.requested.id !== requestedId) {
       throw new ForbiddenException('Forbidden');
     }
 
@@ -73,62 +128,48 @@ export class FriendshipService {
     return this.friendshipRepository
       .save(friendship)
       .then(
-        void this.notificationService.deleteNotificationByRequestIdAndType(
+        void this.notificationService.deleteNotificationByRequestId(
           friendship.id,
-          NotificationType.FRIENDSHIP_REQUEST,
         ),
       );
   }
 
-  async rejectFriendRequest(friendShipId: string, requestedId: string) {
-    this.friendshipRepository
+  async rejectFriendRequest(friendShipId: string, friendId: string) {
+    await this.friendshipRepository
       .delete({
         id: friendShipId,
-        requestedId: requestedId,
+        requested: { id: friendId },
       })
-      .then(
-        void this.notificationService.deleteNotificationByRequestIdAndType(
-          friendShipId,
-          NotificationType.FRIENDSHIP_REQUEST,
-        ),
-      );
+      .then(() => {
+        this.notificationService.deleteNotificationByRequestId(friendShipId);
+      })
+      .catch((error) => {
+        console.error('Error rejecting friendship request:', error);
+      });
   }
 
-  async findFriends(userId: string): Promise<User[]> {
+  async findFriends(userId: string): Promise<FriendResponse[]> {
     const friendships: Friendship[] = await this.friendshipRepository.find({
       where: [
-        { requesterId: userId, status: FriendshipStatus.ACCEPTED },
-        { requestedId: userId, status: FriendshipStatus.ACCEPTED },
+        {
+          requester: { id: userId },
+          status: FriendshipStatus.ACCEPTED,
+        },
+        {
+          requested: { id: userId },
+          status: FriendshipStatus.ACCEPTED,
+        },
       ],
     });
 
-    const friendIds: string[] = friendships.map((friendship) =>
-      friendship.requesterId === userId
-        ? friendship.requestedId
-        : friendship.requesterId,
-    );
-
-    return this.userRepository.find({
-      where: {
-        id: In(friendIds),
-      },
+    return friendships.map((friendship) => {
+      const friendResponse = new FriendResponse();
+      friendResponse.friendshipId = friendship.id;
+      friendResponse.user =
+        friendship.requester.id === userId
+          ? friendship.requested
+          : friendship.requester;
+      return friendResponse;
     });
   }
-
-  async deleteFriendship(principal: Principal, friendshipId: string) {
-    await this.friendshipRepository
-      .createQueryBuilder()
-      .delete()
-      .from(Friendship)
-      .where("id = :friendshipId", { friendshipId })
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where("requesterId = :userId", { userId: principal.userId })
-            .orWhere("requestedId = :userId", { userId: principal.userId });
-        })
-      )
-      .execute();
-  }
-
-
 }

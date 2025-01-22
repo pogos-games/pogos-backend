@@ -10,15 +10,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
-import { PageOptions } from '../../../../../libs/commons-core-library/src/dto/page/page-options.interface';
+import { PageOptions } from '../../../../../libs/commons-core-library/src/dto/response/page/page-options.interface';
 import { JwtAuthGuard } from '@app/auth-library/jwt/jwt-auth.guard';
 import { UserResponse } from '../model/dto/response/user-response.class';
-import { Page } from '../../../../../libs/commons-core-library/src/dto/page/page.interface';
+import { Page } from '../../../../../libs/commons-core-library/src/dto/response/page/page.interface';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthenticationPrincipal } from '@app/auth-library/authentication-principal.decorator';
 import { Principal } from '../model/dto/principal.interface';
-import { UserRequest } from '../model/dto/request/user-request.class';
-import { SelfUserResponse } from '../model/dto/response/self-user-response.interface';
+import { UserRequest } from '../model/dto/request/update-user-request.class';
+import { SelfUserResponse } from '../model/dto/response/self-user-response.class';
 
 @Controller('users')
 export class UserController {

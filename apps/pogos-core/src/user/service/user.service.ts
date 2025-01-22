@@ -11,12 +11,12 @@ import { SignupRequest } from '../../auth/model/dto/request/signup-request.inter
 import { UserResponse } from '../model/dto/response/user-response.class';
 import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
-import { Page } from '../../../../../libs/commons-core-library/src/dto/page/page.interface';
-import { PageOptions } from '../../../../../libs/commons-core-library/src/dto/page/page-options.interface';
-import { PageMeta } from '../../../../../libs/commons-core-library/src/dto/page/page-meta.interface';
+import { Page } from '../../../../../libs/commons-core-library/src/dto/response/page/page.interface';
+import { PageOptions } from '../../../../../libs/commons-core-library/src/dto/response/page/page-options.interface';
+import { PageMeta } from '../../../../../libs/commons-core-library/src/dto/response/page/page-meta.interface';
 import { Principal } from '../model/dto/principal.interface';
-import { SelfUserResponse } from '../model/dto/response/self-user-response.interface';
-import { UserRequest } from '../model/dto/request/user-request.class';
+import { SelfUserResponse } from '../model/dto/response/self-user-response.class';
+import { UserRequest } from '../model/dto/request/update-user-request.class';
 
 @Injectable()
 export class UserService {
@@ -34,7 +34,7 @@ export class UserService {
   async findSelfProfile(principal: Principal): Promise<SelfUserResponse> {
     const user: User = await this.userRepository.findOne({
       where: { id: principal.userId },
-      relations: ['notifications'], // load notifications array
+      relations: ['receivedNotifications'], // load notifications array
     });
 
     return this.mapper.map(user, User, SelfUserResponse);

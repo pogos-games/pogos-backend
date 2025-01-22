@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { RestLibraryService } from './rest-library.service';
+import { UserProfile } from './profile/user.profile';
 
 @Module({
-  providers: [RestLibraryService],
-  exports: [RestLibraryService],
+  providers: [UserProfile],
+  exports: [UserProfile],
 })
 export class CommonsCoreLibraryModule {}
