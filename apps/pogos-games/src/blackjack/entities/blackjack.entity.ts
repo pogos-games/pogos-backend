@@ -6,6 +6,7 @@ import { BlackjackPlayerResponse } from '../dto/response/blackjack-player-respon
 import { Expose, Type } from 'class-transformer';
 import { Game, Player } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
+import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.interface';
 
 export class BlackJackPlayer extends Player {
   id: string;
@@ -26,7 +27,12 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
   @Type(() => BlackJackPlayer)
   protected readonly _players: BlackJackPlayer[];
 
-  constructor(id:string,deck: Card[], leaderId: string, type: BlackjackType) {
+  constructor(
+    id?: string,
+    deck?: Card[],
+    leaderId?: string,
+    type?: BlackjackType
+  ) {
     super(id,deck,leaderId, type)
     this._dealerHand = [];
     this._players = [];
@@ -73,11 +79,11 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     super.clearHands();
   }
 
-  public play(player: BlackJackPlayer, action: BlackJackAction) {
+  public play(player: BlackJackPlayer, action: BlackjackActionRequest) {
     if (player.roundPlayed) {
       return;
     }
-    switch (action) {
+    switch (action.action) {
       case BlackJackAction.HIT:
         this.hit(player);
         break;

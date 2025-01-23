@@ -2,6 +2,7 @@
 export enum GatewayEventsListener {
   END_GAME = 'END_GAME',
   CREATE_GAME = 'CREATE_GAME',
+  START_GAME = 'START_GAME',
   JOIN_GAME = 'JOIN_GAME',
   ACTION = 'ACTION',
 }

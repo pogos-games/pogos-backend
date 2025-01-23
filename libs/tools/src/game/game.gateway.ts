@@ -1,8 +1,4 @@
-import {
-  OnGatewayConnection,
-  OnGatewayDisconnect, SubscribeMessage,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { ChatGateway } from '../chat/chat.gateway';
@@ -10,10 +6,10 @@ import { GamePlayerResponse } from './dto/response/game-player-response.interfac
 import { GatewayEventsListener } from './enum/gateway/gateway-events-listener.enum';
 import { GatewayEventEmitter } from './enum/gateway/gateway-event-emitter.enum';
 import { GameCreationRequest } from './dto/request/game-creation-request.class';
-import { GameType } from './enum/game-type.enum';
 import { Game, Player } from './entities/game.entity';
 import { GameResponse } from './dto/response/game-response.interface';
-import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
+import { GameActionRequest } from './dto/request/game-action-request.interface';
+import { GameStartRequest } from './dto/request/game-start-request.class';
 
 // process.env.FRONTEND_URL
 export class GameGateway<
@@ -71,21 +67,29 @@ export class GameGateway<
       request.type,
     );
     console.log('Game created:', gameId);
-    if (request.type == GameType.SOLO) {
-      const response = await this.gameService.startGame(client.id, gameId);
-      client.emit(GatewayEventEmitter.GAME_UPDATE, response);
-    } else {
-      client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
-    }
+    console.log('LeaderId: ', client.id);
+    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+  }
+
+  @SubscribeMessage(GatewayEventsListener.START_GAME)
+  async handleStartGame(client: Socket, request: GameStartRequest) {
+    const response = await this.gameService.startGame(client.id, request);
+    client.emit(GatewayEventEmitter.GAME_UPDATE, response);
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
-  async handleJoinGame(client: Socket, gameId: string,
-                       GameClass: new(id?: string,
-                                        deck?: Card[],
-                                        leaderId?: string,
-                                        type?: string) => TGame ) {
-    await this.gameService.joinGame(gameId, client.id, GameClass);
+  async handleJoinGame(client: Socket, gameId: string) {
+    await this.gameService.join(gameId, client.id);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+  }
+
+
+  @SubscribeMessage(GatewayEventsListener.ACTION)
+  async handleAction(client: Socket, gameAction: GameActionRequest) {
+    const { players, response } = await this.gameService.play(
+      client,
+      gameAction,
+    );
+    await this.sendGameAction(players, response);
   }
 }

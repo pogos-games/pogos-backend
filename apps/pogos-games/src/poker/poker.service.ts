@@ -1,69 +1,70 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { Blackjack, BlackJackPlayer } from './entities/blackjack.entity';
-import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
-import { BlackjackPlayerResponse } from './dto/response/blackjack-player-response.interface';
-import { BlackjackType } from './enum/blackjack-type.enum';
+import { Poker, PokerPlayer } from './entities/poker.entity';
+import { PokerActionRequest } from './dto/request/poker-action-request.interface';
+import { PokerPlayerResponse } from './dto/response/poker-player-response.interface';
+import { PokerType } from './enum/poker-type.enum';
 import { GameService } from '../../../../libs/tools/src/game/game.service';
-import { BlackjackResponse } from './dto/response/blackjack-response.interface';
+import { PokerResponse } from './dto/response/poker-response.interface';
 import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
 import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 
 @Injectable()
-export class BlackjackService extends GameService<Blackjack, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer> {
-  protected GAME_KEY_PREFIX = 'blackjack';
+export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerResponse, PokerPlayer> {
+  protected GAME_KEY_PREFIX = 'poker';
 
   constructor(
     protected readonly redisService: RedisService,
     protected readonly cardsService: CardsService,
     protected readonly idGeneratorService: IdGeneratorService
   ) {super(redisService,cardsService,idGeneratorService)}
-  async createGame(leaderId: string,type:BlackjackType) {
-    const game = await super.create(leaderId, type, Blackjack)
+  async createGame(leaderId: string,type:PokerType) {
+    const game = await super.create(leaderId, type, Poker)
     return game.id;
   }
 
   async join(gameId: string, playerId: string){
-    await super.joinGame(gameId, playerId, Blackjack);
+    await super.joinGame(gameId, playerId, Poker);
   }
+
   /**
    * End the game
    * @param client the client that is ending the game
-   * @param blackjackAction
+   * @param pokerAction
    * @returns list of player ids
    */
 
   async play(
     client: Socket,
-    blackjackAction: BlackjackActionRequest
-  ): Promise<{ players: string[], response: BlackjackPlayerResponse }> {
+    pokerAction: PokerActionRequest
+  ): Promise<{ players: string[], response: PokerPlayerResponse }> {
     return super.playAction(
       client,
-      blackjackAction,
-      Blackjack,
+      pokerAction,
+      Poker,
       this.mapResponse
     );
   }
 
 
-  mapResponse<BlackjackPlayerResponse>(player: BlackJackPlayer, players: string[]): { players: string[], response: BlackjackPlayerResponse } {
+  mapResponse<PokerPlayerResponse>(player: PokerPlayer, players: string[]): { players: string[], response: PokerPlayerResponse } {
     return {
       players,
       response: {
         playerId: player.id,
         hand: player.hand,
         balance: player.balance,
-        bet: player.bet,
         roundPlayed: player.roundPlayed,
-      } as BlackjackPlayerResponse,
+        allIn: player.allIn,
+      } as PokerPlayerResponse,
     };
   }
 
-  async startGame<BlackjackResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(BlackjackType).includes(request.type as BlackjackType)) {
-      return await this.start(clientId, request.gameId, Blackjack) as BlackjackResponse;
+  async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
+    if (Object.values(PokerType).includes(request.type as PokerType)) {
+      return await this.start(clientId, request.gameId, Poker) as PokerResponse;
     } else {
       throw new Error('Wrong game type');
     }
@@ -75,12 +76,12 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   //   this.games.delete(client.id);
   // }
 
-  // restartGame(clientId: string): BlackjackDeckResponse {
+  // restartGame(clientId: string): PokerDeckResponse {
   //   this.clearHands(clientId);
   //   return this.startGame(clientId);
   // }
 
-  // hit(clientId: string): BlackjackDeckResponse {
+  // hit(clientId: string): PokerDeckResponse {
   //   const game = this.games.get(clientId);
   //   const card = this.drawCard(game.deck);
   //   game.playerHand.push(card);
@@ -88,8 +89,8 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   //   this.calculateHandValue(game.dealerHand);
   //   const message =
   //     playerTotal > 21
-  //       ? BlackJackMessage.PLAYER_BUST
-  //       : BlackJackMessage.CONTINUE;
+  //       ? PokerMessage.PLAYER_BUST
+  //       : PokerMessage.CONTINUE;
   //
   //   const response = {
   //     playerHand: game.playerHand,
@@ -98,14 +99,14 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   //     message,
   //   };
   //
-  //   if (message === BlackJackMessage.PLAYER_BUST) {
+  //   if (message === PokerMessage.PLAYER_BUST) {
   //     this.clearHands(clientId);
   //   }
   //
   //   return response;
   // }
   //
-  // stand(clientId: string): BlackjackDeckResponse {
+  // stand(clientId: string): PokerDeckResponse {
   //   const game = this.games.get(clientId);
   //
   //   let dealerTotal = this.calculateHandValue(game.dealerHand);
@@ -115,15 +116,15 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   //   }
   //
   //   const playerTotal = this.calculateHandValue(game.playerHand);
-  //   let result: BlackJackMessage;
+  //   let result: PokerMessage;
   //   if (dealerTotal > 21) {
-  //     result = BlackJackMessage.DEALER_BUST;
+  //     result = PokerMessage.DEALER_BUST;
   //   } else if (playerTotal > dealerTotal) {
-  //     result = BlackJackMessage.PLAYER_WIN;
+  //     result = PokerMessage.PLAYER_WIN;
   //   } else if (playerTotal < dealerTotal) {
-  //     result = BlackJackMessage.DEALER_WIN;
+  //     result = PokerMessage.DEALER_WIN;
   //   } else {
-  //     result = BlackJackMessage.TIE;
+  //     result = PokerMessage.TIE;
   //   }
   //
   //   const response = {
@@ -134,10 +135,10 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   //   };
   //
   //   if (
-  //     result === BlackJackMessage.DEALER_BUST ||
-  //     result === BlackJackMessage.PLAYER_WIN ||
-  //     result === BlackJackMessage.DEALER_WIN ||
-  //     result === BlackJackMessage.TIE
+  //     result === PokerMessage.DEALER_BUST ||
+  //     result === PokerMessage.PLAYER_WIN ||
+  //     result === PokerMessage.DEALER_WIN ||
+  //     result === PokerMessage.TIE
   //   ) {
   //     this.clearHands(clientId);
   //   }
