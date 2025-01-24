@@ -16,14 +16,15 @@ export class NotificationService {
     @InjectMapper()
     private readonly mapper: Mapper,
   ) {}
-
   async findNotificationsByUserId(
     requestedId: string,
   ): Promise<NotificationResponse[]> {
     const notifications: Notification[] =
-      await this.notificationRepository.findBy({
-        recipient: { id: requestedId },
+      await this.notificationRepository.find({
+        where: { recipient: { id: requestedId } },
+        relations: ['sender'],
       });
+
     return this.mapper.mapArray(
       notifications,
       Notification,

@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Delete,
+  Delete, ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -20,7 +20,7 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from '@ne
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @Get()
+  @Get(':userId')
   @ApiOperation({ summary: 'find notifications of authenticated user id' })
   @HttpCode(200)
   @ApiResponse({
@@ -31,7 +31,11 @@ export class NotificationController {
   })
   async findNotificationsByUserId(
     @AuthenticationPrincipal() principal: Principal,
+    @Param('userId') userId:string
   ): Promise<NotificationResponse[]> {
+    if(principal.userId !== userId) {
+      throw new ForbiddenException(`Not allowed to read theses notifications`);
+    }
     return await this.notificationService.findNotificationsByUserId(
       principal.userId,
     );

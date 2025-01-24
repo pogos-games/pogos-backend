@@ -7,6 +7,7 @@ import { classes } from '@automapper/classes';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Notification } from './model/entity/notification.entity';
 import { NotificationGateway } from './gateway/notification.gateway';
+import { NotificationProfile } from './profile/notification-profile';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { NotificationGateway } from './gateway/notification.gateway';
       strategyInitializer: classes(),
     }),
   ],
-  providers: [NotificationService, NotificationGateway],
+  providers: [NotificationService, NotificationGateway,NotificationProfile],
   controllers: [NotificationController],
   exports: [NotificationService],
 })
