@@ -45,7 +45,7 @@ export abstract class Game<TResponse extends GameResponse,
     ) {
         this._id = id ?? '';
         this._status = GameStatus.WAITING;
-        this._deck = deck ?? [];
+        this._deck = this.shuffle(deck) ?? [];
         this._players = [];
         this._leaderId = leaderId ?? '';
         this._type = type ?? '';
