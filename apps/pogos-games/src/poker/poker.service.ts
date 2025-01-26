@@ -26,7 +26,7 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
   }
 
   async join(gameId: string, playerId: string){
-    await super.joinGame(gameId, playerId, Poker);
+    return await super.joinGame(gameId, playerId, Poker);
   }
 
   /**
@@ -39,7 +39,7 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
   async play(
     client: Socket,
     pokerAction: PokerActionRequest
-  ): Promise<{ players: string[], response: PokerPlayerResponse }> {
+  ): Promise<{ players: string[], response: PokerPlayerResponse, game: Poker }> {
     return super.playAction(
       client,
       pokerAction,
@@ -54,7 +54,6 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
       players,
       response: {
         playerId: player.id,
-        hand: player.hand,
         balance: player.balance,
         roundPlayed: player.roundPlayed,
         allIn: player.allIn,

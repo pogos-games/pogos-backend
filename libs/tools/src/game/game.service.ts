@@ -70,7 +70,7 @@ export abstract class GameService<
     );
   }
 
-  abstract join(gameId: string, playerId: string);
+  abstract join(gameId: string, playerId: string): Promise<string[]>;
 
   async joinGame(gameId: string, playerId: string,
                  GameClass: new(id?: string,
@@ -88,10 +88,11 @@ export abstract class GameService<
       });
     await this.saveGame(game);
     console.log("New player joined: ", playerId);
+    return game.players.map(player => player.id)
   }
 
 
-  abstract play(client: Socket, gameAction: GameActionRequest) : Promise<{ players: string[], response: GamePlayerResponse }>;
+  abstract play(client: Socket, gameAction: GameActionRequest) : Promise<{ players: string[], response: GamePlayerResponse, game: TGame }>;
 
   abstract mapResponse(player : TPlayer, players: string[]): { players: string[], response: TPlayerResponse };
 
@@ -101,7 +102,7 @@ export abstract class GameService<
                                               leaderId?: string,
                                               type?: string) => TGame,
                              mapResponse: (player: TPlayer, players: string[]) => {players: string[], response: TPlayerResponse}
-  ): Promise<{ players: string[], response: TPlayerResponse }> {
+  ): Promise<{ players: string[], response: TPlayerResponse, game: TGame }> {
     return this.redisService
       .get<TGame>(`${this.GAME_KEY_PREFIX}:${gameAction.gameId}`,GameClass)
       .then((game) => {
@@ -124,12 +125,13 @@ export abstract class GameService<
         this.saveGame(game);
         const players = game.players.map((player) => player.id);
 
-        return mapResponse(player, players);
+        const response = mapResponse(player, players)
+        return { players:response.players, response: response.response , game: game};
       })
   }
 
 
-  abstract startGame<TResponse>(clientId: string, request: GameStartRequest): Promise<TResponse>;
+  abstract startGame(clientId: string, request: GameStartRequest): Promise<GameResponse>;
 
 
   protected async start(clientId: string, gameId:string,

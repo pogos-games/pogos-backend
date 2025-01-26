@@ -26,7 +26,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   }
 
   async join(gameId: string, playerId: string){
-    await super.joinGame(gameId, playerId, Blackjack);
+    return await super.joinGame(gameId, playerId, Blackjack);
   }
   /**
    * End the game
@@ -38,7 +38,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   async play(
     client: Socket,
     blackjackAction: BlackjackActionRequest
-  ): Promise<{ players: string[], response: BlackjackPlayerResponse }> {
+  ): Promise<{ players: string[], response: BlackjackPlayerResponse, game: Blackjack }> {
     return super.playAction(
       client,
       blackjackAction,

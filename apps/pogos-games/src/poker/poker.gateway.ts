@@ -16,12 +16,16 @@ export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse
 
   protected async sendGameAction(
     players: string[],
-    gameAction: GamePlayerResponse
+    gameAction: GamePlayerResponse,
+    game: Poker
   ) {
     players.forEach((playerId) => {
       this.server
         .to(playerId)
         .emit(GatewayEventEmitter.PLAYER_UPDATE, gameAction);
+      this.server
+        .to(playerId)
+        .emit(GatewayEventEmitter.GAME_UPDATE, game.nextPlayerId);
     });
   }
 }

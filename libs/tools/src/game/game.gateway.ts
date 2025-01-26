@@ -40,6 +40,7 @@ export class GameGateway<
   protected async sendGameAction(
     players: string[],
     gameAction: GamePlayerResponse,
+    game: TGame
   ) {
     players.forEach((playerId) => {
       this.server
@@ -74,22 +75,33 @@ export class GameGateway<
   @SubscribeMessage(GatewayEventsListener.START_GAME)
   async handleStartGame(client: Socket, request: GameStartRequest) {
     const response = await this.gameService.startGame(client.id, request);
-    client.emit(GatewayEventEmitter.GAME_UPDATE, response);
+    response.players.forEach((player) => {
+      this.server
+        .to(player.playerId)
+        .emit(GatewayEventEmitter.GAME_UPDATE, response, player.playerId);
+    });
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
   async handleJoinGame(client: Socket, gameId: string) {
-    await this.gameService.join(gameId, client.id);
+    const players = await this.gameService.join(gameId, client.id);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+    players.forEach((playerId) => {
+      if (playerId != client.id) {
+        this.server
+          .to(playerId)
+          .emit(GatewayEventEmitter.GAME_UPDATE, client.id);
+      }
+    });
   }
 
 
   @SubscribeMessage(GatewayEventsListener.ACTION)
   async handleAction(client: Socket, gameAction: GameActionRequest) {
-    const { players, response } = await this.gameService.play(
+    const { players, response, game } = await this.gameService.play(
       client,
       gameAction,
     );
-    await this.sendGameAction(players, response);
+    await this.sendGameAction(players, response, game);
   }
 }

@@ -27,7 +27,10 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
 
   @Expose()
   @Type(() => PokerPlayer)
-  protected readonly _players: PokerPlayer[];
+  protected _players: PokerPlayer[];
+
+  @Expose()
+  protected _nextPlayerId: string;
 
   @Expose()
   protected readonly _type: PokerType;
@@ -54,6 +57,10 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     return this._players;
 }
 
+  public get nextPlayerId(){
+    return this._nextPlayerId
+  }
+
   private get river() {
     return this._river;
   }
@@ -61,7 +68,6 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
   private set river(value: Card[]) {
     this._river = value;
   }
-
 
   public addUser(userId: string) {
     if (this.status !== GameStatus.WAITING) {
@@ -81,6 +87,8 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
 
   public startGame() {
     super.startGame()
+    this._players = this.shuffle(this._players)
+    this._nextPlayerId = this._players[0].id
     this._players.forEach((player) => {
       player.hand.push(this.drawCard(this.deck), this.drawCard(this.deck));
     });
@@ -92,6 +100,9 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
   }
 
   public play(player: PokerPlayer, action: PokerActionRequest) {
+    if (player.id != this._nextPlayerId){
+      throw new Error("You are not allowed to play right now")
+    }
     if (player.roundPlayed) {
       throw new Error("Player already played")
     }
@@ -119,6 +130,15 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
         console.log('Invalid action');
     }
     player.roundPlayed = true;
+
+    const nextPlayer = this._players.find(player => !player.roundPlayed);
+    if (nextPlayer) {
+      this._nextPlayerId = nextPlayer.id;
+    }
+    else {
+      this._nextPlayerId = this._players[0].id
+      this._players.forEach(player => player.roundPlayed = false)
+    }
   }
 
   private raise(player: PokerPlayer, bet: number){
@@ -143,8 +163,6 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     player.roundBet += bet;
     player.balance -= bet;
     player.allIn += bet;
-    console.log(player)
-    console.log(this)
   }
 
   private allIn(player: PokerPlayer){
@@ -184,6 +202,7 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
       pot: this._pot,
       lastBet: this._lastBet,
       status: this._status,
+      nextPlayerId: this._players[0].id
     } as PokerResponse;
   }
 }
