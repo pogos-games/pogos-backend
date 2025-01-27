@@ -157,7 +157,7 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     }
     else {
       if (this.river.length == 5){
-        this.finishGame()
+        this.finishRound()
       }
       else if (this.river.length == 0){
         this._river.push(this.drawCard(this.deck))
@@ -215,7 +215,7 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     player.roundPlayed = true;
   }
 
-  private finishGame(){
+  private finishRound(){
     this.clearHands()
   }
 
