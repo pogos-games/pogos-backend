@@ -21,6 +21,8 @@ export class PokerPlayer extends Player {
 }
 
 export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse> {
+  public SMALL_BLIND = 5;
+
   @Expose()
   @Type(() => Card)
   private _river: Card[];
@@ -61,12 +63,8 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     return this._nextPlayerId
   }
 
-  private get river() {
+  public get river() {
     return this._river;
-  }
-
-  private set river(value: Card[]) {
-    this._river = value;
   }
 
   public addUser(userId: string) {
@@ -86,16 +84,38 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
   }
 
   public startGame() {
-    super.startGame()
-    this._players = this.shuffle(this._players)
-    this._nextPlayerId = this._players[0].id
+    super.startGame();
+    this._players = this.shuffle(this._players);
+
+    if (this._players.length > 2) {
+      this._nextPlayerId = this._players[2].id;
+    } else {
+      throw new Error("Insufficient players to start the game.");
+    }
+    const smallBlindPlayer = this._players[0];
+    const bigBlindPlayer = this._players[1];
+
+    this.play(smallBlindPlayer, {
+      action: PokerAction.RAISE,
+      bet: this.SMALL_BLIND,
+      gameId: this.id,
+    });
+
+    this.play(bigBlindPlayer, {
+      action: PokerAction.RAISE,
+      bet: this.SMALL_BLIND * 2,
+      gameId: this.id,
+    });
     this._players.forEach((player) => {
+      if (this.deck.length < 2) {
+        throw new Error("Not enough cards in the deck to deal.");
+      }
       player.hand.push(this.drawCard(this.deck), this.drawCard(this.deck));
     });
   }
 
   public clearHands() {
-    this.river = [];
+    this._river = [];
     super.clearHands();
   }
 
@@ -136,8 +156,19 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
       this._nextPlayerId = nextPlayer.id;
     }
     else {
+      if (this.river.length == 5){
+        this.finishGame()
+      }
+      else if (this.river.length == 0){
+        this._river.push(this.drawCard(this.deck))
+        this._river.push(this.drawCard(this.deck))
+      }
+      this._river.push(this.drawCard(this.deck))
       this._nextPlayerId = this._players[0].id
-      this._players.forEach(player => player.roundPlayed = false)
+      this._players.forEach(player => {
+        player.roundPlayed = false
+        this._pot += player.roundBet
+      })
     }
   }
 
@@ -159,7 +190,6 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     }
     player.roundPlayed = true;
     this._lastBet = bet + player.roundBet;
-    this._pot += bet;
     player.roundBet += bet;
     player.balance -= bet;
     player.allIn += bet;
@@ -183,6 +213,10 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
   private check(player: PokerPlayer){
     this._lastBet = 0
     player.roundPlayed = true;
+  }
+
+  private finishGame(){
+    this.clearHands()
   }
 
   public toResponse(): PokerResponse {

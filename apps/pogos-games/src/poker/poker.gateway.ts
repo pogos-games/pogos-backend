@@ -25,7 +25,7 @@ export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse
         .emit(GatewayEventEmitter.PLAYER_UPDATE, gameAction);
       this.server
         .to(playerId)
-        .emit(GatewayEventEmitter.GAME_UPDATE, game.nextPlayerId);
+        .emit(GatewayEventEmitter.GAME_UPDATE, game.river, game.nextPlayerId);
     });
   }
 }
