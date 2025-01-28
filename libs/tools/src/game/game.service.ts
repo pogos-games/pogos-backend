@@ -10,12 +10,14 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { GameStatus } from './enum/game-status.enum';
 import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 import { GameStartRequest } from './dto/request/game-start-request.class';
+import { GamePlayResponse } from './dto/response/game-play-response.interface';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
   TResponse extends GameResponse,
   TPlayerResponse extends GamePlayerResponse,
-  TPlayer extends Player
+  TPlayer extends Player,
+  TPlayResponse extends GamePlayResponse
 > {
   constructor(
     protected readonly redisService: RedisService,
@@ -92,17 +94,17 @@ export abstract class GameService<
   }
 
 
-  abstract play(client: Socket, gameAction: GameActionRequest) : Promise<{ players: string[], response: GamePlayerResponse, game: TGame }>;
+  abstract play(client: Socket, gameAction: GameActionRequest) : Promise<TPlayResponse>;
 
   abstract mapResponse(player : TPlayer, players: string[]): { players: string[], response: TPlayerResponse };
 
-  protected async playAction(client: Socket, gameAction: GameActionRequest,
+  protected async playAction<TPlayResponse>(client: Socket, gameAction: GameActionRequest,
                              GameClass: new(id?: string,
                                               deck?: Card[],
                                               leaderId?: string,
                                               type?: string) => TGame,
                              mapResponse: (player: TPlayer, players: string[]) => {players: string[], response: TPlayerResponse}
-  ): Promise<{ players: string[], response: TPlayerResponse, game: TGame }> {
+  ): Promise<TPlayResponse>{
     return this.redisService
       .get<TGame>(`${this.GAME_KEY_PREFIX}:${gameAction.gameId}`,GameClass)
       .then((game) => {

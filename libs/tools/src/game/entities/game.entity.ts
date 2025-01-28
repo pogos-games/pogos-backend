@@ -5,6 +5,7 @@ import { GameResponse } from '../dto/response/game-response.interface';
 import { GamePlayerResponse } from '../dto/response/game-player-response.interface';
 import { GameActionRequest } from '../dto/request/game-action-request.interface';
 import { randomInt } from 'crypto';
+import { GameEndResponse } from '../dto/response/game-end-response.interface';
 
 export abstract class Player {
     id: string;

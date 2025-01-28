@@ -10,6 +10,7 @@ import { Game, Player } from './entities/game.entity';
 import { GameResponse } from './dto/response/game-response.interface';
 import { GameActionRequest } from './dto/request/game-action-request.interface';
 import { GameStartRequest } from './dto/request/game-start-request.class';
+import { GamePlayResponse } from './dto/response/game-play-response.interface';
 
 // process.env.FRONTEND_URL
 export class GameGateway<
@@ -17,7 +18,8 @@ export class GameGateway<
   TPlayerResponse extends GamePlayerResponse,
   TPlayer extends Player,
   TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
-  TGameService extends GameService<TGame, TResponse, TPlayerResponse, TPlayer>
+  TPlayResponse extends GamePlayResponse,
+  TGameService extends GameService<TGame, TResponse, TPlayerResponse, TPlayer, TPlayResponse>
 >
   extends ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -37,15 +39,11 @@ export class GameGateway<
     console.log('Client disconnected:', client.id);
   }
 
-  protected async sendGameAction(
-    players: string[],
-    gameAction: GamePlayerResponse,
-    game: TGame
-  ) {
-    players.forEach((playerId) => {
+  protected async sendGameAction(gamePlayResponse: GamePlayResponse) {
+    gamePlayResponse.players.forEach((playerId) => {
       this.server
         .to(playerId)
-        .emit(GatewayEventEmitter.PLAYER_UPDATE, gameAction);
+        .emit(GatewayEventEmitter.PLAYER_UPDATE, gamePlayResponse.response);
     });
   }
 
@@ -98,10 +96,17 @@ export class GameGateway<
 
   @SubscribeMessage(GatewayEventsListener.ACTION)
   async handleAction(client: Socket, gameAction: GameActionRequest) {
-    const { players, response, game } = await this.gameService.play(
+    const gamePlayResponse = await this.gameService.play(
       client,
       gameAction,
     );
-    await this.sendGameAction(players, response, game);
+    if (gamePlayResponse.end){
+      gamePlayResponse.game.endRound().points.forEach((player) => {
+        this.server
+          .to(player.playerId)
+          .emit(GatewayEventEmitter.END_GAME, player.points);
+      })
+    }
+    await this.sendGameAction(gamePlayResponse);
   }
 }
