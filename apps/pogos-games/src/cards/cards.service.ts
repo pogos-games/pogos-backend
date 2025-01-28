@@ -4,13 +4,6 @@ import { Card } from './model/card.interface';
 @Injectable()
 export class CardsService {
 
-  private shuffleDeck(deck: Card[]) {
-    for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-  }
-
   private getBlackjackRankValue(rank: string): number {
     if (['K', 'Q', 'J'].includes(rank)) {
       return 10;
@@ -44,7 +37,6 @@ export class CardsService {
         deck.push({ rank, suit, value: this.getBlackjackRankValue(rank) });
       }
     }
-    this.shuffleDeck(deck)
     return deck;
   }
 }

@@ -10,4 +10,5 @@ export interface PokerResponse extends GameResponse {
   pot: number,
   lastBet: number,
   status:GameStatus,
+  nextPlayerId: string,
 }

@@ -10,12 +10,14 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { GameStatus } from './enum/game-status.enum';
 import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 import { GameStartRequest } from './dto/request/game-start-request.class';
+import { GamePlayResponse } from './dto/response/game-play-response.interface';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
   TResponse extends GameResponse,
   TPlayerResponse extends GamePlayerResponse,
-  TPlayer extends Player
+  TPlayer extends Player,
+  TPlayResponse extends GamePlayResponse
 > {
   constructor(
     protected readonly redisService: RedisService,
@@ -70,7 +72,7 @@ export abstract class GameService<
     );
   }
 
-  abstract join(gameId: string, playerId: string);
+  abstract join(gameId: string, playerId: string): Promise<string[]>;
 
   async joinGame(gameId: string, playerId: string,
                  GameClass: new(id?: string,
@@ -88,20 +90,21 @@ export abstract class GameService<
       });
     await this.saveGame(game);
     console.log("New player joined: ", playerId);
+    return game.players.map(player => player.id)
   }
 
 
-  abstract play(client: Socket, gameAction: GameActionRequest) : Promise<{ players: string[], response: GamePlayerResponse }>;
+  abstract play(client: Socket, gameAction: GameActionRequest) : Promise<TPlayResponse>;
 
   abstract mapResponse(player : TPlayer, players: string[]): { players: string[], response: TPlayerResponse };
 
-  protected async playAction(client: Socket, gameAction: GameActionRequest,
+  protected async playAction<TPlayResponse>(client: Socket, gameAction: GameActionRequest,
                              GameClass: new(id?: string,
                                               deck?: Card[],
                                               leaderId?: string,
                                               type?: string) => TGame,
                              mapResponse: (player: TPlayer, players: string[]) => {players: string[], response: TPlayerResponse}
-  ): Promise<{ players: string[], response: TPlayerResponse }> {
+  ): Promise<TPlayResponse>{
     return this.redisService
       .get<TGame>(`${this.GAME_KEY_PREFIX}:${gameAction.gameId}`,GameClass)
       .then((game) => {
@@ -120,16 +123,32 @@ export abstract class GameService<
         if (game.status != GameStatus.IN_PROGRESS){
           throw new NotFoundException(`Game hasn't started`);
         }
-        game.play(player, gameAction);
+        const end = game.play(player, gameAction);
         this.saveGame(game);
         const players = game.players.map((player) => player.id);
 
-        return mapResponse(player, players);
+        const response = mapResponse(player, players)
+        return { players:response.players, end:end, response: response.response , game: game} as TPlayResponse;
       })
   }
 
+  protected endRound(gameId: string,GameClass: new(id?: string,
+                                    deck?: Card[],
+                                    leaderId?: string,
+                                    type?: string) => TGame){
+    return this.redisService
+      .get<TGame>(`${this.GAME_KEY_PREFIX}:${gameId}`,GameClass)
+      .then((game) => {
+        if (!game) {
+          throw new NotFoundException(
+            `Game id ${gameId} not found`,
+          );
+        }
+        return game.endRound()
+      })
+  }
 
-  abstract startGame<TResponse>(clientId: string, request: GameStartRequest): Promise<TResponse>;
+  abstract startGame(clientId: string, request: GameStartRequest): Promise<GameResponse>;
 
 
   protected async start(clientId: string, gameId:string,

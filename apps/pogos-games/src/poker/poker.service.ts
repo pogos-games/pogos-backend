@@ -10,9 +10,10 @@ import { RedisService } from '../../../../libs/tools-library/src/redis/redis.ser
 import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
+import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
 
 @Injectable()
-export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerResponse, PokerPlayer> {
+export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse> {
   protected GAME_KEY_PREFIX = 'poker';
 
   constructor(
@@ -26,7 +27,7 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
   }
 
   async join(gameId: string, playerId: string){
-    await super.joinGame(gameId, playerId, Poker);
+    return await super.joinGame(gameId, playerId, Poker);
   }
 
   /**
@@ -39,8 +40,8 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
   async play(
     client: Socket,
     pokerAction: PokerActionRequest
-  ): Promise<{ players: string[], response: PokerPlayerResponse }> {
-    return super.playAction(
+  ): Promise<PokerPlayResponse> {
+    return super.playAction<PokerPlayResponse>(
       client,
       pokerAction,
       Poker,
@@ -54,7 +55,6 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
       players,
       response: {
         playerId: player.id,
-        hand: player.hand,
         balance: player.balance,
         roundPlayed: player.roundPlayed,
         allIn: player.allIn,

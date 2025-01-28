@@ -10,9 +10,10 @@ import { RedisService } from '../../../../libs/tools-library/src/redis/redis.ser
 import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
+import { BlackJackPlayResponse } from './dto/response/blackjack-play-response.interface';
 
 @Injectable()
-export class BlackjackService extends GameService<Blackjack, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer> {
+export class BlackjackService extends GameService<Blackjack, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, BlackJackPlayResponse> {
   protected GAME_KEY_PREFIX = 'blackjack';
 
   constructor(
@@ -26,7 +27,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   }
 
   async join(gameId: string, playerId: string){
-    await super.joinGame(gameId, playerId, Blackjack);
+    return await super.joinGame(gameId, playerId, Blackjack);
   }
   /**
    * End the game
@@ -38,8 +39,8 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   async play(
     client: Socket,
     blackjackAction: BlackjackActionRequest
-  ): Promise<{ players: string[], response: BlackjackPlayerResponse }> {
-    return super.playAction(
+  ): Promise<BlackJackPlayResponse> {
+    return super.playAction<BlackJackPlayResponse>(
       client,
       blackjackAction,
       Blackjack,

@@ -7,6 +7,8 @@ import { Expose, Type } from 'class-transformer';
 import { Game, Player } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.interface';
+import * as console from 'console';
+import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 
 export class BlackJackPlayer extends Player {
   id: string;
@@ -79,22 +81,23 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     super.clearHands();
   }
 
-  public play(player: BlackJackPlayer, action: BlackjackActionRequest) {
+  public play(player: BlackJackPlayer, action: BlackjackActionRequest): boolean {
     if (player.roundPlayed) {
-      return;
+      return false;
     }
+    player.roundPlayed = true;
     switch (action.action) {
       case BlackJackAction.HIT:
         this.hit(player);
-        break;
+        return true;
       case BlackJackAction.STAND:
         this.stand(player);
-        break;
+        return true;
       default:
         console.log('No more actions available for the moment');
         console.log('Invalid action');
     }
-    player.roundPlayed = true;
+    return false;
   }
 
   private hit(player: BlackJackPlayer) {
@@ -141,5 +144,9 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
       aceCount--;
     }
     return value;
+  }
+
+  endRound(): GameEndResponse {
+    return undefined;
   }
 }
