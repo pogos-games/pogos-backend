@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
@@ -28,13 +28,19 @@ export class TokenService {
     return { accessToken, refreshToken };
   }
 
-  async verifyRefreshToken(token: string) {
+  async verifyToken(token: string, secret: string, errorMessage: string = 'Invalid token') {
     try {
-      return this.jwtService.verify(token, {
-        secret: this.jwtRefreshTokenSecret,
-      });
+      return this.jwtService.verify(token, { secret });
     } catch (err) {
-      throw new BadRequestException('Invalid refresh token');
+      throw new UnauthorizedException(errorMessage);
     }
+  }
+
+  async verifyAccessToken(token: string) {
+    return this.verifyToken(token, this.jwtAccessTokenSecret, 'Invalid access token');
+  }
+
+  async verifyRefreshToken(token: string) {
+    return this.verifyToken(token, this.jwtRefreshTokenSecret, 'Invalid refresh token');
   }
 }

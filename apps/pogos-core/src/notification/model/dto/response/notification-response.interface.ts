@@ -4,7 +4,6 @@ import { UserResponse } from '../../../../user/model/dto/response/user-response.
 import { AutoMap } from '@automapper/classes';
 
 export class NotificationResponse {
-
   @AutoMap()
   @ApiProperty()
   id: string;
@@ -24,5 +23,4 @@ export class NotificationResponse {
   @AutoMap()
   @ApiProperty()
   sender: UserResponse;
-
 }

@@ -1,40 +1,68 @@
 import {
-  OnGatewayConnection,
-  OnGatewayDisconnect, SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { AuthenticationPrincipal } from '@app/auth-library/authentication-principal.decorator';
-import { Principal } from '../../user/model/dto/principal.interface';
-import { UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '@app/auth-library/jwt/jwt-auth.guard';
+import { Server } from 'socket.io';
+import { TokenService } from '@app/auth-library/service/token.service';
+import { AuthMiddleware } from '@app/auth-library/auth-ws.middleware';
+import { AuthenticatedSocket } from '../model/gateway/authenticated-socket.interface';
+import { NotificationEventEmitter } from '../model/gateway/notification-event-emitter.enum';
+import { NotificationResponse } from '../model/dto/response/notification-response.interface';
 
 @WebSocketGateway({ namespace: 'notifications' })
-@UseGuards(JwtAuthGuard)
-export class NotificationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  handleConnection(
-    client: Socket,
-    @AuthenticationPrincipal() principal: Principal,
-  ) {
-    console.log(`Client connecté : ${client.id}`);
-    console.log('user id',principal.userId);
-    //console.log(`Client user id :${principal.userId}`);
+  private connectedClients = new Map<string, string>(); // Map userId -> socketId
+
+  constructor(private readonly tokenService: TokenService) {
   }
 
-  handleDisconnect(client: Socket) {
-    console.log(`Client déconnecté : ${client.id}`);
+  async handleConnection(client: AuthenticatedSocket) {
+    try {
+      const authMiddleware = new AuthMiddleware(this.tokenService);
+      await authMiddleware.use(client, (err) => {
+        if (err) {
+          console.error('Échec d\'authentification du client :', err.message);
+          client.disconnect();
+        }
+      });
+
+      const userId = client?.user.sub;
+
+      // Associate the user ID with the socket ID
+      this.connectedClients.set(userId, client.id);
+      console.log(`User connected : ${userId} (Socket ID: ${client.id})`);
+    } catch (error) {
+      console.error('Error while connecting client :', error.message);
+      client.disconnect();
+    }
   }
 
-  @SubscribeMessage('testMessage')
-  handleTestMessage(data: string): void {
-    console.log(`Received test message: ${data}`);
-    // You can add additional logic here to handle the message
+  handleDisconnect(client: AuthenticatedSocket) {
+    const userId = client?.user.sub;
+
+    if (userId) {
+      this.connectedClients.delete(userId);
+      console.log(`Utilisateur déconnecté : ${userId}`);
+    }
   }
 
+  /**
+   * Envoie un message à un utilisateur spécifique.
+   * @param userId ID de l'utilisateur (sub dans le JWT).
+   * @param notification Message à envoyer.
+   */
+  async sendNotification(userId: string, notification: NotificationResponse): Promise<void> {
+    const socketId = this.connectedClients.get(userId);
 
+    if (socketId) {
+      this.server.to(socketId).emit(NotificationEventEmitter.NOTIFICATION, notification);
+      console.log(`Message sent to: ${userId}: ${notification}`);
+    } else {
+      console.log(`User:  ${userId} not connected.`);
+    }
+  }
 }

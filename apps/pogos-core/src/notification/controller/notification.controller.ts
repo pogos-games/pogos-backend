@@ -1,7 +1,8 @@
 import {
   Body,
   Controller,
-  Delete, ForbiddenException,
+  Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -12,7 +13,13 @@ import { NotificationService } from '../service/notification.service';
 import { NotificationResponse } from '../model/dto/response/notification-response.interface';
 import { AuthenticationPrincipal } from '@app/auth-library/authentication-principal.decorator';
 import { Principal } from '../../user/model/dto/principal.interface';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -31,9 +38,9 @@ export class NotificationController {
   })
   async findNotificationsByUserId(
     @AuthenticationPrincipal() principal: Principal,
-    @Param('userId') userId:string
+    @Param('userId') userId: string,
   ): Promise<NotificationResponse[]> {
-    if(principal.userId !== userId) {
+    if (principal.userId !== userId) {
       throw new ForbiddenException(`Not allowed to read theses notifications`);
     }
     return await this.notificationService.findNotificationsByUserId(

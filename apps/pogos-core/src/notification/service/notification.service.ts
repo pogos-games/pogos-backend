@@ -7,6 +7,7 @@ import { NotificationResponse } from '../model/dto/response/notification-respons
 import { InjectMapper } from '@automapper/nestjs';
 import { NotificationType } from '../model/enum/notification-type.enum';
 import { User } from '../../user/model/entity/user.entity';
+import { NotificationGateway } from '../gateway/notification.gateway';
 
 @Injectable()
 export class NotificationService {
@@ -15,6 +16,7 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
     @InjectMapper()
     private readonly mapper: Mapper,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   async findNotificationsByUserId(
     requestedId: string,
@@ -59,7 +61,15 @@ export class NotificationService {
     notification.message = message;
     notification.type = type;
     notification.requestId = requestId;
-    return await this.notificationRepository.save(notification);
+    return await this.notificationRepository
+      .save(notification)
+      .then(async (notification: Notification) => {
+        await this.notificationGateway.sendNotification(
+          notification.recipient.id,
+          this.mapper.map(notification, Notification, NotificationResponse),
+        );
+        return notification;
+      });
   }
 
   async deleteNotifications(
