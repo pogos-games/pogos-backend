@@ -123,15 +123,30 @@ export abstract class GameService<
         if (game.status != GameStatus.IN_PROGRESS){
           throw new NotFoundException(`Game hasn't started`);
         }
-        game.play(player, gameAction);
+        const end = game.play(player, gameAction);
         this.saveGame(game);
         const players = game.players.map((player) => player.id);
 
         const response = mapResponse(player, players)
-        return { players:response.players, response: response.response , game: game};
+        return { players:response.players, end:end, response: response.response , game: game} as TPlayResponse;
       })
   }
 
+  protected endRound(gameId: string,GameClass: new(id?: string,
+                                    deck?: Card[],
+                                    leaderId?: string,
+                                    type?: string) => TGame){
+    return this.redisService
+      .get<TGame>(`${this.GAME_KEY_PREFIX}:${gameId}`,GameClass)
+      .then((game) => {
+        if (!game) {
+          throw new NotFoundException(
+            `Game id ${gameId} not found`,
+          );
+        }
+        return game.endRound()
+      })
+  }
 
   abstract startGame(clientId: string, request: GameStartRequest): Promise<GameResponse>;
 

@@ -23,7 +23,7 @@ export abstract class Game<TResponse extends GameResponse,
 
     @Expose()
     @Type(() => Card)
-    protected readonly _deck: Card[];
+    protected _deck: Card[];
 
     @Expose()
     protected readonly _leaderId: string;
@@ -46,7 +46,7 @@ export abstract class Game<TResponse extends GameResponse,
     ) {
         this._id = id ?? '';
         this._status = GameStatus.WAITING;
-        this._deck = this.shuffle(deck) ?? [];
+        this._deck = deck ?? [];
         this._players = [];
         this._leaderId = leaderId ?? '';
         this._type = type ?? '';
@@ -97,6 +97,7 @@ export abstract class Game<TResponse extends GameResponse,
 
     public startGame() {
         this._status = GameStatus.IN_PROGRESS;
+        this._deck = this.shuffle(this.deck);
         this.clearHands();
     }
     
@@ -106,16 +107,23 @@ export abstract class Game<TResponse extends GameResponse,
         });
     }
     
-    play(player: TPlayer, action: GameActionRequest){
+    play(player: TPlayer, action: GameActionRequest): boolean{
         if (action) {
             console.log('No more actions available for the moment');
+            return true
         }
         else{
             console.log('Invalid action');
+            return false
         }
     }
 
     public abstract toResponse() : TResponse;
+
+    /**
+     * renvoie les points de chaque joueurs à la fin de la parite
+     */
+    public abstract endRound(): GameEndResponse;
 
     public shuffle<T>(array: T[]): T[] {
         for (let i = array.length - 1; i > 0; i--) {
