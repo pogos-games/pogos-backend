@@ -135,7 +135,10 @@ export class UserService {
    */
   async updateUser(userId: string, userRequest: UserRequest): Promise<UserResponse> {
 
-    const user: User = await this.userRepository.findOneBy({id:userId});
+    const user: User = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['receivedNotifications'], // load notifications array
+    });
     if (!user) {
       throw new NotFoundException('User not found.');
     }

@@ -28,7 +28,7 @@ export class Notification {
   @Column()
   message: string;
 
-  @AutoMap()
+  @AutoMap(() => String)
   @Column({
     type: 'enum',
     enum: NotificationType,
