@@ -8,7 +8,6 @@ export class LoginRequest {
     required:true
   })
   @IsEmail()
-  @MaxLength(20)
   email: string;
 
   @ApiProperty({
