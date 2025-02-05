@@ -10,7 +10,6 @@ import { GameEndResponse } from '../dto/response/game-end-response.interface';
 export abstract class Player {
     id: string;
     username: string;
-    hand: Card[];
 }
 
 export abstract class Game<TResponse extends GameResponse,
@@ -101,11 +100,7 @@ export abstract class Game<TResponse extends GameResponse,
         this.clearHands();
     }
     
-    public clearHands() {
-        this._players.forEach((player) => {
-          player.hand = [];
-        });
-    }
+    public abstract clearHands();
     
     play(player: TPlayer, action: GameActionRequest): boolean{
         if (action) {
