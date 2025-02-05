@@ -126,7 +126,9 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
   }
 
   private doubleDown(player: BlackJackPlayer){
-
+    player.bet += player.bet
+    this.hit(player)
+    this.stand(player)
   }
 
   private split(player: BlackJackPlayer){
