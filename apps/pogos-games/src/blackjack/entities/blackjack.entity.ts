@@ -184,7 +184,9 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
       const dealerHandValue = this.calculateHandValue(this.dealerHand)
       player.hand.forEach(hand => {
         const currentHandValue = this.calculateHandValue(hand)
-        if (currentHandValue > 21){}
+        if (currentHandValue > 21){
+          totalWin += 0;
+        }
         if (currentHandValue == dealerHandValue){
           totalWin += eachBet;
         }
