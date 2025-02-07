@@ -132,6 +132,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
   }
 
   private split(player: BlackJackPlayer){
+    player.bet += player.bet
     const card: Card = player.hand[player.currentHandId].pop()
     player.currentHandId += 1;
     player.hand.push([card])
@@ -176,7 +177,26 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     return value;
   }
 
-  endRound(): GameEndResponse {
-    return undefined;
+  public endRound(): GameEndResponse {
+    const playerResponse = this.players.map(player => {
+      let totalWin = 0
+      const eachBet = player.bet / player.hand.length
+      const dealerHandValue = this.calculateHandValue(this.dealerHand)
+      player.hand.forEach(hand => {
+        const currentHandValue = this.calculateHandValue(hand)
+        if (currentHandValue > 21){}
+        if (currentHandValue == dealerHandValue){
+          totalWin += eachBet;
+        }
+        else if (currentHandValue > dealerHandValue ){
+          totalWin += eachBet * 2
+        }
+        if (currentHandValue == 21 && hand.length == 2){
+          totalWin += eachBet
+        }
+      })
+      return {playerId: player.id, points: totalWin}
+    })
+    return {end: true, points: playerResponse}  as GameEndResponse;
   }
 }
