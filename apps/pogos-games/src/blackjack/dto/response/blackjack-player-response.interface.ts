@@ -3,7 +3,8 @@ import { Card } from '../../../cards/model/card.interface';
 
 export interface BlackjackPlayerResponse extends GamePlayerResponse{
   playerId:string,
-  hand:Card[],
+  hand:Card[][],
+  currentHandId: number,
   balance:number,
   bet:number,
   roundPlayed: boolean;

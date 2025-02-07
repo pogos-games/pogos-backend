@@ -13,7 +13,8 @@ import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response
 export class BlackJackPlayer extends Player {
   id: string;
   username: string;
-  hand: Card[];
+  hand: Card[][]
+  currentHandId: number;
   balance: number;
   bet: number;
   isStanding: boolean;
@@ -61,6 +62,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
       id: userId,
       username: 'not defined',
       hand: [],
+      currentHandId: 0,
       balance: 1000,
       bet: 0,
       roundPlayed: false,
@@ -71,14 +73,19 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
   public startGame() {
     super.startGame()
     this._players.forEach((player) => {
-      player.hand.push(this.drawCard(this.deck), this.drawCard(this.deck));
+      player.hand.push([this.drawCard(this.deck), this.drawCard(this.deck)]);
     });
     this.dealerHand.push(this.drawCard(this.deck), this.drawCard(this.deck));
   }
 
   public clearHands() {
     this.dealerHand = [];
-    super.clearHands();
+    this._players.forEach((player) => {
+      player.currentHandId = 0;
+    });
+    this._players.forEach((player) => {
+      player.hand = [];
+    });
   }
 
   public play(player: BlackJackPlayer, action: BlackjackActionRequest): boolean {
@@ -89,10 +96,16 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     switch (action.action) {
       case BlackJackAction.HIT:
         this.hit(player);
-        return true;
+        return false;
       case BlackJackAction.STAND:
         this.stand(player);
         return true;
+      case BlackJackAction.DOUBLE_DOWN:
+        this.doubleDown(player);
+        return false;
+      case BlackJackAction.SPLIT:
+        this.split(player);
+        return false;
       default:
         console.log('No more actions available for the moment');
         console.log('Invalid action');
@@ -101,17 +114,35 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
   }
 
   private hit(player: BlackJackPlayer) {
-    player.hand.push(this.drawCard(this.deck));
+    player.hand[player.currentHandId].push(this.drawCard(this.deck));
   }
 
   private stand(player: BlackJackPlayer) {
-    player.isStanding = true;
+    player.currentHandId += 1
+    if (player.currentHandId == player.hand.length) {
+      player.isStanding = true;
+      player.currentHandId = 0;
+    }
+  }
+
+  private doubleDown(player: BlackJackPlayer){
+    player.bet += player.bet
+    this.hit(player)
+    this.stand(player)
+  }
+
+  private split(player: BlackJackPlayer){
+    player.bet += player.bet
+    const card: Card = player.hand[player.currentHandId].pop()
+    player.currentHandId += 1;
+    player.hand.push([card])
   }
 
   public toResponse(): BlackjackResponse {
     const players: BlackjackPlayerResponse[] = this._players.map((player) => ({
       playerId: player.id,
       hand: player.hand,
+      currentHandId: player.currentHandId,
       balance: player.balance,
       bet: player.bet,
       roundPlayed: player.roundPlayed,
@@ -146,7 +177,28 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     return value;
   }
 
-  endRound(): GameEndResponse {
-    return undefined;
+  public endRound(): GameEndResponse {
+    const playerResponse = this.players.map(player => {
+      let totalWin = 0
+      const eachBet = player.bet / player.hand.length
+      const dealerHandValue = this.calculateHandValue(this.dealerHand)
+      player.hand.forEach(hand => {
+        const currentHandValue = this.calculateHandValue(hand)
+        if (currentHandValue > 21){
+          totalWin += 0;
+        }
+        if (currentHandValue == dealerHandValue){
+          totalWin += eachBet;
+        }
+        else if (currentHandValue > dealerHandValue ){
+          totalWin += eachBet * 2
+        }
+        if (currentHandValue == 21 && hand.length == 2){
+          totalWin += eachBet
+        }
+      })
+      return {playerId: player.id, points: totalWin}
+    })
+    return {end: true, points: playerResponse}  as GameEndResponse;
   }
 }
