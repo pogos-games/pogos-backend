@@ -85,8 +85,7 @@ export abstract class Game<TResponse extends GameResponse,
         }
         this._players.push({
           id: userId,
-          username: 'not defined',
-          hand: [],
+          username: 'not defined'
         } as TPlayer);
     }
     
