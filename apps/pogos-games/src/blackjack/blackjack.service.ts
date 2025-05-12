@@ -29,12 +29,6 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
   async join(gameId: string, playerId: string){
     return await super.joinGame(gameId, playerId, Blackjack);
   }
-  /**
-   * End the game
-   * @param client the client that is ending the game
-   * @param blackjackAction
-   * @returns list of player ids
-   */
 
   async play(
     client: Socket,
@@ -58,6 +52,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
         balance: player.balance,
         bet: player.bet,
         roundPlayed: player.roundPlayed,
+        currentHandId: player.currentHandId,
       } as BlackjackPlayerResponse,
     };
   }
@@ -69,8 +64,6 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
       throw new Error('Wrong game type');
     }
   }
-
-
 
   // endGame(client: Socket) {
   //   this.games.delete(client.id);

@@ -32,11 +32,9 @@ export class GameGateway<
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
   }
 
   handleDisconnect(client: Socket) {
-    console.log('Client disconnected:', client.id);
   }
 
   protected async sendGameAction(gamePlayResponse: GamePlayResponse) {
@@ -65,8 +63,6 @@ export class GameGateway<
       client.id,
       request.type,
     );
-    console.log('Game created:', gameId);
-    console.log('LeaderId: ', client.id);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
   }
 

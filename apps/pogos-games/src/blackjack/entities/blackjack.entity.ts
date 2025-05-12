@@ -92,7 +92,6 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     if (player.roundPlayed) {
       return false;
     }
-    player.roundPlayed = true;
     switch (action.action) {
       case BlackJackAction.HIT:
         this.hit(player);
@@ -107,8 +106,6 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
         this.split(player);
         return false;
       default:
-        console.log('No more actions available for the moment');
-        console.log('Invalid action');
     }
     return false;
   }
