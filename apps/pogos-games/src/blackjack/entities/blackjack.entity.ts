@@ -7,7 +7,6 @@ import { Expose, Type } from 'class-transformer';
 import { Game, Player } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.interface';
-import * as console from 'console';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 
 export class BlackJackPlayer extends Player {
@@ -74,6 +73,9 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     super.startGame()
     this._players.forEach((player) => {
       player.hand.push([this.drawCard(this.deck), this.drawCard(this.deck)]);
+      if (this.calculateHandValue(player.hand[player.currentHandId]) == 21) {
+        this.stand(player);
+      }
     });
     this.dealerHand.push(this.drawCard(this.deck), this.drawCard(this.deck));
   }
@@ -95,23 +97,26 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     switch (action.action) {
       case BlackJackAction.HIT:
         this.hit(player);
-        return false;
+        break;
       case BlackJackAction.STAND:
         this.stand(player);
-        return true;
+        break;
       case BlackJackAction.DOUBLE_DOWN:
         this.doubleDown(player);
-        return false;
+        break;
       case BlackJackAction.SPLIT:
         this.split(player);
-        return false;
+        break;
       default:
     }
-    return false;
+    return player.isStanding
   }
 
   private hit(player: BlackJackPlayer) {
     player.hand[player.currentHandId].push(this.drawCard(this.deck));
+    if (this.calculateHandValue(player.hand[player.currentHandId]) >= 21) {
+      this.stand(player)
+    }
   }
 
   private stand(player: BlackJackPlayer) {
@@ -143,6 +148,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
       balance: player.balance,
       bet: player.bet,
       roundPlayed: player.roundPlayed,
+      isStanding: player.isStanding
     }));
 
     return {
@@ -178,20 +184,23 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     const playerResponse = this.players.map(player => {
       let totalWin = 0
       const eachBet = player.bet / player.hand.length
+
+      while(this.calculateHandValue(this.dealerHand) < 17){
+        this.dealerHand.push(this.drawCard(this.deck));
+      }
       const dealerHandValue = this.calculateHandValue(this.dealerHand)
+      console.log(dealerHandValue)
+
       player.hand.forEach(hand => {
         const currentHandValue = this.calculateHandValue(hand)
         if (currentHandValue > 21){
           totalWin += 0;
         }
-        if (currentHandValue == dealerHandValue){
+        else if (currentHandValue == dealerHandValue){
           totalWin += eachBet;
         }
-        else if (currentHandValue > dealerHandValue ){
+        else if (currentHandValue > dealerHandValue || dealerHandValue > 21 ){
           totalWin += eachBet * 2
-        }
-        if (currentHandValue == 21 && hand.length == 2){
-          totalWin += eachBet
         }
       })
       return {playerId: player.id, points: totalWin}
