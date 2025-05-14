@@ -121,7 +121,10 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
 
   public clearHands() {
     this._river = [];
-    super.clearHands();
+
+    this._players.forEach((player) => {
+      player.hand = [];
+    });
   }
 
   public play(player: PokerPlayer, action: PokerActionRequest) : boolean {
