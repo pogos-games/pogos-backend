@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { Blackjack, BlackJackPlayer } from './entities/blackjack.entity';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
@@ -11,8 +11,6 @@ import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { BlackJackPlayResponse } from './dto/response/blackjack-play-response.interface';
-import { Card } from '../cards/model/card.interface';
-import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
 
 @Injectable()
 export class BlackjackService extends GameService<Blackjack, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, BlackJackPlayResponse> {
@@ -32,41 +30,8 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
     return await super.joinGame(gameId, playerId, Blackjack);
   }
 
-  protected async playAction<TPlayResponse>(client: Socket, gameAction: BlackjackActionRequest,
-                                            GameClass: new(id?: string,
-                                                           deck?: Card[],
-                                                           leaderId?: string,
-                                                           type?: string) => Blackjack,
-                                            mapResponse: (player: BlackJackPlayer, players: string[]) => {players: string[], response: BlackjackPlayerResponse}
-  ): Promise<TPlayResponse>{
-    return this.redisService
-      .get<Blackjack>(`${this.GAME_KEY_PREFIX}:${gameAction.gameId}`,GameClass)
-      .then((game) => {
-        if (!game) {
-          throw new NotFoundException(
-            `Game id ${gameAction.gameId} not found`,
-          );
-        }
-        console.log(game.players[0].id)
-        const player = game.players.find(
-          (player) => player.id === client.id,
-        );
-        if (!player) {
-          throw new NotFoundException(`Player id ${client.id} not found`);
-        }
-        if (game.status != GameStatus.IN_PROGRESS){
-          throw new NotFoundException(`Game hasn't started`);
-        }
-        let end = game.play(player, gameAction);
-        this.saveGame(game);
-        if (end) {
-          end = game.players.every(player => player.isStanding == true);
-        }
-        const players = game.players.map((player) => player.id);
-
-        const response = mapResponse(player, players)
-        return { players:response.players, end:end, response: response.response , game: game} as TPlayResponse;
-      })
+  protected checkEnd(game: Blackjack): boolean {
+    return game.players.every(player => player.isStanding == true);
   }
 
   async play(

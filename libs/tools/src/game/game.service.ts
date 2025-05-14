@@ -123,13 +123,20 @@ export abstract class GameService<
         if (game.status != GameStatus.IN_PROGRESS){
           throw new NotFoundException(`Game hasn't started`);
         }
-        const end = game.play(player, gameAction);
+        let end = game.play(player, gameAction);
         this.saveGame(game);
+        if (end) {
+          end = this.checkEnd(game);
+        }
         const players = game.players.map((player) => player.id);
 
         const response = mapResponse(player, players)
         return { players:response.players, end:end, response: response.response , game: game} as TPlayResponse;
       })
+  }
+
+  protected checkEnd(game: TGame): boolean {
+    return true;
   }
 
   protected endRound(gameId: string,GameClass: new(id?: string,
