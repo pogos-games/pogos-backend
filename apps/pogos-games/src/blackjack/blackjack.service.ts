@@ -9,7 +9,6 @@ import { BlackjackResponse } from './dto/response/blackjack-response.interface';
 import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
 import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
-import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { BlackJackPlayResponse } from './dto/response/blackjack-play-response.interface';
 import { BlackjackStartRequest } from './dto/request/blackjack-start-request.class';
 
@@ -70,7 +69,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
     }
   }
 
-  async restartGame<BlackjackResponse>(clientId: string, request: GameStartRequest) {
+  async restartGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
     if (Object.values(BlackjackType).includes(request.type as BlackjackType)) {
       return await this.restart(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
     } else {
