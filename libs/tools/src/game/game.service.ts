@@ -19,7 +19,7 @@ export abstract class GameService<
   TPlayer extends Player,
   TPlayResponse extends GamePlayResponse
 > {
-  constructor(
+  protected constructor(
     protected readonly redisService: RedisService,
     protected readonly cardsService: CardsService,
     protected readonly idGeneratorService: IdGeneratorService

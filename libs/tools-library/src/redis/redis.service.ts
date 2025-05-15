@@ -6,10 +6,15 @@ import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interfac
 export class RedisService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClient) {}
 
-  async get<TGame>(key: string, type: new(id?: string,
-                                            deck?: Card[],
-                                            leaderId?: string,
-                                            type?: string) => TGame ): Promise<TGame> {
+  async get<TGame>(
+    key: string,
+    type: new (
+      id?: string,
+      deck?: Card[],
+      leaderId?: string,
+      type?: string,
+    ) => TGame,
+  ): Promise<TGame> {
     const value = await this.redis.get(key);
     if (!value) {
       return null;
@@ -44,4 +49,9 @@ export class RedisService {
     await this.redis.del(key);
   }
 
+  async subscribe(channel: string, callback: (message: string) => void) {
+    await this.redis.subscribe(channel, (message) => {
+      callback(message);
+    });
+  }
 }
