@@ -9,11 +9,11 @@ import { BlackjackResponse } from './dto/response/blackjack-response.interface';
 import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
 import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
-import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { BlackJackPlayResponse } from './dto/response/blackjack-play-response.interface';
+import { BlackjackStartRequest } from './dto/request/blackjack-start-request.class';
 
 @Injectable()
-export class BlackjackService extends GameService<Blackjack, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, BlackJackPlayResponse> {
+export class BlackjackService extends GameService<Blackjack, BlackjackStartRequest, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, BlackJackPlayResponse> {
   protected GAME_KEY_PREFIX = 'blackjack';
 
   constructor(
@@ -30,11 +30,15 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
     return await super.joinGame(gameId, playerId, Blackjack);
   }
 
+  protected checkEnd(game: Blackjack): boolean {
+    return game.players.every(player => player.isStanding);
+  }
+
   async play(
     client: Socket,
     blackjackAction: BlackjackActionRequest
   ): Promise<BlackJackPlayResponse> {
-    return super.playAction<BlackJackPlayResponse>(
+    return this.playAction<BlackJackPlayResponse>(
       client,
       blackjackAction,
       Blackjack,
@@ -57,9 +61,17 @@ export class BlackjackService extends GameService<Blackjack, BlackjackResponse, 
     };
   }
 
-  async startGame<BlackjackResponse>(clientId: string, request: GameStartRequest) {
+  async startGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
     if (Object.values(BlackjackType).includes(request.type as BlackjackType)) {
-      return await this.start(clientId, request.gameId, Blackjack) as BlackjackResponse;
+      return await this.start(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
+    } else {
+      throw new Error('Wrong game type');
+    }
+  }
+
+  async restartGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
+    if (Object.values(BlackjackType).includes(request.type as BlackjackType)) {
+      return await this.restart(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
     } else {
       throw new Error('Wrong game type');
     }

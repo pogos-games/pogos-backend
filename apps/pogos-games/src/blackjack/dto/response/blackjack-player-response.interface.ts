@@ -8,4 +8,5 @@ export interface BlackjackPlayerResponse extends GamePlayerResponse{
   balance:number,
   bet:number,
   roundPlayed: boolean;
+  isStanding: boolean
 }
