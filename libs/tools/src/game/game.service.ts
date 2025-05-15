@@ -13,7 +13,8 @@ import { GameStartRequest } from './dto/request/game-start-request.class';
 import { GamePlayResponse } from './dto/response/game-play-response.interface';
 
 export abstract class GameService<
-  TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
+  TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse>,
+  TStartRequest extends GameStartRequest,
   TResponse extends GameResponse,
   TPlayerResponse extends GamePlayerResponse,
   TPlayer extends Player,
@@ -113,7 +114,6 @@ export abstract class GameService<
             `Game id ${gameAction.gameId} not found`,
           );
         }
-        console.log(game.players[0].id)
         const player = game.players.find(
           (player) => player.id === client.id,
         );
@@ -157,14 +157,16 @@ export abstract class GameService<
 
   abstract startGame(clientId: string, request: GameStartRequest): Promise<GameResponse>;
 
+  abstract restartGame(clientId: string, request: GameStartRequest): Promise<GameResponse>;
+
 
   protected async start(clientId: string, gameId:string,
                                       GameClass: new(id?: string,
                                                        deck?: Card[],
                                                        leaderId?: string,
-                                                       type?: string) => TGame ) {
-    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
-    const game: TGame = await this.redisService.get<TGame>(key,GameClass);
+                                                       type?: string) => TGame,
+                                      startRequest: TStartRequest ) {
+    const game = await this.findGame(gameId, GameClass);
     if (!game) {
       throw new NotFoundException(`Game id ${gameId} not found`);
     }
@@ -172,12 +174,45 @@ export abstract class GameService<
       throw new UnauthorizedException(`Only the leader can start the game`);
     }
 
-    game.startGame();
+    game.startGame(startRequest);
     await this.saveGame(game);
 
     return game.toResponse();
 
   }
+
+
+  protected async restart(clientId: string, gameId:string,
+                        GameClass: new(id?: string,
+                                       deck?: Card[],
+                                       leaderId?: string,
+                                       type?: string) => TGame,
+                          startRequest: TStartRequest ) {
+    const game = await this.findGame(gameId, GameClass);
+    if (game.leaderId !== clientId) {
+      throw new UnauthorizedException(`Only the leader can restart the game`);
+    }
+
+    game.restartGame(startRequest);
+    await this.saveGame(game);
+
+    return game.toResponse();
+
+  }
+
+  protected async findGame(gameId:string,
+                           GameClass: new(id?: string,
+                                          deck?: Card[],
+                                          leaderId?: string,
+                                          type?: string) => TGame) {
+    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
+    const game: TGame = await this.redisService.get<TGame>(key,GameClass);
+    if (!game) {
+      throw new NotFoundException(`Game id ${gameId} not found`);
+    }
+    return game;
+  }
+
   /**
    * End the game
    * @param client the client that is ending the game

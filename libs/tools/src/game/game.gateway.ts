@@ -16,10 +16,11 @@ import { GamePlayResponse } from './dto/response/game-play-response.interface';
 export class GameGateway<
   TResponse extends GameResponse,
   TPlayerResponse extends GamePlayerResponse,
+  TStartRequest extends GameStartRequest,
   TPlayer extends Player,
-  TGame extends Game<TResponse, TPlayer, TPlayerResponse>,
+  TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse>,
   TPlayResponse extends GamePlayResponse,
-  TGameService extends GameService<TGame, TResponse, TPlayerResponse, TPlayer, TPlayResponse>
+  TGameService extends GameService<TGame, TStartRequest, TResponse, TPlayerResponse, TPlayer, TPlayResponse>
 >
   extends ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -67,8 +68,18 @@ export class GameGateway<
   }
 
   @SubscribeMessage(GatewayEventsListener.START_GAME)
-  async handleStartGame(client: Socket, request: GameStartRequest) {
+  async handleStartGame(client: Socket, request: TStartRequest) {
     const response = await this.gameService.startGame(client.id, request);
+    response.players.forEach((player) => {
+      this.server
+        .to(player.playerId)
+        .emit(GatewayEventEmitter.GAME_UPDATE, response, player.playerId);
+    });
+  }
+
+  @SubscribeMessage(GatewayEventsListener.RESTART_GAME)
+  async handleRestartGame(client: Socket, request: TStartRequest) {
+    const response = await this.gameService.restartGame(client.id, request);
     response.players.forEach((player) => {
       this.server
         .to(player.playerId)

@@ -6,10 +6,11 @@ import { PokerResponse } from './dto/response/poker-response.interface';
 import { PokerPlayerResponse } from './dto/response/poker-player-response.interface';
 import { GatewayEventEmitter } from '../../../../libs/tools/src/game/enum/gateway/gateway-event-emitter.enum';
 import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
+import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'poker', cors: 'http://localhost:4200' })
-export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse, PokerPlayer, Poker, PokerPlayResponse, PokerService> {
+export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse, GameStartRequest, PokerPlayer, Poker, PokerPlayResponse, PokerService> {
   constructor(private readonly pokerService: PokerService) {
     super(pokerService);
   }

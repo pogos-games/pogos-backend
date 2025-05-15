@@ -6,6 +6,7 @@ import { GamePlayerResponse } from '../dto/response/game-player-response.interfa
 import { GameActionRequest } from '../dto/request/game-action-request.interface';
 import { randomInt } from 'crypto';
 import { GameEndResponse } from '../dto/response/game-end-response.interface';
+import { GameStartRequest } from '../dto/request/game-start-request.class';
 
 export abstract class Player {
     id: string;
@@ -13,6 +14,7 @@ export abstract class Player {
 }
 
 export abstract class Game<TResponse extends GameResponse,
+  TStartRequest extends GameStartRequest,
   TPlayer extends Player,
   TPlayerResponse extends GamePlayerResponse
 > {
@@ -93,10 +95,14 @@ export abstract class Game<TResponse extends GameResponse,
         return deck.pop();
     }
 
-    public startGame() {
+    public startGame(gameStartRequest: TStartRequest) {
         this._status = GameStatus.IN_PROGRESS;
         this._deck = this.shuffle(this.deck);
         this.clearHands();
+    }
+
+    public restartGame(gameStartRequest: TStartRequest){
+        this.startGame(gameStartRequest);
     }
     
     public abstract clearHands();

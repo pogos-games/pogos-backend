@@ -10,6 +10,7 @@ import { BadRequestException } from '@nestjs/common';
 import { PokerActionRequest } from '../dto/request/poker-action-request.interface';
 import * as PokerEvaluator from 'poker-evaluator-ts';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
+import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
 
 export class PokerPlayer extends Player {
   id: string;
@@ -22,7 +23,7 @@ export class PokerPlayer extends Player {
   allIn: number;
 }
 
-export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse> {
+export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, PokerPlayerResponse> {
   public SMALL_BLIND = 5;
 
   @Expose()
@@ -85,8 +86,8 @@ export class Poker extends Game<PokerResponse, PokerPlayer, PokerPlayerResponse>
     });
   }
 
-  public startGame() {
-    super.startGame();
+  public startGame(gameStartRequest: GameStartRequest) {
+    super.startGame(gameStartRequest);
     this._players = this.shuffle(this._players);
 
     if (this._players.length > 2) {

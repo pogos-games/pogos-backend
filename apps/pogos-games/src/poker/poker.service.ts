@@ -11,9 +11,10 @@ import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
+import { GameResponse } from '../../../../libs/tools/src/game/dto/response/game-response.interface';
 
 @Injectable()
-export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse> {
+export class PokerService extends GameService<Poker, GameStartRequest, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse> {
   protected GAME_KEY_PREFIX = 'poker';
 
   constructor(
@@ -64,10 +65,14 @@ export class PokerService extends GameService<Poker, PokerResponse, PokerPlayerR
 
   async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
     if (Object.values(PokerType).includes(request.type as PokerType)) {
-      return await this.start(clientId, request.gameId, Poker) as PokerResponse;
+      return await this.start(clientId, request.gameId, Poker, request) as PokerResponse;
     } else {
       throw new Error('Wrong game type');
     }
+  }
+
+  restartGame(clientId: string, request: GameStartRequest): Promise<GameResponse> {
+    return this.startGame(clientId, request)
   }
 
 

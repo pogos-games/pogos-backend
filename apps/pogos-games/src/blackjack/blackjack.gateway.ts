@@ -9,10 +9,11 @@ import { GatewayEventsListener } from '../../../../libs/tools/src/game/enum/gate
 import { Socket } from 'socket.io';
 import { GatewayEventEmitter } from '../../../../libs/tools/src/game/enum/gateway/gateway-event-emitter.enum';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
+import { BlackjackStartRequest } from './dto/request/blackjack-start-request.class';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'blackjack', cors: 'http://localhost:4200' })
-export class BlackjackGateway extends GameGateway<BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, Blackjack, BlackJackPlayResponse, BlackjackService> {
+export class BlackjackGateway extends GameGateway<BlackjackResponse, BlackjackPlayerResponse, BlackjackStartRequest, BlackJackPlayer, Blackjack, BlackJackPlayResponse, BlackjackService> {
   constructor(private readonly blackjackService: BlackjackService) {
     super(blackjackService);
   }

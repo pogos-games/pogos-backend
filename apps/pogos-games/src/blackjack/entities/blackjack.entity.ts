@@ -8,6 +8,7 @@ import { Game, Player } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.interface';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
+import { BlackjackStartRequest } from '../dto/request/blackjack-start-request.class';
 
 export class BlackJackPlayer extends Player {
   id: string;
@@ -20,7 +21,7 @@ export class BlackJackPlayer extends Player {
   roundPlayed: boolean;
 }
 
-export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, BlackjackPlayerResponse> {
+export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, BlackJackPlayer, BlackjackPlayerResponse> {
   @Expose()
   @Type(() => Card)
   private _dealerHand: Card[];
@@ -69,15 +70,24 @@ export class Blackjack extends Game<BlackjackResponse, BlackJackPlayer, Blackjac
     });
   }
 
-  public startGame() {
-    super.startGame()
+  public startGame(request: BlackjackStartRequest) {
+    super.startGame(request)
     this._players.forEach((player) => {
       player.hand.push([this.drawCard(this.deck), this.drawCard(this.deck)]);
+      player.bet = request.bet;
+      player.balance -= request.bet;
       if (this.calculateHandValue(player.hand[player.currentHandId]) == 21) {
         this.stand(player);
       }
     });
     this.dealerHand.push(this.drawCard(this.deck), this.drawCard(this.deck));
+  }
+
+  public restartGame(request :BlackjackStartRequest) {
+    if (this.players.some(player => player.balance < request.bet)) {
+      throw new Error('Some users doesn\'t have enough balance')
+    }
+    this.startGame(request)
   }
 
   public clearHands() {
