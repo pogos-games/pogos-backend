@@ -249,7 +249,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       }
     })
      const gains = sortedPlayers.map((player: PokerPlayer) => ({
-       playerId: player.id,
+       player: player,
        points: player.roundBet,
      }))
     return {end: true, points: gains} as GameEndResponse

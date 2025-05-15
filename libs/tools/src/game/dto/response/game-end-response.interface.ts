@@ -1,4 +1,6 @@
+import { Player } from '../../entities/game.entity';
+
 export interface GameEndResponse {
   end:boolean,
-  points:{playerId: string, points: number}[];
+  points:{player: Player, points: number}[];
 }

@@ -199,7 +199,6 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
         this.dealerHand.push(this.drawCard(this.deck));
       }
       const dealerHandValue = this.calculateHandValue(this.dealerHand)
-      console.log(dealerHandValue)
 
       player.hand.forEach(hand => {
         const currentHandValue = this.calculateHandValue(hand)
@@ -213,7 +212,8 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
           totalWin += eachBet * 2
         }
       })
-      return {playerId: player.id, points: totalWin}
+      player.balance += totalWin;
+      return {player: player, points: totalWin}
     })
     return {end: true, points: playerResponse}  as GameEndResponse;
   }
