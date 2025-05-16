@@ -46,6 +46,8 @@ export class FriendshipController {
     enum: FriendshipAction,
     description: 'The action to perform (ACCEPT or REJECT)',
   })
+
+
   @ApiParam({
     name: 'friendRequestId',
     type: String,

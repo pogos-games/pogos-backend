@@ -123,7 +123,9 @@ export class FriendshipService {
 
     // check that user is allowed to accept this request
     if (friendship.requested.id !== requestedId) {
-      throw new ForbiddenException('You are not allowed to accept this request.');
+      throw new ForbiddenException(
+        'You are not allowed to accept this request.',
+      );
     }
 
     // update friendship status
@@ -145,19 +147,25 @@ export class FriendshipService {
     return friendship;
   }
 
-
   async rejectFriendRequest(friendShipId: string, friendId: string) {
-    await this.friendshipRepository
-      .delete({
-        id: friendShipId,
-        requested: { id: friendId },
-      })
-      .then(() => {
-        this.notificationService.deleteNotificationByRequestId(friendShipId);
-      })
-      .catch((error) => {
-        console.error('Error rejecting friendship request:', error);
-      });
+    const friendship = await this.friendshipRepository.findOne({
+      where: [
+        { id: friendShipId, requested: { id: friendId } },
+        { id: friendShipId, requester: { id: friendId } },
+      ],
+      relations: ['requested', 'requester'],
+    });
+
+    if (friendship) {
+      await this.friendshipRepository
+        .remove(friendship)
+        .then(() => {
+          this.notificationService.deleteNotificationByRequestId(friendShipId);
+        })
+        .catch((error) => {
+          console.error('Error rejecting friendship request:', error);
+        });
+    }
   }
 
   async findFriends(userId: string): Promise<FriendResponse[]> {
