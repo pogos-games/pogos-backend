@@ -224,7 +224,7 @@ export abstract class GameService<
                                 GameClass: new(id?: string,
                                                  deck?: Card[],
                                                  leaderId?: string,
-                                                 type?: string) => TGame ): Promise<string[]> {
+                                                 type?: string) => TGame ): Promise<TGame> {
     const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
     const game = await this.redisService.get<TGame>(key,GameClass);
     if (!game) {
@@ -234,6 +234,6 @@ export abstract class GameService<
       throw new UnauthorizedException(`Only the leader can end the game`);
     }
     game.status = GameStatus.ENDED;
-    return game.players.map((player) => player.id);
+    return game;
   }
 }

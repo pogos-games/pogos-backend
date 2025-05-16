@@ -27,11 +27,11 @@ export class BlackjackGateway extends GameGateway<BlackjackResponse, BlackjackPl
     if (gamePlayResponse.end){
       gamePlayResponse.game.endRound().points.forEach((player) => {
         this.server
-          .to(player.playerId)
+          .to(player.player.id)
           .emit(GatewayEventEmitter.GAME_UPDATE, gamePlayResponse)
         this.server
-          .to(player.playerId)
-          .emit(GatewayEventEmitter.END_GAME, player.points);
+          .to(player.player.id)
+          .emit(GatewayEventEmitter.END_GAME, player);
       })
     }
     await this.sendGameAction(gamePlayResponse);

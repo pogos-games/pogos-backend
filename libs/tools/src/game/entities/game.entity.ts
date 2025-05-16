@@ -104,7 +104,7 @@ export abstract class Game<TResponse extends GameResponse,
     public restartGame(gameStartRequest: TStartRequest){
         this.startGame(gameStartRequest);
     }
-    
+
     public abstract clearHands();
     
     play(player: TPlayer, action: GameActionRequest): boolean{

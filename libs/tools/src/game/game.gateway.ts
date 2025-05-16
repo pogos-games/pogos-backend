@@ -49,12 +49,15 @@ export class GameGateway<
   @SubscribeMessage(GatewayEventsListener.END_GAME)
   async handleEndGame(client: Socket, gameId: string,
                       GameClass: new() => TGame) {
-    const gameClients = await this.gameService.endGame(client, gameId, GameClass);
-    gameClients.forEach((clientId) => {
+    const game = await this.gameService.endGame(client, gameId, GameClass);
+    game.players.forEach((player) => {
       this.server
-        .to(clientId)
+        .to(player.id)
+        .emit(GatewayEventEmitter.END_GAME, player)
+      this.server
+        .to(player.id)
         .emit(GatewayEventEmitter.GAME_UPDATE, 'game ended');
-      this.server.sockets.sockets.get(clientId).disconnect();
+      this.server.sockets.sockets.get(player.id).disconnect();
     });
   }
 
@@ -110,8 +113,8 @@ export class GameGateway<
     if (gamePlayResponse.end){
       gamePlayResponse.game.endRound().points.forEach((player) => {
         this.server
-          .to(player.playerId)
-          .emit(GatewayEventEmitter.END_GAME, player.points);
+          .to(player.player.id)
+          .emit(GatewayEventEmitter.END_GAME, player);
       })
     }
     await this.sendGameAction(gamePlayResponse);
