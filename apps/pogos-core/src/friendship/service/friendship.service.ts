@@ -49,12 +49,10 @@ export class FriendshipService {
         {
           requester: requester,
           requested: friend,
-          status: FriendshipStatus.PENDING,
         },
         {
           requester: friend,
           requested: requester,
-          status: FriendshipStatus.PENDING,
         },
       ],
     });
