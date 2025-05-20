@@ -1,0 +1,26 @@
+# Étape 1 : Builder
+FROM node:20-alpine AS builder
+
+WORKDIR /repo
+
+# Copier tout le projet (en évitant un .dockerignore trop restrictif)
+COPY . .
+
+# Installer les dépendances via workspaces
+RUN npm install
+
+# Builder uniquement le microservice
+RUN npm run build pogos-games
+
+# Étape 2 : Runtime
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copier uniquement le build et les dépendances nécessaires
+COPY --from=builder /repo/dist/apps/pogos-games ./
+COPY --from=builder /repo/package*.json ./
+
+RUN npm ci --omit=dev
+
+CMD ["node", "main.js"]
