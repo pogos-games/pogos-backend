@@ -1,0 +1,32 @@
+name: Manual Deploy to PROD
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to deploy (e.g., pogos-core)"
+        required: true
+        default: "pogos-core"
+      tag:
+        description: 'Docker image tag to deploy (e.g., v1.0.0 or latest)'
+        required: true
+        default: 'latest'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy selected service with tag
+        run: |
+          if [[ "${{ github.event.inputs.service }}" == "pogos-core" ]]; then
+            URL="${{ secrets.COOLIFY_POGOS_CORE_WEBHOOK }}"
+          elif [[ "${{ github.event.inputs.service }}" == "pogos-games" ]]; then
+            URL="${{ secrets.COOLIFY_POGOS_GAMES_WEBHOOK }}"
+          else
+            echo "Service not recognized"
+            exit 1
+          fi
+
+          # Append tag as query param, Coolify utilise ce paramètre pour déployer le tag spécifique
+          curl -X POST "${URL}?tag=${{ github.event.inputs.tag }}"
