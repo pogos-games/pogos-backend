@@ -44,6 +44,7 @@ jobs:
           tags: |
             ${{ env.IMAGE_CORE }}:${{ github.event.inputs.tag }}
             ${{ env.IMAGE_CORE }}:${{ github.sha }}
+            ${{ env.IMAGE_CORE }}:latest
           push: true
           build-args: |
             APP_NAME=pogos-core
@@ -57,6 +58,7 @@ jobs:
           tags: |
             ${{ env.IMAGE_GAMES }}:${{ github.event.inputs.tag }}
             ${{ env.IMAGE_GAMES }}:${{ github.sha }}
+            ${{ env.IMAGE_GAMES }}:latest
           push: true
           build-args: |
             APP_NAME=pogos-games
