@@ -24,3 +24,5 @@ COPY --from=builder /repo/package*.json ./
 RUN npm ci --omit=dev
 
 CMD ["node", "main.js"]
+
+EXPOSE 3000
