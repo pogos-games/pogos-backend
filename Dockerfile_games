@@ -25,4 +25,4 @@ RUN npm ci --omit=dev
 
 CMD ["node", "main.js"]
 
-EXPOSE 3000
+EXPOSE 3001
