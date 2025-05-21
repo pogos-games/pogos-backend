@@ -4,16 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: "Service to deploy"
+        description: "Service to deploy (e.g., pogos-core)"
         required: true
         default: "pogos-core"
-        type: choice
-        options:
-          - pogos-core
-        #  - pogos-games
-
       tag:
-        description: 'Docker image tag to deploy (ex: v1.0.0 or latest)'
+        description: 'Docker image tag to deploy (e.g., v1.0.0 or latest)'
         required: true
         default: 'latest'
 

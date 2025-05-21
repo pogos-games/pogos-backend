@@ -1,9 +1,12 @@
 name: Build and Push Docker Images
 
 on:
-  push:
-    branches: [main, develop, feat/bd/cicd]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Docker image tag to push (e.g., v1.0.0)"
+        required: true
+        default: "latest"
 
 env:
   REGISTRY: ghcr.io
@@ -39,7 +42,7 @@ jobs:
           context: .
           file: Dockerfile_core
           tags: |
-            ${{ env.IMAGE_CORE }}:latest
+            ${{ env.IMAGE_CORE }}:${{ github.event.inputs.tag }}
             ${{ env.IMAGE_CORE }}:${{ github.sha }}
           push: true
           build-args: |
@@ -52,7 +55,7 @@ jobs:
           context: .
           file: Dockerfile_games
           tags: |
-            ${{ env.IMAGE_GAMES }}:latest
+            ${{ env.IMAGE_GAMES }}:${{ github.event.inputs.tag }}
             ${{ env.IMAGE_GAMES }}:${{ github.sha }}
           push: true
           build-args: |
