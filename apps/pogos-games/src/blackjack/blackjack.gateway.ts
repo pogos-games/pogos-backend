@@ -15,7 +15,6 @@ import { BlackjackStartRequest } from './dto/request/blackjack-start-request.cla
 @WebSocketGateway({
   namespace: '/blackjack',
   cors: '*',
-  path: '/api/games/socket.io',
 })
 export class BlackjackGateway extends GameGateway<
   BlackjackResponse,
