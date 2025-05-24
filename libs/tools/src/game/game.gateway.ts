@@ -48,7 +48,9 @@ export class GameGateway<
     console.log('Client connected');
   }
 
-  handleDisconnect(client: Socket) {}
+  handleDisconnect(client: Socket) {
+    console.log('Client disconnected');
+  }
 
   protected async sendGameAction(gamePlayResponse: GamePlayResponse) {
     gamePlayResponse.players.forEach((playerId) => {
