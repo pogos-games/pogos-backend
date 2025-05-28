@@ -6,4 +6,6 @@ export enum GatewayEventsListener {
   RESTART_GAME = 'RESTART_GAME',
   JOIN_GAME = 'JOIN_GAME',
   ACTION = 'ACTION',
+  DRAW_CARD = 'DRAW_CARD',
+  UNO_END_ACTION = 'UNO_END_ACTION'
 }
