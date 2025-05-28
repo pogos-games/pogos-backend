@@ -17,6 +17,13 @@ export class RedisService {
     const parsedValue = JSON.parse(value);
     return Object.assign(new type(), parsedValue);
   }
+  async scan(cursor = 0, pattern = '*', count = 10): Promise<[number, string[]]> {
+    const result = await this.redis.scan(cursor, {
+      MATCH: pattern,
+      COUNT: count,
+    });
+    return [result.cursor, result.keys];
+  }
 
   async set<T>(key: string, value: T, expiration?: number) {
     const jsonValue = JSON.stringify(value);

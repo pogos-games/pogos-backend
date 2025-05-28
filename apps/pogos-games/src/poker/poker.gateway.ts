@@ -7,6 +7,7 @@ import { PokerPlayerResponse } from './dto/response/poker-player-response.interf
 import { GatewayEventEmitter } from '../../../../libs/tools/src/game/enum/gateway/gateway-event-emitter.enum';
 import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
+import { Socket } from 'socket.io';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'poker', cors: 'http://localhost:4200' })
@@ -24,5 +25,9 @@ export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse
         .to(playerId)
         .emit(GatewayEventEmitter.GAME_UPDATE, pokerGameResponse.game.river, pokerGameResponse.game.nextPlayerId);
     });
+  }
+
+  async handleDisconnectClientCall(client: Socket) {
+    return this.handleDisconnectClient(client, Poker);
   }
 }

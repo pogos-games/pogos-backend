@@ -30,6 +30,10 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
     return await super.joinGame(gameId, playerId, Blackjack);
   }
 
+  async quit(gameId: string, playerId: string){
+    return await super.quitGame(gameId, playerId, Blackjack);
+  }
+
   protected checkEnd(game: Blackjack): boolean {
     return game.players.every(player => player.isStanding);
   }

@@ -34,7 +34,7 @@ export abstract class Game<TResponse extends GameResponse,
 
     @Expose()
     @Type(() => Player)
-    protected readonly _players: TPlayer[];
+    protected _players: TPlayer[];
     
     @Expose()
     protected _status: GameStatus;
@@ -90,7 +90,11 @@ export abstract class Game<TResponse extends GameResponse,
           username: 'not defined'
         } as TPlayer);
     }
-    
+
+    public removeUser(userId: string): void {
+        this._players = this._players.filter(player => player.id !== userId);
+    }
+
     public drawCard(deck: Card[]): Card {
         return deck.pop();
     }
