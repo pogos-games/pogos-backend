@@ -58,6 +58,10 @@ export abstract class GameService<
     return game;
   }
 
+  async deleteGame(game: TGame){
+    await this.redisService.delete(`${this.GAME_KEY_PREFIX}:${game.id}`);
+    await this.redisService.delete(`${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${game.leaderId}`);
+  }
   protected async findByLeaderId(leaderId: string,
                                  GameClass: new(id?: string,
                                                   deck?: Card[],
@@ -74,6 +78,8 @@ export abstract class GameService<
   }
 
   abstract join(gameId: string, playerId: string): Promise<string[]>;
+
+  abstract quit(gameId: string, playerId: string): Promise<TGame>;
 
   async joinGame(gameId: string, playerId: string,
                  GameClass: new(id?: string,
@@ -92,6 +98,28 @@ export abstract class GameService<
     await this.saveGame(game);
     console.log("New player joined: ", playerId);
     return game.players.map(player => player.id)
+  }
+
+  async quitGame(gameId: string, playerId: string,
+                 GameClass: new(id?: string,
+                                deck?: Card[],
+                                leaderId?: string,
+                                type?: string) =>  TGame){
+    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
+    return this.redisService.get<TGame>(key,GameClass)
+      .then(async (game) => {
+        if (!game) {
+          throw new NotFoundException(`Game id ${gameId} not found`);
+        }
+        game.removeUser(playerId);
+        console.log("Player : " + playerId + " left");
+        return await this.saveGame(game).then(async () => {
+          if (game.players.length == 0) {
+            await this.deleteGame(game);
+          }
+          return game
+        })
+      });
   }
 
 
@@ -159,6 +187,35 @@ export abstract class GameService<
 
   abstract restartGame(clientId: string, request: GameStartRequest): Promise<GameResponse>;
 
+  async disconnectClient(clientId: string,
+                        GameClass: new (
+                        id?: string,
+                          deck?: Card[],
+                          leaderId?: string,
+                          type?: string
+                      ) => TGame): Promise<TGame[]> {
+    let cursor = 0;
+    let games: TGame[] = [];
+
+    do {
+      const [nextCursor, keys] = await this.redisService.scan(
+        cursor,
+        `${this.GAME_KEY_PREFIX}:*`
+      );
+      cursor = nextCursor;
+
+      for (const key of keys) {
+        if (key.includes(this.LEADER_KEY_PREFIX)) continue;
+
+        let game = await this.redisService.get<TGame>(key, GameClass);
+        if (game?.players?.some((p) => p.id === clientId)) {
+          game = await this.quitGame(game.id, clientId, GameClass);
+          games.push(game);
+        }
+      }
+    } while (cursor !== 0);
+    return games
+  }
 
   protected async start(clientId: string, gameId:string,
                                       GameClass: new(id?: string,

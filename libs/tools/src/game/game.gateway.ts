@@ -1,9 +1,4 @@
-import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { ChatGateway } from '../chat/chat.gateway';
@@ -16,9 +11,10 @@ import { GameResponse } from './dto/response/game-response.interface';
 import { GameActionRequest } from './dto/request/game-action-request.interface';
 import { GameStartRequest } from './dto/request/game-start-request.class';
 import { GamePlayResponse } from './dto/response/game-play-response.interface';
+import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 
 // process.env.FRONTEND_URL
-export class GameGateway<
+export abstract class GameGateway<
     TResponse extends GameResponse,
     TPlayerResponse extends GamePlayerResponse,
     TStartRequest extends GameStartRequest,
@@ -48,8 +44,26 @@ export class GameGateway<
     console.log('Client connected');
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     console.log('Client disconnected');
+    this.handleDisconnectClientCall(client).then();
+  }
+
+  abstract handleDisconnectClientCall(client: Socket);
+  async handleDisconnectClient(client: Socket,
+                         GameClass: new (
+                           id?: string,
+                           deck?: Card[],
+                           leaderId?: string,
+                           type?: string
+                         ) => TGame): Promise<void>{
+    return this.gameService.disconnectClient(client.id, GameClass).then(games => {
+      games.forEach(game => game.players.forEach((player) => {
+        this.server
+          .to(player.id)
+          .emit(GatewayEventEmitter.GAME_UPDATE, game.toResponse());
+      }));
+    });
   }
 
   protected async sendGameAction(gamePlayResponse: GamePlayResponse) {
@@ -103,13 +117,27 @@ export class GameGateway<
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
-  async handleJoinGame(client: Socket, gameId: string) {
-    const players = await this.gameService.join(gameId, client.id);
-    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+  async handleJoinGame(client: Socket, gameId: {gameId: string}) {
+    const players = await this.gameService.join(gameId.gameId, client.id);
+    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId.gameId);
     players.forEach((playerId) => {
       if (playerId != client.id) {
         this.server
           .to(playerId)
+          .emit(GatewayEventEmitter.GAME_UPDATE, client.id);
+      }
+    });
+  }
+
+  @SubscribeMessage(GatewayEventsListener.QUIT_GAME)
+  async handleQuitGame(client: Socket, gameId: {gameId: string}) {
+    console.log(gameId)
+    const game = await this.gameService.quit(gameId.gameId, client.id);
+    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId.gameId);
+    game.players.forEach((player) => {
+      if (player.id != client.id) {
+        this.server
+          .to(player.id)
           .emit(GatewayEventEmitter.GAME_UPDATE, client.id);
       }
     });

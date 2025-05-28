@@ -31,6 +31,10 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
     return await super.joinGame(gameId, playerId, Poker);
   }
 
+  async quit(gameId: string, playerId: string){
+    return await super.quitGame(gameId, playerId, Poker);
+  }
+
   /**
    * End the game
    * @param client the client that is ending the game
