@@ -117,9 +117,9 @@ export abstract class GameGateway<
   }
 
   @SubscribeMessage(GatewayEventsListener.JOIN_GAME)
-  async handleJoinGame(client: Socket, gameId: string) {
-    const players = await this.gameService.join(gameId, client.id);
-    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+  async handleJoinGame(client: Socket, gameId: {gameId: string}) {
+    const players = await this.gameService.join(gameId.gameId, client.id);
+    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId.gameId);
     players.forEach((playerId) => {
       if (playerId != client.id) {
         this.server
@@ -130,9 +130,10 @@ export abstract class GameGateway<
   }
 
   @SubscribeMessage(GatewayEventsListener.QUIT_GAME)
-  async handleQuitGame(client: Socket, gameId: string) {
-    const game = await this.gameService.quit(gameId, client.id);
-    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId);
+  async handleQuitGame(client: Socket, gameId: {gameId: string}) {
+    console.log(gameId)
+    const game = await this.gameService.quit(gameId.gameId, client.id);
+    client.emit(GatewayEventEmitter.GAME_UPDATE, gameId.gameId);
     game.players.forEach((player) => {
       if (player.id != client.id) {
         this.server
