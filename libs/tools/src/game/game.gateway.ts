@@ -131,7 +131,6 @@ export abstract class GameGateway<
 
   @SubscribeMessage(GatewayEventsListener.QUIT_GAME)
   async handleQuitGame(client: Socket, gameId: {gameId: string}) {
-    console.log(gameId)
     const game = await this.gameService.quit(gameId.gameId, client.id);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId.gameId);
     game.players.forEach((player) => {
