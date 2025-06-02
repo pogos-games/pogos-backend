@@ -1,17 +1,18 @@
-import { SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import {
+  MessageBody,
+  SubscribeMessage,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { Server } from 'socket.io';
+import { ChatMessage } from './model/chat-message.interface';
 
-export class ChatGateway  {
-
-
+export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-
   @SubscribeMessage('CHAT')
-  async handleChat(client: Socket, payload: string) {
-    console.log("Chat sender id:", client.id);
-    console.log('Chat message:', payload);
-    client.emit('chat', payload);
+  async handleChat(@MessageBody() payload: ChatMessage) {
+    console.log('chat received:', payload);
+    this.server.to(payload.gameId).emit('CHAT', payload);
   }
 }
