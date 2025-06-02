@@ -137,7 +137,7 @@ export abstract class GameGateway<
       if (player.id != client.id) {
         this.server
           .to(player.id)
-          .emit(GatewayEventEmitter.GAME_UPDATE, client.id);
+          .emit(GatewayEventEmitter.GAME_UPDATE, game.toResponse());
       }
     });
   }

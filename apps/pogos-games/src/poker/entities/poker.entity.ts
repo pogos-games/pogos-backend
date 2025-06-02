@@ -277,7 +277,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
 
     return {
       gameId: this._id,
-      river: this._river,
+      dealerHand: this._river,
       players: players,
       pot: this._pot,
       lastBet: this._lastBet,
