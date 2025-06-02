@@ -6,9 +6,8 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Socket } from 'socket.io';
 import { UnoService } from './uno.service';
 import { UnoGameMode } from './model/uno-game-mode.interface';
 import { GameEvent } from './model/uno-game-event.interface';
@@ -16,15 +15,18 @@ import { GatewayEventsListener } from '../../../../libs/tools/src/game/enum/gate
 import { UnoEndAction } from './model/uno-end-action.interface';
 import { UnoEndActionType } from './model/uno-end-action-type.enum';
 import { UnoAction, UnoActionType } from './model/uno-action.interface';
+import { ChatGateway } from '../../../../libs/tools/src/chat/chat.gateway';
 
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
-export class UnoGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
-
+export class UnoGateway
+  extends ChatGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly clientRoomMap = new Map<string, string>();
 
-  constructor(private readonly gameService: UnoService) {}
+  constructor(private readonly gameService: UnoService) {
+    super();
+  }
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
@@ -74,7 +76,7 @@ export class UnoGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.dispatchEvents(events);
   }
 
-  @SubscribeMessage(GatewayEventsListener.ACTION)
+  @SubscribeMessage(GatewayEventsListener)
   handlePlayCard(@MessageBody() action: UnoAction) {
     if (action.type === UnoActionType.PLAY_CARD)
       this.dispatchEvents(
