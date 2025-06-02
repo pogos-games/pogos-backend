@@ -34,7 +34,7 @@ export abstract class Game<
 
   @Expose()
   @Type(() => Player)
-  protected readonly _players: TPlayer[];
+  protected _players: TPlayer[];
 
   @Expose()
   protected _status: GameStatus;
@@ -76,19 +76,23 @@ export abstract class Game<
     return this._type;
   }
 
-  public addUser(userId: string) {
-    if (this.status !== GameStatus.WAITING) {
-      throw new Error('Cannot add user to a game that has already started');
+    public addUser(userId: string) {
+        if (this.status !== GameStatus.WAITING) {
+          throw new Error('Cannot add user to a game that has already started');
+        }
+        this._players.push({
+          id: userId,
+          username: 'not defined'
+        } as TPlayer);
     }
-    this._players.push({
-      id: userId,
-      username: 'not defined',
-    } as TPlayer);
-  }
 
-  public drawCard(deck: Card[]): Card {
-    return deck.pop();
-  }
+    public removeUser(userId: string): void {
+        this._players = this._players.filter(player => player.id !== userId);
+    }
+
+    public drawCard(deck: Card[]): Card {
+        return deck.pop();
+    }
 
   public startGame(gameStartRequest: TStartRequest) {
     this._status = GameStatus.IN_PROGRESS;

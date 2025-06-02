@@ -12,28 +12,40 @@ import { BlackjackActionRequest } from './dto/request/blackjack-action-request.i
 import { BlackjackStartRequest } from './dto/request/blackjack-start-request.class';
 
 // process.env.FRONTEND_URL
-@WebSocketGateway({ namespace: 'blackjack', cors: 'http://localhost:4200' })
-export class BlackjackGateway extends GameGateway<BlackjackResponse, BlackjackPlayerResponse, BlackjackStartRequest, BlackJackPlayer, Blackjack, BlackJackPlayResponse, BlackjackService> {
+@WebSocketGateway({
+  namespace: '/blackjack',
+  cors: '*',
+})
+export class BlackjackGateway extends GameGateway<
+  BlackjackResponse,
+  BlackjackPlayerResponse,
+  BlackjackStartRequest,
+  BlackJackPlayer,
+  Blackjack,
+  BlackJackPlayResponse,
+  BlackjackService
+> {
   constructor(private readonly blackjackService: BlackjackService) {
     super(blackjackService);
   }
 
   @SubscribeMessage(GatewayEventsListener.ACTION)
   async handleAction(client: Socket, gameAction: BlackjackActionRequest) {
-    const gamePlayResponse = await this.gameService.play(
-      client,
-      gameAction,
-    );
-    if (gamePlayResponse.end){
+    const gamePlayResponse = await this.gameService.play(client, gameAction);
+    if (gamePlayResponse.end) {
       gamePlayResponse.game.endRound().points.forEach((player) => {
         this.server
           .to(player.player.id)
-          .emit(GatewayEventEmitter.GAME_UPDATE, gamePlayResponse)
+          .emit(GatewayEventEmitter.GAME_UPDATE, gamePlayResponse);
         this.server
           .to(player.player.id)
           .emit(GatewayEventEmitter.END_GAME, player);
-      })
+      });
     }
     await this.sendGameAction(gamePlayResponse);
+  }
+
+  async handleDisconnectClientCall(client: Socket) {
+    return this.handleDisconnectClient(client, Blackjack);
   }
 }

@@ -1,8 +1,8 @@
 import {
-  WebSocketGateway,
-  WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { TokenService } from '@app/auth-library/service/token.service';
@@ -12,22 +12,24 @@ import { NotificationEventEmitter } from '../model/gateway/notification-event-em
 import { NotificationResponse } from '../model/dto/response/notification-response.interface';
 
 @WebSocketGateway({ namespace: 'notifications' })
-export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
+export class NotificationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer() readonly server: Server;
 
-  private connectedClients = new Map<string, string>(); // Map userId -> socketId
+  private readonly connectedClients = new Map<string, string>(); // Map userId -> socketId
 
-  constructor(private readonly tokenService: TokenService) {
-  }
+  constructor(private readonly tokenService: TokenService) {}
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
       const authMiddleware = new AuthMiddleware(this.tokenService);
       await authMiddleware.use(client, (err) => {
         if (err) {
-          console.error('Échec d\'authentification du client :', err.message);
+          console.error("Échec d'authentification du client :", err.message);
           client.disconnect();
         }
+        console.log('Client connected');
       });
 
       const userId = client?.user.sub;
@@ -55,11 +57,16 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
    * @param userId ID de l'utilisateur (sub dans le JWT).
    * @param notification Message à envoyer.
    */
-  async sendNotification(userId: string, notification: NotificationResponse): Promise<void> {
+  async sendNotification(
+    userId: string,
+    notification: NotificationResponse,
+  ): Promise<void> {
     const socketId = this.connectedClients.get(userId);
 
     if (socketId) {
-      this.server.to(socketId).emit(NotificationEventEmitter.NOTIFICATION, notification);
+      this.server
+        .to(socketId)
+        .emit(NotificationEventEmitter.NOTIFICATION, notification);
       console.log(`Message sent to: ${userId}: ${notification}`);
     } else {
       console.log(`User:  ${userId} not connected.`);
