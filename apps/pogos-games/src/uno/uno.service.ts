@@ -41,7 +41,7 @@ export class UnoService {
       {
         id: clientId,
         name: playerName,
-        type: UnoPlayerType.Human,
+        type: UnoPlayerType.HUMAN,
         hand: [],
         declaredUno: false,
       },
@@ -52,7 +52,7 @@ export class UnoService {
         players.push({
           id: uuidv4(),
           name: `Bot ${i}`,
-          type: UnoPlayerType.Bot,
+          type: UnoPlayerType.BOT,
           hand: [],
           declaredUno: false,
         });
@@ -101,7 +101,7 @@ export class UnoService {
 
     const playersToNotify =
       game.mode === UnoGameMode.SOLO
-        ? game.players.filter((p) => p.type !== UnoPlayerType.Bot)
+        ? game.players.filter((p) => p.type !== UnoPlayerType.BOT)
         : game.players;
 
     for (const player of playersToNotify) {

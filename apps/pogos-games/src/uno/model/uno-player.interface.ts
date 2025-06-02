@@ -10,6 +10,6 @@ export interface UnoPlayer {
 
 // enums/player-type.enum.ts
 export enum UnoPlayerType {
-  Human = 'HUMAN',
-  Bot = 'BOT',
+  HUMAN = 'HUMAN',
+  BOT = 'BOT',
 }

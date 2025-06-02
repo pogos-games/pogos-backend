@@ -6,19 +6,19 @@ export interface UnoCard {
 }
 
 export enum UnoCardType {
-  Number = 'NUMBER',
-  Skip = 'SKIP',
-  Reverse = 'REVERSE',
-  DrawTwo = 'DRAW_TWO',
-  Wild = 'WILD',
-  WildDrawFour = 'WILD_DRAW_FOUR',
+  NUMBER = 'NUMBER',
+  SKIP = 'SKIP',
+  REVERSE = 'REVERSE',
+  DRAW_TO = 'DRAW_TWO',
+  WILD = 'WILD',
+  WILD_DRAW_FOUR = 'WILD_DRAW_FOUR',
 }
 
 
 export enum UnoCardColor {
-  Red = 'RED',
-  Yellow = 'YELLOW',
-  Green = 'GREEN',
-  Blue = 'BLUE',
-  Wild = 'WILD',
+  RED = 'RED',
+  YELLOW = 'YELLOW',
+  GREEN = 'GREEN',
+  BLUE = 'BLUE',
+  WILD = 'WILD',
 }

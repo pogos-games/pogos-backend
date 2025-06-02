@@ -3,13 +3,12 @@ import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoGameDirection } from './uno-game-direction.enum';
 import { UnoCard, UnoCardColor, UnoCardType } from './uno-card.interface';
 import { UnoGameMode } from './uno-game-mode.interface';
-import { Card } from '../../cards/model/card.interface';
 
 export class UnoGame {
   public currentTurnIndex = 0;
   public discardPile: UnoCard[] = [];
   public hasStarted = false;
-  public direction = UnoGameDirection.Clockwise;
+  public direction = UnoGameDirection.CLOCKWISE;
   public players: UnoPlayer[] = [];
   public deck: UnoCard[];
 
@@ -26,14 +25,14 @@ export class UnoGame {
     this.hasStarted = true;
     this.players.forEach((p) => {
       for (let i = 0; i < 7; i++) {
-        p.hand.push(this.deck.pop()!);
+        p.hand.push(this.deck.pop());
       }
     });
 
     let firstCard: UnoCard;
     do {
       firstCard = this.deck.pop()!;
-    } while (firstCard.type !== UnoCardType.Number);
+    } while (firstCard.type !== UnoCardType.NUMBER);
 
     this.discardPile.push(firstCard);
   }
@@ -59,9 +58,9 @@ export class UnoGame {
     return true;
   }
 
-  drawCard(playerId: string) : UnoCard[] {
-    const player : UnoPlayer = this.players.find((p) => p.id === playerId);
-    if(!player) return;
+  drawCard(playerId: string): UnoCard[] {
+    const player: UnoPlayer = this.players.find((p) => p.id === playerId);
+    if (!player) return;
 
     const drawnCard = this.deck.pop();
     if (drawnCard) {
@@ -70,13 +69,12 @@ export class UnoGame {
     }
 
     return player.hand;
-
   }
 
   handleBotTurns(): void {
-    while (this.players[this.currentTurnIndex].type === UnoPlayerType.Bot) {
+    while (this.players[this.currentTurnIndex].type === UnoPlayerType.BOT) {
       const bot = this.players[this.currentTurnIndex];
-      const top = this.discardPile.at(-1)!;
+      const top = this.discardPile.at(-1);
       const card = bot.hand.find((c) => this.isCardPlayable(c, top));
 
       if (card) {
@@ -99,7 +97,7 @@ export class UnoGame {
   counterUno(targetPlayerId: string) {
     const target = this.players.find((p) => p.id === targetPlayerId);
     if (target && target.hand.length === 1 && !target.declaredUno) {
-      target.hand.push(this.deck.pop()!, this.deck.pop()!);
+      target.hand.push(this.deck.pop(), this.deck.pop());
     }
   }
 
@@ -119,17 +117,17 @@ export class UnoGame {
 
   private isCardPlayable(card: UnoCard, top: UnoCard): boolean {
     return (
-      card.color === UnoCardColor.Wild ||
+      card.color === UnoCardColor.WILD ||
       card.color === top.color ||
       card.type === top.type ||
-      (card.type === UnoCardType.Number &&
-        top.type === UnoCardType.Number &&
+      (card.type === UnoCardType.NUMBER &&
+        top.type === UnoCardType.NUMBER &&
         card.value === top.value)
     );
   }
 
   private advanceTurn() {
-    const delta = this.direction === UnoGameDirection.Clockwise ? 1 : -1;
+    const delta = this.direction === UnoGameDirection.CLOCKWISE ? 1 : -1;
     this.currentTurnIndex =
       (this.currentTurnIndex + delta + this.players.length) %
       this.players.length;
@@ -137,27 +135,27 @@ export class UnoGame {
 
   private generateShuffledDeck(): UnoCard[] {
     const colors = [
-      UnoCardColor.Red,
-      UnoCardColor.Green,
-      UnoCardColor.Blue,
-      UnoCardColor.Yellow,
+      UnoCardColor.RED,
+      UnoCardColor.GREEN,
+      UnoCardColor.BLUE,
+      UnoCardColor.YELLOW,
     ];
     const deck: UnoCard[] = [];
 
     for (const color of colors) {
       for (let i = 0; i <= 9; i++) {
-        deck.push({ color, type: UnoCardType.Number, value: i });
-        if (i !== 0) deck.push({ color, type: UnoCardType.Number, value: i });
+        deck.push({ color, type: UnoCardType.NUMBER, value: i });
+        if (i !== 0) deck.push({ color, type: UnoCardType.NUMBER, value: i });
       }
       for (let i = 0; i < 2; i++) {
-        deck.push({ color, type: UnoCardType.Skip });
-        deck.push({ color, type: UnoCardType.Reverse });
-        deck.push({ color, type: UnoCardType.DrawTwo });
+        deck.push({ color, type: UnoCardType.SKIP });
+        deck.push({ color, type: UnoCardType.REVERSE });
+        deck.push({ color, type: UnoCardType.DRAW_TO });
       }
     }
     for (let i = 0; i < 4; i++) {
-      deck.push({ color: UnoCardColor.Wild, type: UnoCardType.Wild });
-      deck.push({ color: UnoCardColor.Wild, type: UnoCardType.WildDrawFour });
+      deck.push({ color: UnoCardColor.WILD, type: UnoCardType.WILD });
+      deck.push({ color: UnoCardColor.WILD, type: UnoCardType.WILD_DRAW_FOUR });
     }
 
     return deck.sort(() => Math.random() - 0.5);
