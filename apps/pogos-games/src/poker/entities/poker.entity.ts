@@ -1,6 +1,5 @@
 import { Card } from '../../cards/model/card.interface';
 import { PokerAction } from '../enum/poker-action.enum';
-import { PokerType } from '../enum/poker-type.enum';
 import { PokerResponse } from '../dto/response/poker-response.interface';
 import { PokerPlayerResponse } from '../dto/response/poker-player-response.interface';
 import { Expose, Type } from 'class-transformer';
@@ -11,6 +10,7 @@ import { PokerActionRequest } from '../dto/request/poker-action-request.interfac
 import * as PokerEvaluator from 'poker-evaluator-ts';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class PokerPlayer extends Player {
   id: string;
@@ -38,9 +38,6 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   protected _nextPlayerId: string;
 
   @Expose()
-  protected readonly _type: PokerType;
-
-  @Expose()
   private _pot;
 
   @Expose()
@@ -50,7 +47,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     id?: string,
     deck?: Card[],
     leaderId?: string,
-    type?: string
+    type?: GameType
   ) {
     super(id,deck,leaderId,type)
     this._river = [];
