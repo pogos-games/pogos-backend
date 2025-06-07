@@ -2,7 +2,7 @@
 import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoGameDirection } from './uno-game-direction.enum';
 import { UnoCard, UnoCardColor, UnoCardType } from './uno-card.interface';
-import { UnoGameMode } from './uno-game-mode.interface';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class UnoGame {
   public currentTurnIndex = 0;
@@ -14,7 +14,7 @@ export class UnoGame {
 
   constructor(
     public readonly id: string,
-    public readonly mode: UnoGameMode,
+    public readonly mode: GameType,
     initialPlayers: UnoPlayer[],
   ) {
     this.players = initialPlayers;
@@ -41,7 +41,7 @@ export class UnoGame {
     const player = this.players.find((p) => p.id === playerId);
     if (!player) return false;
 
-    const topCard = this.discardPile.at(-1);
+    const topCard = this.discardPile[-1];
     if (!topCard || !this.isCardPlayable(card, topCard)) return false;
 
     const index = player.hand.findIndex(
@@ -74,7 +74,7 @@ export class UnoGame {
   handleBotTurns(): void {
     while (this.players[this.currentTurnIndex].type === UnoPlayerType.BOT) {
       const bot = this.players[this.currentTurnIndex];
-      const top = this.discardPile.at(-1);
+      const top = this.discardPile[-1];
       const card = bot.hand.find((c) => this.isCardPlayable(c, top));
 
       if (card) {
@@ -109,7 +109,7 @@ export class UnoGame {
         type: p.type,
         handCount: p.hand.length,
       })),
-      topCard: this.discardPile.at(-1),
+      topCard: this.discardPile[-1],
       currentTurnPlayerId: this.players[this.currentTurnIndex].id,
       direction: this.direction,
     };

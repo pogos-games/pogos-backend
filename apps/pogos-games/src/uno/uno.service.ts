@@ -1,16 +1,13 @@
 // uno.service.ts
-import {
-  GameEvent,
-  UnoGameEventTarget,
-} from './model/uno-game-event.interface';
+import { GameEvent, UnoGameEventTarget } from './model/uno-game-event.interface';
 import { Injectable } from '@nestjs/common';
-import { UnoGameMode } from './model/uno-game-mode.interface';
 import { UnoGame } from './model/uno-game.class';
 import { UnoPlayer, UnoPlayerType } from './model/uno-player.interface';
 import { UnoCard } from './model/uno-card.interface';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { v4 as uuidv4 } from 'uuid';
 import { UnoGatewayEventEmit } from './model/uno-gateway-event-emit.enum';
+import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @Injectable()
 export class UnoService {
@@ -33,7 +30,7 @@ export class UnoService {
   async createGame(
     clientId: string,
     playerName: string,
-    mode: UnoGameMode,
+    mode: GameType,
   ): Promise<{ game: UnoGame; events: GameEvent[] }> {
     const roomId = await this.idGeneratorService.generateUniqueId('#', 'uno');
 
@@ -47,7 +44,7 @@ export class UnoService {
       },
     ];
 
-    if (mode === UnoGameMode.SOLO) {
+    if (mode === GameType.SOLO) {
       for (let i = 1; i <= 3; i++) {
         players.push({
           id: uuidv4(),
@@ -100,7 +97,7 @@ export class UnoService {
     ];
 
     const playersToNotify =
-      game.mode === UnoGameMode.SOLO
+      game.mode === GameType.SOLO
         ? game.players.filter((p) => p.type !== UnoPlayerType.BOT)
         : game.players;
 
@@ -152,7 +149,7 @@ export class UnoService {
         });
       }
 
-      if (game.mode === UnoGameMode.SOLO) {
+      if (game.mode === GameType.SOLO) {
         game.handleBotTurns();
         // return game state updated due to bot
         events.push({
@@ -204,7 +201,7 @@ export class UnoService {
     if (!game) return [];
 
     const playerHand: UnoCard[] = game.drawCard(playerId);
-    if (game.mode == UnoGameMode.SOLO) {
+    if (game.mode == GameType.SOLO) {
       game.handleBotTurns();
     }
     return [

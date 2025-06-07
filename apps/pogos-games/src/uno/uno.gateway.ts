@@ -9,13 +9,13 @@ import {
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { UnoService } from './uno.service';
-import { UnoGameMode } from './model/uno-game-mode.interface';
 import { GameEvent } from './model/uno-game-event.interface';
 import { GatewayEventsListener } from '../../../../libs/tools/src/game/enum/gateway/gateway-events-listener.enum';
 import { UnoEndAction } from './model/uno-end-action.interface';
 import { UnoEndActionType } from './model/uno-end-action-type.enum';
 import { UnoAction, UnoActionType } from './model/uno-action.interface';
 import { ChatGateway } from '../../../../libs/tools/src/chat/chat.gateway';
+import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
 export class UnoGateway
@@ -45,7 +45,7 @@ export class UnoGateway
 
   @SubscribeMessage(GatewayEventsListener.CREATE_GAME)
   async handleCreateGame(
-    @MessageBody() data: { playerName: string; mode: UnoGameMode },
+    @MessageBody() data: { playerName: string; mode: GameType },
     @ConnectedSocket() client: Socket,
   ) {
     this.gameService.registerPlayerSocket(client.id, client.id);
