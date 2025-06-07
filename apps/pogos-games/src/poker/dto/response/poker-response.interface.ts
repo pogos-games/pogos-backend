@@ -5,7 +5,7 @@ import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 
 export interface PokerResponse extends GameResponse {
   gameId:string,
-  river: Card[],
+  dealerHand: Card[],
   players:PokerPlayerResponse[],
   pot: number,
   lastBet: number,
