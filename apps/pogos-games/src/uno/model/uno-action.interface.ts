@@ -1,4 +1,4 @@
-import { UnoCard } from './uno-card.interface';
+import { UnoCard, UnoCardColor } from './uno-card.interface';
 
 export enum UnoActionType {
   PLAY_CARD = 'PLAY_CARD',
@@ -8,6 +8,8 @@ export enum UnoActionType {
 export interface UnoAction {
   roomId: string;
   type: UnoActionType;
-  playerId: string; // Optional, depending on the action
+  playerId: string;
+  // Optional, depending on the action
   card?: UnoCard;
+  declaredColor?: UnoCardColor; // For declaring color in WILD actions
 }

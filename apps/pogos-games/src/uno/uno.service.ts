@@ -7,10 +7,11 @@ import { Injectable } from '@nestjs/common';
 import { UnoGameMode } from './model/uno-game-mode.interface';
 import { UnoGame } from './model/uno-game.class';
 import { UnoPlayer, UnoPlayerType } from './model/uno-player.interface';
-import { UnoCard } from './model/uno-card.interface';
+import { UnoCard, UnoCardColor } from './model/uno-card.interface';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { v4 as uuidv4 } from 'uuid';
 import { UnoGatewayEventEmit } from './model/uno-gateway-event-emit.enum';
+import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
 
 @Injectable()
 export class UnoService {
@@ -30,9 +31,24 @@ export class UnoService {
     }
   }
 
+  getGameIdByPlayer(playerId: string): string {
+    for (const [gameId, game] of this.games.entries()) {
+      if (game.players.some((player) => player.id === playerId)) {
+        return gameId;
+      }
+    }
+    return '';
+  }
+
+  public isSoloGame(gameId: string): boolean {
+    const game: UnoGame = this.getGameById(gameId);
+    return game ? game.mode === UnoGameMode.SOLO : false;
+  }
+
   async createGame(
     clientId: string,
     playerName: string,
+    avatar: Avatar,
     mode: UnoGameMode,
   ): Promise<{ game: UnoGame; events: GameEvent[] }> {
     const roomId = await this.idGeneratorService.generateUniqueId('#', 'uno');
@@ -41,6 +57,7 @@ export class UnoService {
       {
         id: clientId,
         name: playerName,
+        avatar: avatar,
         type: UnoPlayerType.HUMAN,
         hand: [],
         declaredUno: false,
@@ -52,6 +69,7 @@ export class UnoService {
         players.push({
           id: uuidv4(),
           name: `Bot ${i}`,
+          avatar: Avatar.ROBOCOP,
           type: UnoPlayerType.BOT,
           hand: [],
           declaredUno: false,
@@ -116,13 +134,18 @@ export class UnoService {
     return events;
   }
 
-  playCard(roomId: string, playerId: string, card: UnoCard): GameEvent[] {
+  playCard(
+    roomId: string,
+    playerId: string,
+    card: UnoCard,
+    declaredColor?: UnoCardColor,
+  ): GameEvent[] {
     const game: UnoGame = this.games.get(roomId);
     if (!game) return [];
 
     const events: GameEvent[] = [];
 
-    const result = game.playCard(playerId, card);
+    const result = game.playCard(playerId, card, declaredColor);
     if (result) {
       events.push({
         type: UnoGatewayEventEmit.CARD_PLAYED,
@@ -149,17 +172,6 @@ export class UnoService {
             hand: game.getPlayerHand(playerId),
             playerId,
           },
-        });
-      }
-
-      if (game.mode === UnoGameMode.SOLO) {
-        game.handleBotTurns();
-        // return game state updated due to bot
-        events.push({
-          type: UnoGatewayEventEmit.GAME_STATE,
-          target: UnoGameEventTarget.ROOM,
-          targetId: roomId,
-          payload: { state: game.getPublicState() },
         });
       }
     }
@@ -204,9 +216,6 @@ export class UnoService {
     if (!game) return [];
 
     const playerHand: UnoCard[] = game.drawCard(playerId);
-    if (game.mode == UnoGameMode.SOLO) {
-      game.handleBotTurns();
-    }
     return [
       {
         type: UnoGatewayEventEmit.PRIVATE_STATE,
@@ -221,5 +230,65 @@ export class UnoService {
         payload: { state: game.getPublicState() },
       },
     ];
+  }
+
+  getGameById(gameId: string): UnoGame | undefined {
+    return this.games.get(gameId);
+  }
+
+  async startBotTurnLoop(gameId: string, callback: (event: GameEvent) => void) {
+    const game: UnoGame = this.getGameById(gameId);
+    if (!game) return;
+
+    let continuePlaying = true;
+
+    while (continuePlaying && game.isCurrentPlayerABot()) {
+      await this.delay(1500);
+
+      const result = game.playBotTurn(); // ← méthode du domaine (UnoGame)
+
+      // Génération des événements ici (service)
+      const events: GameEvent[] = [];
+
+      if (result.playedCard) {
+        events.push({
+          type: UnoGatewayEventEmit.CARD_PLAYED,
+          targetId: gameId,
+          target: UnoGameEventTarget.ROOM,
+          payload: {
+            playerId: result.playerId,
+            card: result.playedCard,
+            declaredColor: result.declaredColor,
+          },
+        });
+      } else if (result.drawnCard) {
+        events.push({
+          type: UnoGatewayEventEmit.CARD_DRAWN,
+          targetId: gameId,
+          target: UnoGameEventTarget.ROOM,
+          payload: {
+            playerId: result.playerId,
+            card: result.drawnCard,
+          },
+        });
+      }
+
+      events.push({
+        type: UnoGatewayEventEmit.GAME_STATE,
+        targetId: gameId,
+        target: UnoGameEventTarget.ROOM,
+        payload: { state: game.getPublicState() },
+      });
+
+      for (const event of events) {
+        callback(event);
+      }
+
+      continuePlaying = game.isCurrentPlayerABot();
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

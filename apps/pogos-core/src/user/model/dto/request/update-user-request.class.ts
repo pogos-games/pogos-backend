@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Avatar } from '../../enum/avatar.enum';
 import { IsEnum, MaxLength, MinLength } from 'class-validator';
+import { Avatar } from '../../../../../../../libs/tools/src/game/enum/avatar.enum';
 
 export class UserRequest {
   @ApiProperty()
@@ -8,7 +8,7 @@ export class UserRequest {
   @MaxLength(15)
   username: string;
 
-  @ApiProperty({enum:Avatar})
+  @ApiProperty({ enum: Avatar })
   @IsEnum(Avatar)
   avatar: Avatar;
 }
