@@ -58,7 +58,6 @@ export class UnoGame {
 
     player.hand.splice(index, 1);
 
-    // Pour les cartes WILD ou WILD_DRAW_FOUR, on applique la couleur déclarée
     if (
       card.type === UnoCardType.WILD ||
       card.type === UnoCardType.WILD_DRAW_FOUR
@@ -77,7 +76,7 @@ export class UnoGame {
             ? UnoGameDirection.COUNTERCLOCKWISE
             : UnoGameDirection.CLOCKWISE;
         // Si 2 joueurs : reverse = skip
-        if (this.players.length === 2) this.advanceTurn();
+        this.advanceTurn();
         break;
 
       case UnoCardType.SKIP:
@@ -140,7 +139,7 @@ export class UnoGame {
 
     // Cherche une carte jouable dans la main
     const playableCard = hand.find((card) =>
-      this.isCardPlayable(card, topCard)
+      this.isCardPlayable(card, topCard),
     );
 
     if (playableCard) {
