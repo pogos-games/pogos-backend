@@ -1,6 +1,5 @@
 import { Card } from '../../cards/model/card.interface';
 import { PokerAction } from '../enum/poker-action.enum';
-import { PokerType } from '../enum/poker-type.enum';
 import { PokerResponse } from '../dto/response/poker-response.interface';
 import { PokerPlayerResponse } from '../dto/response/poker-player-response.interface';
 import { Expose, Type } from 'class-transformer';
@@ -11,13 +10,14 @@ import { PokerActionRequest } from '../dto/request/poker-action-request.interfac
 import * as PokerEvaluator from 'poker-evaluator-ts';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class PokerPlayer extends Player {
   id: string;
   username: string;
   hand: Card[];
   balance: number;
-  roundBet: number
+  bet: number
   hasFolded: boolean;
   roundPlayed: boolean;
   allIn: number;
@@ -28,7 +28,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
 
   @Expose()
   @Type(() => Card)
-  private _river: Card[];
+  private _dealerHand: Card[];
 
   @Expose()
   @Type(() => PokerPlayer)
@@ -36,9 +36,6 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
 
   @Expose()
   protected _nextPlayerId: string;
-
-  @Expose()
-  protected readonly _type: PokerType;
 
   @Expose()
   private _pot;
@@ -50,10 +47,10 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     id?: string,
     deck?: Card[],
     leaderId?: string,
-    type?: string
+    type?: GameType
   ) {
     super(id,deck,leaderId,type)
-    this._river = [];
+    this._dealerHand = [];
     this._players = [];
     this._pot = 0;
   }
@@ -66,8 +63,8 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     return this._nextPlayerId
   }
 
-  public get river() {
-    return this._river;
+  public get dealerHand() {
+    return this._dealerHand;
   }
 
   public addUser(userId: string) {
@@ -79,7 +76,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       username: 'not defined',
       hand: [],
       balance: 1000,
-      roundBet: 0,
+      bet: 0,
       roundPlayed: false,
       hasFolded: false,
       allIn: 0,
@@ -90,18 +87,14 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     super.startGame(gameStartRequest);
     this._players = this.shuffle(this._players);
 
-    if (this._players.length > 2) {
-      this._nextPlayerId = this._players[2].id;
-    }
-    else if (this._players.length == 2) {
-      this._nextPlayerId = this._players[0].id;
-    } else {
+    if (this._players.length < 2) {
       throw new Error("Insufficient players to start the game.");
     }
     const smallBlindPlayer = this._players[0];
     const bigBlindPlayer = this._players[1];
 
-    this.play(smallBlindPlayer, {
+    this._nextPlayerId = smallBlindPlayer.id
+    this.play(this._players[0], {
       action: PokerAction.RAISE,
       bet: this.SMALL_BLIND,
       gameId: this.id,
@@ -121,14 +114,18 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   }
 
   public clearHands() {
-    this._river = [];
+    this._dealerHand = [];
 
     this._players.forEach((player) => {
       player.hand = [];
     });
   }
 
-  public play(player: PokerPlayer, action: PokerActionRequest) : boolean {
+  public play(askedPlayer: PokerPlayer, action: PokerActionRequest) : boolean {
+    const player: PokerPlayer = this._players.find(currentPlayer => currentPlayer == askedPlayer )
+    if (!player){
+      throw new Error("Player not found")
+    }
     if (player.id != this._nextPlayerId){
       throw new Error("You are not allowed to play right now")
     }
@@ -165,18 +162,18 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       this._nextPlayerId = nextPlayer.id;
     }
     else {
-      if (this.river.length == 5){
+      if (this.dealerHand.length == 5){
         return true;
       }
-      else if (this.river.length == 0){
-        this._river.push(this.drawCard(this.deck))
-        this._river.push(this.drawCard(this.deck))
+      else if (this.dealerHand.length == 0){
+        this._dealerHand.push(this.drawCard(this.deck))
+        this._dealerHand.push(this.drawCard(this.deck))
       }
-      this._river.push(this.drawCard(this.deck))
+      this._dealerHand.push(this.drawCard(this.deck))
       this._nextPlayerId = this._players[0].id
       this._players.forEach(player => {
         player.roundPlayed = false
-        this._pot += player.roundBet
+        this._pot += player.bet
       })
     }
     return false;
@@ -195,12 +192,12 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     if (bet <= 0){
       throw new BadRequestException("Le bet doit être supérieur à 0");
     }
-    if ((bet + player.roundBet) < this._lastBet){
+    if ((bet + player.bet) < this._lastBet){
       throw new BadRequestException("Le bet doit être supérieur ou égal au last bet");
     }
     player.roundPlayed = true;
-    this._lastBet = bet + player.roundBet;
-    player.roundBet += bet;
+    this._lastBet = bet + player.bet;
+    player.bet += bet;
     player.balance -= bet;
     player.allIn += bet;
   }
@@ -212,7 +209,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   }
 
   private call(player: PokerPlayer){
-    this.raise(player,this._lastBet - player.roundBet)
+    this.raise(player,this._lastBet - player.bet)
   }
 
   private fold(player: PokerPlayer){
@@ -231,32 +228,32 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     });
     this.clearHands()
     sortedPlayers.forEach((player: PokerPlayer) => {
-      player.roundBet = 0
+      player.bet = 0
       if (this._pot > 0){
         if(player.allIn != 0){
           const maxWin = player.allIn * this._players.length
           if (maxWin < this._pot ) {
             player.balance += maxWin
             this._pot -= maxWin
-            player.roundBet = maxWin
+            player.bet = maxWin
           }
         }
         else {
           player.balance += this._pot
-          player.roundBet = this._pot
+          player.bet = this._pot
           this._pot = 0
         }
       }
     })
      const gains = sortedPlayers.map((player: PokerPlayer) => ({
        player: player,
-       points: player.roundBet,
+       points: player.bet,
      }))
     return {end: true, points: gains} as GameEndResponse
   }
 
   private evaluateHand(player: PokerPlayer): number{
-    const combinedHand = [...player.hand, ...this._river].sort((a: Card, b: Card) => {
+    const combinedHand = [...player.hand, ...this._dealerHand].sort((a: Card, b: Card) => {
       return a.value - b.value;
     })
       .map((card: Card) => {
@@ -270,19 +267,19 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       playerId: player.id,
       hand: player.hand,
       balance: player.balance,
-      roundBet: player.roundBet,
+      bet: player.bet,
       roundPlayed: player.roundPlayed,
       allIn: player.allIn,
     }));
 
     return {
       gameId: this._id,
-      river: this._river,
+      dealerHand: this._dealerHand,
       players: players,
       pot: this._pot,
       lastBet: this._lastBet,
       status: this._status,
-      nextPlayerId: this._players[0].id
+      nextPlayerId: this._nextPlayerId,
     } as PokerResponse;
   }
 }

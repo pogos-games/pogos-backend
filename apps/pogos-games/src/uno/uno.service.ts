@@ -4,7 +4,6 @@ import {
   UnoGameEventTarget,
 } from './model/uno-game-event.interface';
 import { Injectable } from '@nestjs/common';
-import { UnoGameMode } from './model/uno-game-mode.interface';
 import { UnoGame } from './model/uno-game.class';
 import { UnoPlayer, UnoPlayerType } from './model/uno-player.interface';
 import { UnoCard, UnoCardColor } from './model/uno-card.interface';
@@ -13,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { UnoGatewayEventEmit } from './model/uno-gateway-event-emit.enum';
 import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
+import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @Injectable()
 export class UnoService {
@@ -43,14 +43,14 @@ export class UnoService {
 
   public isSoloGame(gameId: string): boolean {
     const game: UnoGame = this.getGameById(gameId);
-    return game ? game.mode === UnoGameMode.SOLO : false;
+    return game ? game.mode === GameType.SOLO : false;
   }
 
   async createGame(
     clientId: string,
     playerName: string,
     avatar: Avatar,
-    mode: UnoGameMode,
+    mode: GameType,
   ): Promise<{ game: UnoGame; events: GameEvent[] }> {
     const roomId = await this.idGeneratorService.generateUniqueId('#', 'uno');
 
@@ -65,7 +65,7 @@ export class UnoService {
       },
     ];
 
-    if (mode === UnoGameMode.SOLO) {
+    if (mode === GameType.SOLO) {
       for (let i = 1; i <= 3; i++) {
         players.push({
           id: uuidv4(),
@@ -119,7 +119,7 @@ export class UnoService {
     ];
 
     const playersToNotify =
-      game.mode === UnoGameMode.SOLO
+      game.mode === GameType.SOLO
         ? game.players.filter((p) => p.type !== UnoPlayerType.BOT)
         : game.players;
 
@@ -313,7 +313,7 @@ export class UnoService {
       }
 
       // 🏁 Vérification si le bot a gagné
-      const botPlayer = game.players.find(p => p.id === result.playerId);
+      const botPlayer = game.players.find((p) => p.id === result.playerId);
       if (botPlayer && botPlayer.hand.length === 0) {
         game.status = GameStatus.ENDED;
         game.winnerUsername = botPlayer.name;
@@ -330,7 +330,6 @@ export class UnoService {
 
         // On stoppe la boucle immédiatement si le bot a gagné
         continuePlaying = false;
-
       } else {
         continuePlaying = game.isCurrentPlayerABot();
       }
@@ -340,7 +339,6 @@ export class UnoService {
       }
     }
   }
-
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
