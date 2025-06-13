@@ -1,8 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Friendship } from '../../../friendship/model/entity/friendship.entity';
 import { AutoMap } from '@automapper/classes';
-import { Avatar } from '../enum/avatar.enum';
 import { Notification } from '../../../notification/model/entity/notification.entity';
+import { Avatar } from '../../../../../../libs/tools/src/game/enum/avatar.enum';
 
 @Entity()
 export class User {

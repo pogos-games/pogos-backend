@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AutoMap } from '@automapper/classes';
-import { Avatar } from '../../enum/avatar.enum';
+import { Avatar } from '../../../../../../../libs/tools/src/game/enum/avatar.enum';
 
 export class SelfUserResponse {
   @ApiProperty()
