@@ -15,6 +15,7 @@ import { UnoEndAction } from './model/uno-end-action.interface';
 import { UnoEndActionType } from './model/uno-end-action-type.enum';
 import { UnoAction, UnoActionType } from './model/uno-action.interface';
 import { ChatGateway } from '../../../../libs/tools/src/chat/chat.gateway';
+import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
@@ -45,7 +46,8 @@ export class UnoGateway
 
   @SubscribeMessage(GatewayEventsListener.CREATE_GAME)
   async handleCreateGame(
-    @MessageBody() data: { playerName: string; mode: GameType },
+    @MessageBody()
+    data: { playerName: string; mode: GameType; avatar: Avatar },
     @ConnectedSocket() client: Socket,
   ) {
     this.gameService.registerPlayerSocket(client.id, client.id);
@@ -53,6 +55,7 @@ export class UnoGateway
     const { game, events } = await this.gameService.createGame(
       client.id,
       data.playerName,
+      data.avatar,
       data.mode,
     );
 
@@ -76,16 +79,32 @@ export class UnoGateway
     this.dispatchEvents(events);
   }
 
-  @SubscribeMessage(GatewayEventsListener)
+  @SubscribeMessage(GatewayEventsListener.ACTION)
   handlePlayCard(@MessageBody() action: UnoAction) {
-    if (action.type === UnoActionType.PLAY_CARD)
+    if (action.type === UnoActionType.PLAY_CARD) {
       this.dispatchEvents(
-        this.gameService.playCard(action.roomId, action.playerId, action.card),
+        this.gameService.playCard(
+          action.roomId,
+          action.playerId,
+          action.card,
+          action.declaredColor,
+        ),
       );
+    }
+
     if (action.type === UnoActionType.DRAW_CARD) {
       this.dispatchEvents(
         this.gameService.drawCard(action.roomId, action.playerId),
       );
+    }
+
+    const gameId = this.gameService.getGameIdByPlayer(action.playerId);
+    const isSolo = this.gameService.isSoloGame(gameId);
+
+    if (isSolo) {
+      this.gameService.startBotTurnLoop(gameId, (event: GameEvent) => {
+        this.dispatchEvent(event);
+      });
     }
   }
 
@@ -110,7 +129,11 @@ export class UnoGateway
 
   private dispatchEvents(events: GameEvent[]) {
     for (const event of events) {
-      this.server.to(event.targetId).emit(event.type, event.payload);
+      this.dispatchEvent(event);
     }
+  }
+
+  dispatchEvent(event: GameEvent) {
+    this.server.to(event.targetId).emit(event.type, event.payload);
   }
 }
