@@ -1,8 +1,10 @@
 import { UnoCard } from './uno-card.interface';
+import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 
 export interface UnoPlayer {
   id: string;
   name: string;
+  avatar: Avatar;
   type: UnoPlayerType;
   hand: UnoCard[];
   declaredUno: boolean;

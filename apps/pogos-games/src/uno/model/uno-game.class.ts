@@ -2,27 +2,30 @@
 import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoGameDirection } from './uno-game-direction.enum';
 import { UnoCard, UnoCardColor, UnoCardType } from './uno-card.interface';
-import { UnoGameMode } from './uno-game-mode.interface';
+import { GameStatus } from '../../../../../libs/tools/src/game/enum/game-status.enum';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class UnoGame {
   public currentTurnIndex = 0;
   public discardPile: UnoCard[] = [];
-  public hasStarted = false;
   public direction = UnoGameDirection.CLOCKWISE;
   public players: UnoPlayer[] = [];
   public deck: UnoCard[];
+  public status: GameStatus;
+  public winnerUsername?: string;
 
   constructor(
     public readonly id: string,
-    public readonly mode: UnoGameMode,
+    public readonly mode: GameType,
     initialPlayers: UnoPlayer[],
   ) {
     this.players = initialPlayers;
+    this.status = GameStatus.WAITING;
     this.deck = this.generateShuffledDeck();
   }
 
   start() {
-    this.hasStarted = true;
+    this.status = GameStatus.IN_PROGRESS;
     this.players.forEach((p) => {
       for (let i = 0; i < 7; i++) {
         p.hand.push(this.deck.pop());
@@ -37,7 +40,11 @@ export class UnoGame {
     this.discardPile.push(firstCard);
   }
 
-  playCard(playerId: string, card: UnoCard): boolean {
+  playCard(
+    playerId: string,
+    card: UnoCard,
+    declaredColor?: UnoCardColor,
+  ): boolean {
     const player = this.players.find((p) => p.id === playerId);
     if (!player) return false;
 
@@ -53,9 +60,62 @@ export class UnoGame {
     if (index === -1) return false;
 
     player.hand.splice(index, 1);
-    this.discardPile.push(card);
-    this.advanceTurn();
+
+    if (
+      card.type === UnoCardType.WILD ||
+      card.type === UnoCardType.WILD_DRAW_FOUR
+    ) {
+      if (!declaredColor || declaredColor === UnoCardColor.WILD) return false;
+      this.discardPile.push({ ...card, color: declaredColor });
+    } else {
+      this.discardPile.push(card);
+    }
+
+    // Gérer les effets spéciaux
+    switch (card.type) {
+      case UnoCardType.REVERSE:
+        this.direction =
+          this.direction === UnoGameDirection.CLOCKWISE
+            ? UnoGameDirection.COUNTERCLOCKWISE
+            : UnoGameDirection.CLOCKWISE;
+        this.advanceTurn();
+        break;
+
+      case UnoCardType.SKIP:
+        this.advanceTurn();
+        this.advanceTurn();
+        break;
+
+      case UnoCardType.DRAW_TO:
+        this.advanceTurn();
+        this.drawCards(this.players[this.currentTurnIndex], 2);
+        break;
+
+      case UnoCardType.WILD_DRAW_FOUR:
+        this.advanceTurn();
+        this.drawCards(this.players[this.currentTurnIndex], 4);
+        break;
+
+      default:
+        this.advanceTurn();
+        break;
+    }
+
+    if (player.hand.length === 0) {
+      this.status = GameStatus.ENDED;
+      this.winnerUsername = player.name;
+    }
+
     return true;
+  }
+
+  private drawCards(player: UnoPlayer, count: number) {
+    for (let i = 0; i < count; i++) {
+      const card = this.deck.pop();
+      if (card) {
+        player.hand.push(card);
+      }
+    }
   }
 
   drawCard(playerId: string): UnoCard[] {
@@ -71,22 +131,59 @@ export class UnoGame {
     return player.hand;
   }
 
-  handleBotTurns(): void {
-    while (this.players[this.currentTurnIndex].type === UnoPlayerType.BOT) {
-      const bot = this.players[this.currentTurnIndex];
-      const top = this.discardPile.at(-1);
-      const card = bot.hand.find((c) => this.isCardPlayable(c, top));
+  playBotTurn(): {
+    playedCard?: UnoCard;
+    declaredColor?: UnoCardColor;
+    drawnCard?: UnoCard;
+    playerId: string;
+  } {
+    const player = this.players[this.currentTurnIndex];
+    if (player.type !== UnoPlayerType.BOT) {
+      return { playerId: player.id };
+    }
 
-      if (card) {
-        bot.hand = bot.hand.filter((c) => c !== card);
-        this.discardPile.push(card);
-      } else {
-        const drawn = this.deck.pop();
-        if (drawn) bot.hand.push(drawn);
+    const topCard = this.discardPile.at(-1);
+    const hand = player.hand;
+    let declaredColor: UnoCardColor | undefined;
+
+    // Cherche une carte jouable dans la main
+    const playableCard = hand.find((card) =>
+      this.isCardPlayable(card, topCard),
+    );
+
+    if (playableCard) {
+      // Si la carte est une carte Joker, choisir une couleur
+      if (
+        playableCard.type === UnoCardType.WILD ||
+        playableCard.type === UnoCardType.WILD_DRAW_FOUR
+      ) {
+        declaredColor = this.getMostFrequentColor(hand);
       }
 
-      this.advanceTurn();
+      const success = this.playCard(player.id, playableCard, declaredColor);
+      if (success) {
+        return {
+          playerId: player.id,
+          playedCard: playableCard,
+          declaredColor,
+        };
+      }
+    } else {
+      // Aucune carte jouable → on pioche une seule carte, et on ne la joue pas
+      const drawnCard = this.deck.pop();
+      if (drawnCard) {
+        player.hand.push(drawnCard);
+        this.advanceTurn();
+        return {
+          playerId: player.id,
+          drawnCard,
+        };
+      }
     }
+
+    // Si la pioche est vide (par sécurité)
+    this.advanceTurn();
+    return { playerId: player.id };
   }
 
   declareUno(playerId: string) {
@@ -107,6 +204,7 @@ export class UnoGame {
         id: p.id,
         name: p.name,
         type: p.type,
+        avatar: p.avatar,
         handCount: p.hand.length,
       })),
       topCard: this.discardPile.at(-1),
@@ -163,5 +261,29 @@ export class UnoGame {
 
   getPlayerHand(playerId: string): UnoCard[] {
     return this.players.find((p) => p.id === playerId)?.hand || [];
+  }
+
+  isCurrentPlayerABot(): boolean {
+    return this.players[this.currentTurnIndex].type === UnoPlayerType.BOT;
+  }
+
+  private getMostFrequentColor(hand: UnoCard[]): UnoCardColor {
+    const colorCount: Record<UnoCardColor, number> = {
+      RED: 0,
+      GREEN: 0,
+      BLUE: 0,
+      YELLOW: 0,
+      WILD: 0,
+    };
+
+    for (const card of hand) {
+      if (card.color !== 'WILD') {
+        colorCount[card.color]++;
+      }
+    }
+
+    return Object.entries(colorCount).sort(
+      (a, b) => b[1] - a[1],
+    )[0][0] as UnoCardColor;
   }
 }

@@ -7,6 +7,7 @@ import { GameActionRequest } from '../dto/request/game-action-request.interface'
 import { randomInt } from 'crypto';
 import { GameEndResponse } from '../dto/response/game-end-response.interface';
 import { GameStartRequest } from '../dto/request/game-start-request.class';
+import { GameType } from '../enum/game-type.enum';
 
 export abstract class Player {
   id: string;
@@ -30,7 +31,7 @@ export abstract class Game<
   protected readonly _leaderId: string;
 
   @Expose()
-  protected readonly _type: string;
+  protected readonly _type: GameType;
 
   @Expose()
   @Type(() => Player)
@@ -39,13 +40,13 @@ export abstract class Game<
   @Expose()
   protected _status: GameStatus;
 
-  constructor(id?: string, deck?: Card[], leaderId?: string, type?: string) {
+  constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameType) {
     this._id = id ?? '';
     this._status = GameStatus.WAITING;
     this._deck = deck ?? [];
     this._players = [];
     this._leaderId = leaderId ?? '';
-    this._type = type ?? '';
+    this._type = type;
   }
 
   public get id(): string {

@@ -1,6 +1,5 @@
 import { Card } from '../../cards/model/card.interface';
 import { BlackJackAction } from '../enum/black-jack-action.enum';
-import { BlackjackType } from '../enum/blackjack-type.enum';
 import { BlackjackResponse } from '../dto/response/blackjack-response.interface';
 import { BlackjackPlayerResponse } from '../dto/response/blackjack-player-response.interface';
 import { Expose, Type } from 'class-transformer';
@@ -9,6 +8,7 @@ import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.interface';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 import { BlackjackStartRequest } from '../dto/request/blackjack-start-request.class';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class BlackJackPlayer extends Player {
   id: string;
@@ -34,7 +34,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
     id?: string,
     deck?: Card[],
     leaderId?: string,
-    type?: BlackjackType
+    type?: GameType
   ) {
     super(id,deck,leaderId, type)
     this._dealerHand = [];
