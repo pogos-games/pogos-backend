@@ -11,6 +11,7 @@ import { GameStatus } from './enum/game-status.enum';
 import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 import { GameStartRequest } from './dto/request/game-start-request.class';
 import { GamePlayResponse } from './dto/response/game-play-response.interface';
+import { GameType } from './enum/game-type.enum';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse>,
@@ -34,7 +35,7 @@ export abstract class GameService<
     await this.redisService.set<TGame>(key, game);
   }
 
-  abstract createGame(leaderId: string, type: string);
+  abstract createGame(leaderId: string, type: GameType);
 
   protected async create(
     leaderId: string,

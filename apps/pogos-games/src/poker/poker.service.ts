@@ -3,7 +3,6 @@ import { Socket } from 'socket.io';
 import { Poker, PokerPlayer } from './entities/poker.entity';
 import { PokerActionRequest } from './dto/request/poker-action-request.interface';
 import { PokerPlayerResponse } from './dto/response/poker-player-response.interface';
-import { PokerType } from './enum/poker-type.enum';
 import { GameService } from '../../../../libs/tools/src/game/game.service';
 import { PokerResponse } from './dto/response/poker-response.interface';
 import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
@@ -12,6 +11,7 @@ import { IdGeneratorService } from '../../../../libs/tools-library/src/id-genera
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
 import { GameResponse } from '../../../../libs/tools/src/game/dto/response/game-response.interface';
+import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @Injectable()
 export class PokerService extends GameService<Poker, GameStartRequest, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse> {
@@ -22,7 +22,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
     protected readonly cardsService: CardsService,
     protected readonly idGeneratorService: IdGeneratorService
   ) {super(redisService,cardsService,idGeneratorService)}
-  async createGame(leaderId: string,type:PokerType) {
+  async createGame(leaderId: string,type:GameType) {
     const game = await super.create(leaderId, type, Poker)
     return game.id;
   }
@@ -68,7 +68,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
   }
 
   async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(PokerType).includes(request.type as PokerType)) {
+    if (Object.values(GameType).includes(request.type as GameType)) {
       return await this.start(clientId, request.gameId, Poker, request) as PokerResponse;
     } else {
       throw new Error('Wrong game type');
