@@ -12,6 +12,7 @@ import { IdGeneratorService } from '../../../../libs/tools-library/src/id-genera
 import { v4 as uuidv4 } from 'uuid';
 import { UnoGatewayEventEmit } from './model/uno-gateway-event-emit.enum';
 import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
+import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
 
 @Injectable()
 export class UnoService {
@@ -161,7 +162,7 @@ export class UnoService {
         payload: { state: game.getPublicState() },
       });
 
-      // 🆕 Ajouter ça pour renvoyer les cartes au joueur qui vient de jouer
+      // 🔐 Mise à jour de la main privée du joueur
       const clientId = this.playerToClient.get(playerId);
       if (clientId) {
         events.push({
@@ -171,6 +172,23 @@ export class UnoService {
           payload: {
             hand: game.getPlayerHand(playerId),
             playerId,
+          },
+        });
+      }
+
+      const player = game.players.find((p) => p.id === playerId);
+      if (player && player.hand.length === 0) {
+        console.log('sending game ended event');
+        game.status = GameStatus.ENDED;
+        game.winnerUsername = player.name;
+
+        events.push({
+          type: UnoGatewayEventEmit.GAME_ENDED,
+          target: UnoGameEventTarget.ROOM,
+          targetId: roomId,
+          payload: {
+            winner: player.name,
+            winnerId: player.id,
           },
         });
       }
@@ -245,9 +263,8 @@ export class UnoService {
     while (continuePlaying && game.isCurrentPlayerABot()) {
       await this.delay(1500);
 
-      const result = game.playBotTurn(); // ← méthode du domaine (UnoGame)
+      const result = game.playBotTurn();
 
-      // Génération des événements ici (service)
       const events: GameEvent[] = [];
 
       if (result.playedCard) {
@@ -273,6 +290,7 @@ export class UnoService {
         });
       }
 
+      // ⬇️ Mise à jour de l'état global
       events.push({
         type: UnoGatewayEventEmit.GAME_STATE,
         targetId: gameId,
@@ -280,13 +298,49 @@ export class UnoService {
         payload: { state: game.getPublicState() },
       });
 
+      // 🔐 Mise à jour de la main privée du bot (optionnel, utile si affiché pour debug)
+      const clientId = this.playerToClient.get(result.playerId);
+      if (clientId) {
+        events.push({
+          type: UnoGatewayEventEmit.PRIVATE_STATE,
+          target: UnoGameEventTarget.PLAYER,
+          targetId: clientId,
+          payload: {
+            hand: game.getPlayerHand(result.playerId),
+            playerId: result.playerId,
+          },
+        });
+      }
+
+      // 🏁 Vérification si le bot a gagné
+      const botPlayer = game.players.find(p => p.id === result.playerId);
+      if (botPlayer && botPlayer.hand.length === 0) {
+        game.status = GameStatus.ENDED;
+        game.winnerUsername = botPlayer.name;
+
+        events.push({
+          type: UnoGatewayEventEmit.GAME_ENDED,
+          target: UnoGameEventTarget.ROOM,
+          targetId: gameId,
+          payload: {
+            winner: botPlayer.name,
+            winnerId: botPlayer.id,
+          },
+        });
+
+        // On stoppe la boucle immédiatement si le bot a gagné
+        continuePlaying = false;
+
+      } else {
+        continuePlaying = game.isCurrentPlayerABot();
+      }
+
       for (const event of events) {
         callback(event);
       }
-
-      continuePlaying = game.isCurrentPlayerABot();
     }
   }
+
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

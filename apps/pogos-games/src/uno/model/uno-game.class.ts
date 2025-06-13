@@ -3,14 +3,16 @@ import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoGameDirection } from './uno-game-direction.enum';
 import { UnoCard, UnoCardColor, UnoCardType } from './uno-card.interface';
 import { UnoGameMode } from './uno-game-mode.interface';
+import { GameStatus } from '../../../../../libs/tools/src/game/enum/game-status.enum';
 
 export class UnoGame {
   public currentTurnIndex = 0;
   public discardPile: UnoCard[] = [];
-  public hasStarted = false;
   public direction = UnoGameDirection.CLOCKWISE;
   public players: UnoPlayer[] = [];
   public deck: UnoCard[];
+  public status: GameStatus;
+  public winnerUsername?: string;
 
   constructor(
     public readonly id: string,
@@ -18,11 +20,12 @@ export class UnoGame {
     initialPlayers: UnoPlayer[],
   ) {
     this.players = initialPlayers;
+    this.status = GameStatus.WAITING;
     this.deck = this.generateShuffledDeck();
   }
 
   start() {
-    this.hasStarted = true;
+    this.status = GameStatus.IN_PROGRESS;
     this.players.forEach((p) => {
       for (let i = 0; i < 7; i++) {
         p.hand.push(this.deck.pop());
@@ -75,17 +78,16 @@ export class UnoGame {
           this.direction === UnoGameDirection.CLOCKWISE
             ? UnoGameDirection.COUNTERCLOCKWISE
             : UnoGameDirection.CLOCKWISE;
-        // Si 2 joueurs : reverse = skip
         this.advanceTurn();
         break;
 
       case UnoCardType.SKIP:
-        this.advanceTurn(); // passe au suivant joueur
-        this.advanceTurn(); // skip son tour
+        this.advanceTurn();
+        this.advanceTurn();
         break;
 
       case UnoCardType.DRAW_TO:
-        this.advanceTurn(); // cibler prochain joueur
+        this.advanceTurn();
         this.drawCards(this.players[this.currentTurnIndex], 2);
         break;
 
@@ -93,10 +95,17 @@ export class UnoGame {
         this.advanceTurn();
         this.drawCards(this.players[this.currentTurnIndex], 4);
         break;
+
       default:
         this.advanceTurn();
         break;
     }
+
+    if (player.hand.length === 0) {
+      this.status = GameStatus.ENDED;
+      this.winnerUsername = player.name;
+    }
+
     return true;
   }
 

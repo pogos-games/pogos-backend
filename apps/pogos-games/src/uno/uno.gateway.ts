@@ -104,6 +104,7 @@ export class UnoGateway
 
     if (isSolo) {
       this.gameService.startBotTurnLoop(gameId, (event: GameEvent) => {
+
         this.dispatchEvent(event);
       });
     }
