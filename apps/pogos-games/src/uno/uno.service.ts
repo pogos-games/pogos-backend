@@ -363,36 +363,42 @@ export class UnoService {
       return;
     }
 
+    // Order players by the number of cards in their hand
+    const sortedPlayers = [...game.players].sort((a, b) => a.hand.length - b.hand.length);
+
+    // assign player names and avatars
     const gameHistoryDto: GameHistoryDto = {
       id: game.id,
       mode: game.mode,
       type: GameType.UNO,
       date: new Date(),
-      player1: {
-        id: game.players[0].id,
-        username: game.players[0].name,
-        avatar: game.players[0].avatar,
-      },
-      player2: game.players[1]
+      player1: sortedPlayers[0]
         ? {
-            id: game.players[1].id,
-            username: game.players[1].name,
-            avatar: game.players[1].avatar,
-          }
+          id: sortedPlayers[0].id,
+          username: sortedPlayers[0].name,
+          avatar: sortedPlayers[0].avatar,
+        }
         : null,
-      player3: game.players[2]
+      player2: sortedPlayers[1]
         ? {
-            id: game.players[2].id,
-            username: game.players[2].name,
-            avatar: game.players[2].avatar,
-          }
+          id: sortedPlayers[1].id,
+          username: sortedPlayers[1].name,
+          avatar: sortedPlayers[1].avatar,
+        }
         : null,
-      player4: game.players[3]
+      player3: sortedPlayers[2]
         ? {
-            id: game.players[3].id,
-            username: game.players[3].name,
-            avatar: game.players[3].avatar,
-          }
+          id: sortedPlayers[2].id,
+          username: sortedPlayers[2].name,
+          avatar: sortedPlayers[2].avatar,
+        }
+        : null,
+      player4: sortedPlayers[3]
+        ? {
+          id: sortedPlayers[3].id,
+          username: sortedPlayers[3].name,
+          avatar: sortedPlayers[3].avatar,
+        }
         : null,
     };
 

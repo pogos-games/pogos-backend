@@ -11,11 +11,11 @@ export class UserResponse {
   @AutoMap()
   username: string;
 
-  @ApiProperty({enum:Avatar})
+  @ApiProperty({ enum: Avatar })
   @AutoMap(() => String)
-  avatar:Avatar
+  avatar: Avatar;
 
   @ApiProperty()
   @AutoMap()
-  points: number;
+  points?: number;
 }
