@@ -7,6 +7,7 @@ import { FriendshipModule } from './friendship/friendship.module';
 import { AutomapperModule } from '@automapper/nestjs';
 import { classes } from '@automapper/classes';
 import { NotificationModule } from './notification/notification.module';
+import { HistoryModule } from './history/history.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationModule } from './notification/notification.module';
     UserModule,
     FriendshipModule,
     NotificationModule,
+    HistoryModule,
   ],
   controllers: [],
   providers: [],

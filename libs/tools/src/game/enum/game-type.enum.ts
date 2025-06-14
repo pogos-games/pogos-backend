@@ -1,5 +1,6 @@
 
 export enum GameType {
-  SOLO = "SOLO",
-  MULTIPLAYER = "MULTIPLAYER"
+  UNO = 'UNO',
+  POKER = 'POKER',
+  BLACKJACK = 'BLACKJACK',
 }
