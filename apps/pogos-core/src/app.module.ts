@@ -24,7 +24,5 @@ import { HistoryModule } from './history/history.module';
     NotificationModule,
     HistoryModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

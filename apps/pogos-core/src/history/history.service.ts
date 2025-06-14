@@ -12,6 +12,7 @@ import { InjectMapper } from '@automapper/nestjs';
 import { User } from '../user/model/entity/user.entity';
 import { RedisChannel } from '../../../../libs/tools-library/src/redis/redis-channels.enum';
 import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
+import { GamePoints } from './model/enum/game-points.enum';
 
 @Injectable()
 export class HistoryService implements OnModuleInit {
@@ -74,8 +75,26 @@ export class HistoryService implements OnModuleInit {
         try {
           await this.gameHistoryRepository.save(entity);
           console.log(`GameHistory ${entity.id} persisted`);
+
+          // Mise à jour des points (via méthode métier dans User)
+          const playersWithPoints: { user: User | null; points: number }[] = [
+            { user: p1.user, points: GamePoints.FIRST },
+            { user: p2.user, points: GamePoints.SECOND },
+            { user: p3.user, points: GamePoints.THIRD },
+            { user: p4.user, points: GamePoints.FOURTH },
+          ];
+
+          for (const { user, points } of playersWithPoints) {
+            if (user) {
+              user.addPoints(points);
+              await this.userRepository.save(user);
+            }
+          }
         } catch (error) {
-          console.error('Failed to persist GameHistory:', error);
+          console.error(
+            'Failed to persist GameHistory or update points:',
+            error,
+          );
         }
       },
     );
