@@ -14,4 +14,8 @@ export class UserResponse {
   @ApiProperty({enum:Avatar})
   @AutoMap(() => String)
   avatar:Avatar
+
+  @ApiProperty()
+  @AutoMap()
+  points: number;
 }

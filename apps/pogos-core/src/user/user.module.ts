@@ -7,6 +7,7 @@ import { classes } from '@automapper/classes';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './model/entity/user.entity';
 import { CommonsCoreLibraryModule } from '../../../../libs/commons-core-library/src';
+import { RankingController } from './ranking/ranking.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { CommonsCoreLibraryModule } from '../../../../libs/commons-core-library/
   ],
   providers: [UserService],
   exports: [UserService],
-  controllers: [UserController],
+  controllers: [UserController, RankingController],
 })
 export class UserModule {}
 

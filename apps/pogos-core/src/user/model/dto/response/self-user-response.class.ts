@@ -5,17 +5,20 @@ import { Avatar } from '../../../../../../../libs/tools/src/game/enum/avatar.enu
 export class SelfUserResponse {
   @ApiProperty()
   @AutoMap()
-  id:string;
+  id: string;
 
   @ApiProperty()
   @AutoMap()
-  username:string;
+  username: string;
 
-  @ApiProperty({enum:Avatar})
+  @ApiProperty({ enum: Avatar })
   @AutoMap(() => String)
-  avatar:Avatar;
+  avatar: Avatar;
 
   @ApiProperty()
-  nbNotifications:number
+  nbNotifications: number;
 
+  @ApiProperty()
+  @AutoMap()
+  points: number;
 }
