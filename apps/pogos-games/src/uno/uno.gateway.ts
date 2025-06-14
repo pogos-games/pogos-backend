@@ -16,7 +16,7 @@ import { UnoEndActionType } from './model/uno-end-action-type.enum';
 import { UnoAction, UnoActionType } from './model/uno-action.interface';
 import { ChatGateway } from '../../../../libs/tools/src/chat/chat.gateway';
 import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
-import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
+import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
 export class UnoGateway
@@ -47,7 +47,7 @@ export class UnoGateway
   @SubscribeMessage(GatewayEventsListener.CREATE_GAME)
   async handleCreateGame(
     @MessageBody()
-    data: { playerName: string; mode: GameType; avatar: Avatar },
+    data: { playerName: string; mode: GameMode; avatar: Avatar },
     @ConnectedSocket() client: Socket,
   ) {
     this.gameService.registerPlayerSocket(client.id, client.id);

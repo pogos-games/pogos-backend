@@ -11,7 +11,7 @@ import { IdGeneratorService } from '../../../../libs/tools-library/src/id-genera
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
 import { GameResponse } from '../../../../libs/tools/src/game/dto/response/game-response.interface';
-import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
+import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @Injectable()
 export class PokerService extends GameService<Poker, GameStartRequest, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse> {
@@ -22,7 +22,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
     protected readonly cardsService: CardsService,
     protected readonly idGeneratorService: IdGeneratorService
   ) {super(redisService,cardsService,idGeneratorService)}
-  async createGame(leaderId: string,type:GameType) {
+  async createGame(leaderId: string,type:GameMode) {
     const game = await super.create(leaderId, type, Poker)
     return game.id;
   }
@@ -68,7 +68,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
   }
 
   async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(GameType).includes(request.type as GameType)) {
+    if (Object.values(GameMode).includes(request.type as GameMode)) {
       return await this.start(clientId, request.gameId, Poker, request) as PokerResponse;
     } else {
       throw new Error('Wrong game type');

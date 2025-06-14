@@ -4,9 +4,21 @@ import { HistoryService } from './history.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GameHistory } from './model/entity/game-history.entity';
 import { GameHistoryProfile } from './gamehistory.profile';
+import { ToolsModule } from '../../../../libs/tools-library/src';
+import { DatabaseModule } from '@app/database';
+import { AutomapperModule } from '@automapper/nestjs';
+import { classes } from '@automapper/classes';
+import { User } from '../user/model/entity/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([GameHistory])],
+  imports: [
+    DatabaseModule,
+    ToolsModule,
+    TypeOrmModule.forFeature([GameHistory, User]),
+    AutomapperModule.forRoot({
+      strategyInitializer: classes(),
+    }),
+  ],
   controllers: [HistoryController],
   providers: [HistoryService, GameHistoryProfile],
 })

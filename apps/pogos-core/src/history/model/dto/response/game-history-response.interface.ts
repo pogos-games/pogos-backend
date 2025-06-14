@@ -1,11 +1,14 @@
 import { AutoMap } from '@automapper/classes';
 import { UserResponse } from '../../../../user/model/dto/response/user-response.class';
-import { UnoGameMode } from '../../../../../../pogos-games/src/uno/model/uno-game-mode.interface';
-import { GameType } from '../../enum/game-type.enum';
+import { GameMode } from '../../../../../../../libs/tools/src/game/enum/game-mode.enum';
+import { GameType } from '../../../../../../../libs/tools/src/game/enum/game-type.enum';
 
-export class GameHistoryResponse {
+export class GameHistoryDto {
   @AutoMap()
   id: string;
+
+  @AutoMap()
+  mode: GameMode;
 
   @AutoMap(() => UserResponse)
   player1: UserResponse;
@@ -20,10 +23,7 @@ export class GameHistoryResponse {
   player4?: UserResponse;
 
   @AutoMap()
-  gameMode: UnoGameMode;
-
-  @AutoMap()
-  gameType: GameType;
+  type: GameType;
 
   @AutoMap()
   date: Date;

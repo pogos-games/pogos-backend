@@ -8,8 +8,8 @@ import {
 } from 'typeorm';
 import { AutoMap } from '@automapper/classes';
 import { User } from '../../../user/model/entity/user.entity';
-import { GameType } from '../enum/game-type.enum';
-import { UnoGameMode } from '../../../../../pogos-games/src/uno/model/uno-game-mode.interface';
+import { GameType } from '../../../../../../libs/tools/src/game/enum/game-type.enum';
+import { GameMode } from '../../../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @Entity()
 export class GameHistory {
@@ -21,12 +21,18 @@ export class GameHistory {
   @JoinColumn({ name: 'player1Id' })
   player1: User;
 
+  @Column({ nullable: true })
+  player1Name?: string;
+
   @ManyToOne(() => User, (user) => user.gamesAsPlayer2, {
     nullable: true,
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'player2Id' })
   player2?: User;
+
+  @Column({ nullable: true })
+  player2Name?: string;
 
   @ManyToOne(() => User, (user) => user.gamesAsPlayer3, {
     nullable: true,
@@ -35,6 +41,9 @@ export class GameHistory {
   @JoinColumn({ name: 'player3Id' })
   player3?: User;
 
+  @Column({ nullable: true })
+  player3Name?: string;
+
   @ManyToOne(() => User, (user) => user.gamesAsPlayer4, {
     nullable: true,
     onDelete: 'SET NULL',
@@ -42,12 +51,15 @@ export class GameHistory {
   @JoinColumn({ name: 'player4Id' })
   player4?: User;
 
+  @Column({ nullable: true })
+  player4Name?: string;
+
   @AutoMap(() => String)
   @Column({
     type: 'enum',
-    enum: UnoGameMode,
+    enum: GameMode,
   })
-  gameMode: UnoGameMode;
+  gameMode: GameMode;
 
   @AutoMap(() => String)
   @Column({

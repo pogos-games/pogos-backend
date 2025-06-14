@@ -10,7 +10,7 @@ import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { BlackJackPlayResponse } from './dto/response/blackjack-play-response.interface';
 import { BlackjackStartRequest } from './dto/request/blackjack-start-request.class';
-import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
+import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @Injectable()
 export class BlackjackService extends GameService<Blackjack, BlackjackStartRequest, BlackjackResponse, BlackjackPlayerResponse, BlackJackPlayer, BlackJackPlayResponse> {
@@ -21,7 +21,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
     protected readonly cardsService: CardsService,
     protected readonly idGeneratorService: IdGeneratorService
   ) {super(redisService,cardsService,idGeneratorService)}
-  async createGame(leaderId: string,type:GameType) {
+  async createGame(leaderId: string,type:GameMode) {
     const game = await super.create(leaderId, type, Blackjack)
     return game.id;
   }
@@ -66,7 +66,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
   }
 
   async startGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
-    if (Object.values(GameType).includes(request.type as GameType)) {
+    if (Object.values(GameMode).includes(request.type as GameMode)) {
       return await this.start(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
     } else {
       throw new Error('Wrong game type');
@@ -74,7 +74,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
   }
 
   async restartGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
-    if (Object.values(GameType).includes(request.type as GameType)) {
+    if (Object.values(GameMode).includes(request.type as GameMode)) {
       return await this.restart(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
     } else {
       throw new Error('Wrong game type');

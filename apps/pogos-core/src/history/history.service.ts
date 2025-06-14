@@ -1,20 +1,84 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameHistory } from './model/entity/game-history.entity';
 import { Repository } from 'typeorm';
 import { PageOptions } from '../../../../libs/commons-core-library/src/dto/response/page/page-options.interface';
 import { Mapper } from '@automapper/core';
-import { GameHistoryResponse } from './model/dto/response/game-history-response.interface';
+import { GameHistoryDto } from './model/dto/response/game-history-response.interface';
 import { PageMeta } from '../../../../libs/commons-core-library/src/dto/response/page/page-meta.interface';
 import { Page } from '../../../../libs/commons-core-library/src/dto/response/page/page.interface';
+import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
+import { InjectMapper } from '@automapper/nestjs';
+import { User } from '../user/model/entity/user.entity';
+import { RedisChannel } from '../../../../libs/tools-library/src/redis/redis-channels.enum';
 
 @Injectable()
-export class HistoryService {
+export class HistoryService implements OnModuleInit {
   constructor(
     @InjectRepository(GameHistory)
     private readonly gameHistoryRepository: Repository<GameHistory>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectMapper()
     private readonly mapper: Mapper,
+    private readonly redisService: RedisService,
   ) {}
+
+  async onModuleInit() {
+    this.initRedisListener();
+  }
+
+  private initRedisListener() {
+    this.redisService.subscribeToChannel<GameHistoryDto>(
+      RedisChannel.HISTORY,
+      async (gameHistoryDto: GameHistoryDto) => {
+        console.log(`Received GameHistoryDto: ${gameHistoryDto}`);
+        const entity = new GameHistory();
+        entity.id = gameHistoryDto.id;
+        entity.gameMode = gameHistoryDto.mode;
+        entity.gameType = gameHistoryDto.type;
+        entity.date = new Date(gameHistoryDto.date);
+
+        const fetchUserAndName = async (userDto?: {
+          id?: string;
+          username?: string;
+        }): Promise<{ user: User | null; name: string | null }> => {
+          if (!userDto) return { user: null, name: null };
+          const user = userDto.id
+            ? await this.userRepository.findOneBy({
+                username: userDto.username,
+              })
+            : null;
+          const name = user?.username || userDto.username || null;
+          return { user, name };
+        };
+
+        const p1 = await fetchUserAndName(gameHistoryDto.player1);
+        const p2 = await fetchUserAndName(gameHistoryDto.player2);
+        const p3 = await fetchUserAndName(gameHistoryDto.player3);
+        const p4 = await fetchUserAndName(gameHistoryDto.player4);
+
+        entity.player1 = p1.user;
+        entity.player1Name = p1.name;
+
+        entity.player2 = p2.user;
+        entity.player2Name = p2.name;
+
+        entity.player3 = p3.user;
+        entity.player3Name = p3.name;
+
+        entity.player4 = p4.user;
+        entity.player4Name = p4.name;
+
+        try {
+          await this.gameHistoryRepository.save(entity);
+          console.log(`GameHistory ${entity.id} persisted`);
+        } catch (error) {
+          console.error('Failed to persist GameHistory:', error);
+        }
+      },
+    );
+  }
 
   async findHistoryByUserId(
     userId: string,
@@ -45,10 +109,10 @@ export class HistoryService {
     const itemCount = await queryBuilder.getCount();
     const { entities } = await queryBuilder.getRawAndEntities();
 
-    const mappedEntities: GameHistoryResponse[] = this.mapper.mapArray(
+    const mappedEntities: GameHistoryDto[] = this.mapper.mapArray(
       entities,
       GameHistory,
-      GameHistoryResponse,
+      GameHistoryDto,
     );
 
     const pageMeta = new PageMeta({ itemCount, pageOptions });
