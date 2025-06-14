@@ -3,6 +3,7 @@ import { Friendship } from '../../../friendship/model/entity/friendship.entity';
 import { AutoMap } from '@automapper/classes';
 import { Notification } from '../../../notification/model/entity/notification.entity';
 import { Avatar } from '../../../../../../libs/tools/src/game/enum/avatar.enum';
+import { GameHistory } from '../../../history/model/entity/game-history.entity';
 
 @Entity()
 export class User {
@@ -45,5 +46,17 @@ export class User {
     (notification: Notification) => notification.sender,
   )
   sentNotifications: Notification[];
+
+  @OneToMany(() => GameHistory, (game) => game.player1)
+  gamesAsPlayer1: GameHistory[];
+
+  @OneToMany(() => GameHistory, (game) => game.player2)
+  gamesAsPlayer2: GameHistory[];
+
+  @OneToMany(() => GameHistory, (game) => game.player3)
+  gamesAsPlayer3: GameHistory[];
+
+  @OneToMany(() => GameHistory, (game) => game.player4)
+  gamesAsPlayer4: GameHistory[];
 }
 

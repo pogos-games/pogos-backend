@@ -3,7 +3,7 @@ import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoGameDirection } from './uno-game-direction.enum';
 import { UnoCard, UnoCardColor, UnoCardType } from './uno-card.interface';
 import { GameStatus } from '../../../../../libs/tools/src/game/enum/game-status.enum';
-import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
+import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 
 export class UnoGame {
   public currentTurnIndex = 0;
@@ -16,7 +16,7 @@ export class UnoGame {
 
   constructor(
     public readonly id: string,
-    public readonly mode: GameType,
+    public readonly mode: GameMode,
     initialPlayers: UnoPlayer[],
   ) {
     this.players = initialPlayers;

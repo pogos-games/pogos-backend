@@ -6,10 +6,15 @@ import { Card } from '../../../../apps/pogos-games/src/cards/model/card.interfac
 export class RedisService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClient) {}
 
-  async get<TGame>(key: string, type: new(id?: string,
-                                            deck?: Card[],
-                                            leaderId?: string,
-                                            type?: string) => TGame ): Promise<TGame> {
+  async get<TGame>(
+    key: string,
+    type: new (
+      id?: string,
+      deck?: Card[],
+      leaderId?: string,
+      type?: string,
+    ) => TGame,
+  ): Promise<TGame> {
     const value = await this.redis.get(key);
     if (!value) {
       return null;
@@ -17,7 +22,11 @@ export class RedisService {
     const parsedValue = JSON.parse(value);
     return Object.assign(new type(), parsedValue);
   }
-  async scan(cursor = 0, pattern = '*', count = 10): Promise<[number, string[]]> {
+  async scan(
+    cursor = 0,
+    pattern = '*',
+    count = 10,
+  ): Promise<[number, string[]]> {
     const result = await this.redis.scan(cursor, {
       MATCH: pattern,
       COUNT: count,
@@ -49,6 +58,28 @@ export class RedisService {
 
   async delete(key: string): Promise<void> {
     await this.redis.del(key);
+  }
+
+  async subscribeToChannel<T>(
+    channel: string,
+    callback: (message: T) => void,
+  ): Promise<void> {
+    this.redis.subscribe(channel, (rawMessage: string) => {
+      try {
+        const parsedMessage: T = JSON.parse(rawMessage);
+        callback(parsedMessage);
+      } catch (error) {
+        console.error(
+          `Failed to parse message from channel "${channel}":`,
+          error,
+        );
+      }
+    });
+  }
+
+  async publishToChannel<T>(channel: string, message: T): Promise<void> {
+    const jsonMessage = JSON.stringify(message);
+    await this.redis.publish(channel, jsonMessage);
   }
 
 }

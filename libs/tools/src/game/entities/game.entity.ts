@@ -7,7 +7,7 @@ import { GameActionRequest } from '../dto/request/game-action-request.interface'
 import { randomInt } from 'crypto';
 import { GameEndResponse } from '../dto/response/game-end-response.interface';
 import { GameStartRequest } from '../dto/request/game-start-request.class';
-import { GameType } from '../enum/game-type.enum';
+import { GameMode } from '../enum/game-mode.enum';
 
 export abstract class Player {
   id: string;
@@ -31,7 +31,7 @@ export abstract class Game<
   protected readonly _leaderId: string;
 
   @Expose()
-  protected readonly _type: GameType;
+  protected readonly _type: GameMode;
 
   @Expose()
   @Type(() => Player)
@@ -40,7 +40,7 @@ export abstract class Game<
   @Expose()
   protected _status: GameStatus;
 
-  constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameType) {
+  constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameMode) {
     this._id = id ?? '';
     this._status = GameStatus.WAITING;
     this._deck = deck ?? [];
@@ -77,23 +77,23 @@ export abstract class Game<
     return this._type;
   }
 
-    public addUser(userId: string) {
-        if (this.status !== GameStatus.WAITING) {
-          throw new Error('Cannot add user to a game that has already started');
-        }
-        this._players.push({
-          id: userId,
-          username: 'not defined'
-        } as TPlayer);
+  public addUser(userId: string) {
+    if (this.status !== GameStatus.WAITING) {
+      throw new Error('Cannot add user to a game that has already started');
     }
+    this._players.push({
+      id: userId,
+      username: 'not defined',
+    } as TPlayer);
+  }
 
-    public removeUser(userId: string): void {
-        this._players = this._players.filter(player => player.id !== userId);
-    }
+  public removeUser(userId: string): void {
+    this._players = this._players.filter((player) => player.id !== userId);
+  }
 
-    public drawCard(deck: Card[]): Card {
-        return deck.pop();
-    }
+  public drawCard(deck: Card[]): Card {
+    return deck.pop();
+  }
 
   public startGame(gameStartRequest: TStartRequest) {
     this._status = GameStatus.IN_PROGRESS;

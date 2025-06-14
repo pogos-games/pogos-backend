@@ -12,13 +12,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { UnoGatewayEventEmit } from './model/uno-gateway-event-emit.enum';
 import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
+import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
+import { GameHistoryDto } from '../../../pogos-core/src/history/model/dto/response/game-history-response.interface';
+import { RedisChannel } from '../../../../libs/tools-library/src/redis/redis-channels.enum';
+import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @Injectable()
 export class UnoService {
   private readonly games = new Map<string, UnoGame>();
   private readonly playerToClient = new Map<string, string>(); // map playerId -> socketId
-  constructor(private readonly idGeneratorService: IdGeneratorService) {}
+  constructor(
+    private readonly idGeneratorService: IdGeneratorService,
+    private readonly redisService: RedisService,
+  ) {}
 
   registerPlayerSocket(playerId: string, clientId: string) {
     this.playerToClient.set(playerId, clientId);
@@ -43,14 +50,14 @@ export class UnoService {
 
   public isSoloGame(gameId: string): boolean {
     const game: UnoGame = this.getGameById(gameId);
-    return game ? game.mode === GameType.SOLO : false;
+    return game ? game.mode === GameMode.SOLO : false;
   }
 
   async createGame(
     clientId: string,
     playerName: string,
     avatar: Avatar,
-    mode: GameType,
+    mode: GameMode,
   ): Promise<{ game: UnoGame; events: GameEvent[] }> {
     const roomId = await this.idGeneratorService.generateUniqueId('#', 'uno');
 
@@ -65,7 +72,7 @@ export class UnoService {
       },
     ];
 
-    if (mode === GameType.SOLO) {
+    if (mode === GameMode.SOLO) {
       for (let i = 1; i <= 3; i++) {
         players.push({
           id: uuidv4(),
@@ -119,7 +126,7 @@ export class UnoService {
     ];
 
     const playersToNotify =
-      game.mode === GameType.SOLO
+      game.mode === GameMode.SOLO
         ? game.players.filter((p) => p.type !== UnoPlayerType.BOT)
         : game.players;
 
@@ -181,6 +188,9 @@ export class UnoService {
         console.log('sending game ended event');
         game.status = GameStatus.ENDED;
         game.winnerUsername = player.name;
+
+        // save game history
+        this.persistGameHistory(roomId);
 
         events.push({
           type: UnoGatewayEventEmit.GAME_ENDED,
@@ -330,6 +340,8 @@ export class UnoService {
 
         // On stoppe la boucle immédiatement si le bot a gagné
         continuePlaying = false;
+        // save game history
+        this.persistGameHistory(gameId);
       } else {
         continuePlaying = game.isCurrentPlayerABot();
       }
@@ -342,5 +354,51 @@ export class UnoService {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  persistGameHistory(gameID: string) {
+    const game: UnoGame = this.getGameById(gameID);
+    if (!game) {
+      console.error(`Game with ID ${gameID} not found.`);
+      return;
+    }
+
+    const gameHistoryDto: GameHistoryDto = {
+      id: game.id,
+      mode: game.mode,
+      type: GameType.UNO,
+      date: new Date(),
+      player1: {
+        id: game.players[0].id,
+        username: game.players[0].name,
+        avatar: game.players[0].avatar,
+      },
+      player2: game.players[1]
+        ? {
+            id: game.players[1].id,
+            username: game.players[1].name,
+            avatar: game.players[1].avatar,
+          }
+        : null,
+      player3: game.players[2]
+        ? {
+            id: game.players[2].id,
+            username: game.players[2].name,
+            avatar: game.players[2].avatar,
+          }
+        : null,
+      player4: game.players[3]
+        ? {
+            id: game.players[3].id,
+            username: game.players[3].name,
+            avatar: game.players[3].avatar,
+          }
+        : null,
+    };
+
+    this.redisService.publishToChannel<GameHistoryDto>(
+      RedisChannel.HISTORY,
+      gameHistoryDto,
+    );
   }
 }
