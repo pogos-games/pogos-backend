@@ -1,9 +1,4 @@
-import {
-  BadRequestException, ConflictException,
-  HttpException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { Like, Repository } from 'typeorm';
 import { User } from '../model/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -133,8 +128,10 @@ export class UserService {
    * @param userId id of user to update
    * @param userRequest dto of user to update
    */
-  async updateUser(userId: string, userRequest: UserRequest): Promise<UserResponse> {
-
+  async updateUser(
+    userId: string,
+    userRequest: UserRequest,
+  ): Promise<UserResponse> {
     const user: User = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['receivedNotifications'], // load notifications array
@@ -143,10 +140,12 @@ export class UserService {
       throw new NotFoundException('User not found.');
     }
 
-    if(user.username !== userRequest.username) {
-     if( await this.existsByUsername(userRequest.username)){
-       throw new ConflictException(`Username ${userRequest.username} is already taken !`);
-     }
+    if (user.username !== userRequest.username) {
+      if (await this.existsByUsername(userRequest.username)) {
+        throw new ConflictException(
+          `Username ${userRequest.username} is already taken !`,
+        );
+      }
     }
     user.username = userRequest.username;
     user.avatar = userRequest.avatar;
@@ -155,4 +154,25 @@ export class UserService {
     return this.mapper.map(updatedUser, User, SelfUserResponse);
   }
 
+  async getUsersByRanking(
+    pageOptions: PageOptions,
+  ): Promise<Page<UserResponse>> {
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    queryBuilder
+      .orderBy('user.points', pageOptions.order)
+      .skip(pageOptions.skip)
+      .take(pageOptions.take);
+
+    const itemCount = await queryBuilder.getCount();
+    const { entities } = await queryBuilder.getRawAndEntities();
+    const mappedEntities: UserResponse[] = this.mapper.mapArray(
+      entities,
+      User,
+      UserResponse,
+    );
+
+    const pageMeta = new PageMeta({ itemCount, pageOptions });
+    return new Page(mappedEntities, pageMeta);
+  }
 }

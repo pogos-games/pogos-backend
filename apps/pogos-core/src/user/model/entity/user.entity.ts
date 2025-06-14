@@ -58,5 +58,13 @@ export class User {
 
   @OneToMany(() => GameHistory, (game) => game.player4)
   gamesAsPlayer4: GameHistory[];
+
+  @Column({ default: 0 })
+  @AutoMap()
+  points: number;
+
+  addPoints(points: number): void {
+    this.points += points;
+  }
 }
 
