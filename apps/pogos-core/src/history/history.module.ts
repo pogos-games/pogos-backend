@@ -3,7 +3,7 @@ import { HistoryController } from './history.controller';
 import { HistoryService } from './history.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GameHistory } from './model/entity/game-history.entity';
-import { GameHistoryProfile } from './gamehistory.profile';
+import { GameHistoryProfile } from './game-history.profile';
 import { ToolsModule } from '../../../../libs/tools-library/src';
 import { DatabaseModule } from '@app/database';
 import { AutomapperModule } from '@automapper/nestjs';

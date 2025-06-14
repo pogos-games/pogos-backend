@@ -11,6 +11,7 @@ import { RedisService } from '../../../../libs/tools-library/src/redis/redis.ser
 import { InjectMapper } from '@automapper/nestjs';
 import { User } from '../user/model/entity/user.entity';
 import { RedisChannel } from '../../../../libs/tools-library/src/redis/redis-channels.enum';
+import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 
 @Injectable()
 export class HistoryService implements OnModuleInit {
@@ -32,11 +33,11 @@ export class HistoryService implements OnModuleInit {
     this.redisService.subscribeToChannel<GameHistoryDto>(
       RedisChannel.HISTORY,
       async (gameHistoryDto: GameHistoryDto) => {
-        console.log(`Received GameHistoryDto: ${gameHistoryDto}`);
+        console.log(`Received GameHistoryDto: ${gameHistoryDto.id}`);
         const entity = new GameHistory();
         entity.id = gameHistoryDto.id;
-        entity.gameMode = gameHistoryDto.mode;
-        entity.gameType = gameHistoryDto.type;
+        entity.mode = gameHistoryDto.mode;
+        entity.type = gameHistoryDto.type;
         entity.date = new Date(gameHistoryDto.date);
 
         const fetchUserAndName = async (userDto?: {
@@ -80,10 +81,40 @@ export class HistoryService implements OnModuleInit {
     );
   }
 
+  async findHistory(pageOptions?: PageOptions, gameType?: GameType) {
+    const queryBuilder = this.gameHistoryRepository
+      .createQueryBuilder('game')
+      .leftJoinAndSelect('game.player1', 'player1')
+      .leftJoinAndSelect('game.player2', 'player2')
+      .leftJoinAndSelect('game.player3', 'player3')
+      .leftJoinAndSelect('game.player4', 'player4');
+
+    if (gameType) {
+      queryBuilder.andWhere('game.type = :gameType', { gameType });
+    }
+
+    queryBuilder
+      .skip(pageOptions?.skip || 0)
+      .take(pageOptions?.take || 10)
+      .orderBy('game.date', pageOptions?.order || 'DESC');
+
+    const itemCount = await queryBuilder.getCount();
+    const { entities } = await queryBuilder.getRawAndEntities();
+
+    const mappedEntities: GameHistoryDto[] = this.mapper.mapArray(
+      entities,
+      GameHistory,
+      GameHistoryDto,
+    );
+
+    const pageMeta = new PageMeta({ itemCount, pageOptions });
+    return new Page(mappedEntities, pageMeta);
+  }
+
   async findHistoryByUserId(
     userId: string,
     pageOptions: PageOptions,
-    gameType?: string,
+    gameType?: GameType,
   ) {
     const queryBuilder = this.gameHistoryRepository
       .createQueryBuilder('game')
@@ -98,7 +129,7 @@ export class HistoryService implements OnModuleInit {
     );
 
     if (gameType) {
-      queryBuilder.andWhere('game.gameType = :gameType', { gameType });
+      queryBuilder.andWhere('game.type = :gameType', { gameType });
     }
 
     queryBuilder

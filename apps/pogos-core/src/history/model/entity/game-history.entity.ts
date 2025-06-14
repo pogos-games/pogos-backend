@@ -17,6 +17,7 @@ export class GameHistory {
   @PrimaryColumn()
   id: string;
 
+  @AutoMap(() => User)
   @ManyToOne(() => User, (user) => user.gamesAsPlayer1, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'player1Id' })
   player1: User;
@@ -24,6 +25,7 @@ export class GameHistory {
   @Column({ nullable: true })
   player1Name?: string;
 
+  @AutoMap(() => User)
   @ManyToOne(() => User, (user) => user.gamesAsPlayer2, {
     nullable: true,
     onDelete: 'SET NULL',
@@ -34,6 +36,7 @@ export class GameHistory {
   @Column({ nullable: true })
   player2Name?: string;
 
+  @AutoMap(() => User)
   @ManyToOne(() => User, (user) => user.gamesAsPlayer3, {
     nullable: true,
     onDelete: 'SET NULL',
@@ -44,6 +47,7 @@ export class GameHistory {
   @Column({ nullable: true })
   player3Name?: string;
 
+  @AutoMap(() => User)
   @ManyToOne(() => User, (user) => user.gamesAsPlayer4, {
     nullable: true,
     onDelete: 'SET NULL',
@@ -59,15 +63,16 @@ export class GameHistory {
     type: 'enum',
     enum: GameMode,
   })
-  gameMode: GameMode;
+  mode: GameMode;
 
   @AutoMap(() => String)
   @Column({
     type: 'enum',
     enum: GameType,
   })
-  gameType: GameType;
+  type: GameType;
 
+  @AutoMap()
   @CreateDateColumn()
   date: Date;
 }

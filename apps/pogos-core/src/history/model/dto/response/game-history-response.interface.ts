@@ -7,7 +7,7 @@ export class GameHistoryDto {
   @AutoMap()
   id: string;
 
-  @AutoMap()
+  @AutoMap(() => String)
   mode: GameMode;
 
   @AutoMap(() => UserResponse)
@@ -22,7 +22,7 @@ export class GameHistoryDto {
   @AutoMap(() => UserResponse)
   player4?: UserResponse;
 
-  @AutoMap()
+  @AutoMap(() => String)
   type: GameType;
 
   @AutoMap()
