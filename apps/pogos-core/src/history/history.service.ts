@@ -50,7 +50,7 @@ export class HistoryService implements OnModuleInit {
                 username: userDto.username,
               })
             : null;
-          const name = user?.username || userDto.username || null;
+          const name = user?.username ?? userDto.username ?? null;
           return { user, name };
         };
 
