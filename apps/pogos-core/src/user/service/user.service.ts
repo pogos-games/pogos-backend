@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Like, Repository } from 'typeorm';
 import { User } from '../model/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -164,8 +170,9 @@ export class UserService {
       .skip(pageOptions.skip)
       .take(pageOptions.take);
 
-    const itemCount = await queryBuilder.getCount();
+    const itemCount: number = await queryBuilder.getCount();
     const { entities } = await queryBuilder.getRawAndEntities();
+
     const mappedEntities: UserResponse[] = this.mapper.mapArray(
       entities,
       User,
