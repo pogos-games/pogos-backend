@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { SignupRequest } from '../model/dto/request/signup-request.interface';
 import { LoginRequest } from '../model/dto/request/login-request.interface';
@@ -68,5 +75,15 @@ export class AuthController {
       principal.userId,
       passwordUpdateRequest,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Delete('account')
+  @HttpCode(204)
+  async deleteAccount(
+    @AuthenticationPrincipal() principal: Principal,
+  ): Promise<{ message: string }> {
+    return this.authService.deleteAccount(principal.userId);
   }
 }

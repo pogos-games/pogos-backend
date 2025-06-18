@@ -113,5 +113,15 @@ export class AuthService {
 
     return { message: 'Password updated successfully' };
   }
+
+  async deleteAccount(userId: string) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userRepository.remove(user);
+    return { message: 'Account deleted successfully' };
+  }
 }
 
