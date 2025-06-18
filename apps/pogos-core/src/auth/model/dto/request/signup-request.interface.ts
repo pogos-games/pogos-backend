@@ -19,7 +19,7 @@ export class SignupRequest {
   email: string;
 
   @ApiProperty({
-    example:"test@pogos.com",
+    example:"testpassword",
     required:true
   })
   @MinLength(6)

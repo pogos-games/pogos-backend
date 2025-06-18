@@ -1,9 +1,13 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { SignupRequest } from '../model/dto/request/signup-request.interface';
 import { LoginRequest } from '../model/dto/request/login-request.interface';
 import { AuthResponse } from '../model/dto/client/response/auth-response.interface';
-import { ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { PasswordUpdateRequest } from '../model/dto/request/password-update-request.interface';
+import { JwtAuthGuard } from '@app/auth-library/jwt/jwt-auth.guard';
+import { AuthenticationPrincipal } from '@app/auth-library/authentication-principal.decorator';
+import { Principal } from '../../user/model/dto/principal.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -51,5 +55,18 @@ export class AuthController {
   })
   async refresh(@Body() body: { refreshToken: string }): Promise<AuthResponse> {
     return this.authService.refreshToken(body.refreshToken);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post('password')
+  async updatePassword(
+    @AuthenticationPrincipal() principal: Principal,
+    @Body() passwordUpdateRequest: PasswordUpdateRequest,
+  ) {
+    return this.authService.updatePassword(
+      principal.userId,
+      passwordUpdateRequest,
+    );
   }
 }
