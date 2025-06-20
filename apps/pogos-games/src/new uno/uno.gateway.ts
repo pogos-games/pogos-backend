@@ -29,30 +29,30 @@ export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, Game
 
   @SubscribeMessage(GatewayEventsListener.ACTION)
   async handleAction(client: Socket, gameAction: UnoActionRequest) {
-    this.gameService.play(client, gameAction).then(async (gamePlayResponse) => {
-      if (gamePlayResponse.end) {
-        gamePlayResponse.game.endRound().points.forEach((player) => {
-          this.server
-            .to(player.player.id)
-            .emit(GatewayEventEmitter.END_GAME, player);
+    const gamePlayResponse = await this.gameService.play(client, gameAction);
+
+    if (gamePlayResponse.end) {
+      const endRoundPoints = gamePlayResponse.game.endRound().points;
+      endRoundPoints.forEach(player => {
+        this.server.to(player.player.id).emit(GatewayEventEmitter.END_GAME, player);
+      });
+    }
+
+    await this.sendGameAction(gamePlayResponse);
+
+    if (gamePlayResponse.game.type !== GameMode.SOLO) return;
+
+    await this.gameService.startBotTurnLoop(gamePlayResponse, (event: UnoPlayResponse) => {
+      this.sendGameAction(event);
+
+      if (event.end) {
+        event.players.forEach(playerId => {
+          this.server.to(playerId).emit(GatewayEventEmitter.END_GAME);
         });
       }
-      await this.sendGameAction(gamePlayResponse).then(() => {
-        if (gamePlayResponse.game.type === GameMode.SOLO) {
-          this.gameService.startBotTurnLoop(gamePlayResponse, (event: UnoPlayResponse) => {
-            this.sendGameAction(event);
-            if(event.end){
-              event.players.forEach((playerId) =>
-              this.server
-                .to(playerId)
-                .emit(GatewayEventEmitter.END_GAME)
-              )
-            }
-          })
-        }
-      })
     });
   }
+
 
   @SubscribeMessage(GatewayEventsListener.UNO_END_ACTION)
   async handleUnoAction(client: Socket, data: UnoEndAction) {

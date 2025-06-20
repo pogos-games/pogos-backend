@@ -72,29 +72,30 @@ export class GameController {
   async findGame(
     @Query('gameId') gameId: string,
     @Query('clientId') clientId: string
-  ): Promise<{ success: boolean, gameName: string }> {
-    let cursor = 0
-    let gamePrefix = ""
-    let success = false
+  ): Promise<{ success: boolean; gameName: string }> {
+    let cursor = 0;
+
     do {
-      const [nextCursor, keys] = await this.redisService.scan(
-        cursor,
-        `*:#${gameId}`
-      );
+      const [nextCursor, keys] = await this.redisService.scan(cursor, `*:#${gameId}`);
       cursor = nextCursor;
+
       for (const key of keys) {
-        if (key.includes("leaderId")) continue;
-        [gamePrefix] = key.split(":")
-        if (this.gameMap[gamePrefix]) {
-          const GameClass = this.gameMap[gamePrefix];
-          const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
-          if (gameInstance?.private) continue
-          if (gameInstance?.players.length == 4) continue
-          success = true
-          break
-        }
+        if (key.includes('leaderId')) continue;
+
+        const [gamePrefix] = key.split(':');
+        const GameClass = this.gameMap[gamePrefix];
+
+        if (!GameClass) continue;
+
+        const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
+
+        if (!gameInstance || gameInstance.private || gameInstance.players.length === 4) continue;
+
+        return { success: true, gameName: gamePrefix };
       }
     } while (cursor !== 0);
-    return { success: success, gameName: gamePrefix };
+
+    return { success: false, gameName: '' };
   }
+
 }
