@@ -68,7 +68,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
   }
 
   async startGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
-    if (Object.values(GameMode).includes(request.type as GameMode)) {
+    if (Object.values(GameMode).includes(request.type)) {
       return await this.start(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
     } else {
       throw new Error('Wrong game type');
@@ -76,7 +76,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
   }
 
   async restartGame<BlackjackResponse>(clientId: string, request: BlackjackStartRequest) {
-    if (Object.values(GameMode).includes(request.type as GameMode)) {
+    if (Object.values(GameMode).includes(request.type)) {
       return await this.restart(clientId, request.gameId, Blackjack, request) as BlackjackResponse;
     } else {
       throw new Error('Wrong game type');

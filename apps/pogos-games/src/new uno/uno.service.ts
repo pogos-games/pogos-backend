@@ -51,7 +51,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   }
 
   async startGame<UnoResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(GameMode).includes(request.type as GameMode)) {
+    if (Object.values(GameMode).includes(request.type)) {
       return await this.start(clientId, request.gameId, Uno, request);
     } else {
       throw new Error('Wrong game type');

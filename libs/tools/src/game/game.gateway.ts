@@ -111,7 +111,7 @@ export abstract class GameGateway<
     const game : TGameResponse = await this.gameService.createGame(client.id, request);
     const sentResponse: TGameResponse = {
       ...game,
-      players: game.players?.map((responsePlayer: TPlayerResponse) => this.privatiseHand(responsePlayer, client.id)) as GamePlayerResponse[]
+      players: game.players?.map((responsePlayer: TPlayerResponse) => this.privatiseHand(responsePlayer, client.id))
     }
     client.emit(GatewayEventEmitter.GAME_UPDATE, sentResponse);
   }

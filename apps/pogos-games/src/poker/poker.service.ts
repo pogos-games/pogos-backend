@@ -69,7 +69,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
   }
 
   async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(GameMode).includes(request.type as GameMode)) {
+    if (Object.values(GameMode).includes(request.type)) {
       return await this.start(clientId, request.gameId, Poker, request) as PokerResponse;
     } else {
       throw new Error('Wrong game type');
