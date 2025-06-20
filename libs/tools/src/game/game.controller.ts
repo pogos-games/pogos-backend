@@ -2,14 +2,14 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { RedisService } from '../../../tools-library/src/redis/redis.service';
 import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/blackjack.entity';
 import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
-import { UnoGame } from '../../../../apps/pogos-games/src/uno/model/uno-game.class';
+import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
 
 @Controller('game/')
 export class GameController {
   private readonly gameMap: Record<string, any> = {
     blackjack: Blackjack,
     poker: Poker,
-    uno: UnoGame
+    uno: Uno
   };
   constructor(protected readonly redisService: RedisService) {
   }

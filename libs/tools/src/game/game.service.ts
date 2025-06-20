@@ -316,7 +316,7 @@ export abstract class GameService<
     return game;
   }
 
-  async abstract persistGameToHistory(gameId: string): Promise<void>;
+  abstract persistGameToHistory(gameId: string): Promise<void>;
   async persistGameHistory(gameId: string,
                            GameClass: new(id?: string,
                                           deck?: TCard[],

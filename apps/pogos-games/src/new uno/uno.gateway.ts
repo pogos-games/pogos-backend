@@ -10,11 +10,11 @@ import { Uno } from './entities/uno.entity';
 import { UnoPlayResponse } from './dto/response/uno-play-response.interface';
 import { UnoCard } from './entities/uno-card.interface';
 import { GatewayEventsListener } from '../../../../libs/tools/src/game/enum/gateway/gateway-events-listener.enum';
-import { UnoEndAction } from '../uno/model/uno-end-action.interface';
-import { UnoEndActionType } from '../uno/model/uno-end-action-type.enum';
 import { GatewayEventEmitter } from '../../../../libs/tools/src/game/enum/gateway/gateway-event-emitter.enum';
 import { UnoActionRequest } from './dto/request/uno-action-request.interface';
 import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
+import { UnoEndActionType } from './enum/uno-end-action-type.enum';
+import { UnoEndAction } from './dto/request/uno-end-action.interface';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
