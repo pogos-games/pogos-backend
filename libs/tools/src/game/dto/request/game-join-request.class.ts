@@ -1,11 +1,10 @@
 import { IsNotEmpty } from 'class-validator';
 import { Avatar } from '../../enum/avatar.enum';
-import { GameMode } from '../../enum/game-mode.enum';
 
-export class GameCreationRequest {
+export class GameJoinRequest {
 
   playerName: string
   avatar: Avatar
   @IsNotEmpty()
-  type: GameMode;
+  gameId: string
 }

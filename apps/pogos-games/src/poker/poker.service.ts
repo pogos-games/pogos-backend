@@ -10,11 +10,14 @@ import { CardsService } from '../cards/cards.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { PokerPlayResponse } from './dto/response/poker-play-response.interface';
+import { Card } from '../cards/model/card.interface';
+import { GameCreationRequest } from '../../../../libs/tools/src/game/dto/request/game-creation-request.class';
+import { GameJoinRequest } from '../../../../libs/tools/src/game/dto/request/game-join-request.class';
 import { GameResponse } from '../../../../libs/tools/src/game/dto/response/game-response.interface';
 import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @Injectable()
-export class PokerService extends GameService<Poker, GameStartRequest, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse> {
+export class PokerService extends GameService<Poker, GameStartRequest, PokerResponse, PokerPlayerResponse, PokerPlayer, PokerPlayResponse, Card> {
   protected GAME_KEY_PREFIX = 'poker';
 
   constructor(
@@ -22,13 +25,12 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
     protected readonly cardsService: CardsService,
     protected readonly idGeneratorService: IdGeneratorService
   ) {super(redisService,cardsService,idGeneratorService)}
-  async createGame(leaderId: string,type:GameMode) {
-    const game = await super.create(leaderId, type, Poker)
-    return game.id;
+  async createGame(leaderId: string, creationRequest: GameCreationRequest) {
+    return (await super.create(leaderId, creationRequest, Poker)).toResponse()
   }
 
-  async join(gameId: string, playerId: string){
-    return await super.joinGame(gameId, playerId, Poker);
+  async join(joinRequest: GameJoinRequest, playerId: string){
+    return await super.joinGame(joinRequest, playerId, Poker);
   }
 
   async quit(gameId: string, playerId: string){
@@ -75,125 +77,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
     }
   }
 
-  restartGame(clientId: string, request: GameStartRequest): Promise<GameResponse> {
+  restartGame(clientId: string, request: GameStartRequest) {
     return this.startGame(clientId, request)
   }
-
-
-
-  // endGame(client: Socket) {
-  //   this.games.delete(client.id);
-  // }
-
-  // restartGame(clientId: string): PokerDeckResponse {
-  //   this.clearHands(clientId);
-  //   return this.startGame(clientId);
-  // }
-
-  // hit(clientId: string): PokerDeckResponse {
-  //   const game = this.games.get(clientId);
-  //   const card = this.drawCard(game.deck);
-  //   game.playerHand.push(card);
-  //   const playerTotal = this.calculateHandValue(game.playerHand);
-  //   this.calculateHandValue(game.dealerHand);
-  //   const message =
-  //     playerTotal > 21
-  //       ? PokerMessage.PLAYER_BUST
-  //       : PokerMessage.CONTINUE;
-  //
-  //   const response = {
-  //     playerHand: game.playerHand,
-  //     dealerHand: game.dealerHand,
-  //     playerTotal,
-  //     message,
-  //   };
-  //
-  //   if (message === PokerMessage.PLAYER_BUST) {
-  //     this.clearHands(clientId);
-  //   }
-  //
-  //   return response;
-  // }
-  //
-  // stand(clientId: string): PokerDeckResponse {
-  //   const game = this.games.get(clientId);
-  //
-  //   let dealerTotal = this.calculateHandValue(game.dealerHand);
-  //   while (dealerTotal < 17) {
-  //     game.dealerHand.push(this.drawCard(game.deck));
-  //     dealerTotal = this.calculateHandValue(game.dealerHand);
-  //   }
-  //
-  //   const playerTotal = this.calculateHandValue(game.playerHand);
-  //   let result: PokerMessage;
-  //   if (dealerTotal > 21) {
-  //     result = PokerMessage.DEALER_BUST;
-  //   } else if (playerTotal > dealerTotal) {
-  //     result = PokerMessage.PLAYER_WIN;
-  //   } else if (playerTotal < dealerTotal) {
-  //     result = PokerMessage.DEALER_WIN;
-  //   } else {
-  //     result = PokerMessage.TIE;
-  //   }
-  //
-  //   const response = {
-  //     playerHand: game.playerHand,
-  //     dealerHand: game.dealerHand,
-  //     playerTotal,
-  //     message: result,
-  //   };
-  //
-  //   if (
-  //     result === PokerMessage.DEALER_BUST ||
-  //     result === PokerMessage.PLAYER_WIN ||
-  //     result === PokerMessage.DEALER_WIN ||
-  //     result === PokerMessage.TIE
-  //   ) {
-  //     this.clearHands(clientId);
-  //   }
-  //
-  //   return response;
-  // }
-  //
-  // private drawCard(deck: Card[]): Card {
-  //   return deck.pop();
-  // }
-  //
-  // private getRankValue(rank: string): number {
-  //   if (['K', 'Q', 'J'].includes(rank)) {
-  //     return 10;
-  //   } else if (rank === 'A') {
-  //     return 11;
-  //   } else {
-  //     return parseInt(rank);
-  //   }
-  // }
-  //
-  // private calculateHandValue(hand: Card[]): number {
-  //   let value = 0;
-  //   let aceCount = 0;
-  //
-  //   for (const card of hand) {
-  //     if (card.rank === 'A') {
-  //       value += 11;
-  //       aceCount++;
-  //     } else if (['K', 'Q', 'J'].includes(card.rank)) {
-  //       value += 10;
-  //     } else {
-  //       value += parseInt(card.rank);
-  //     }
-  //   }
-  //   while (value > 21 && aceCount > 0) {
-  //     value -= 10;
-  //     aceCount--;
-  //   }
-  //   return value;
-  // }
-  //
-  // clearHands(clientId: string) {
-  //   const game = this.games.get(clientId);
-  //   game.playerHand = [];
-  //   game.dealerHand = [];
-  //   //game.deck = this.createDeck();
-  // }
 }

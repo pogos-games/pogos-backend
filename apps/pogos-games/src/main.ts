@@ -29,6 +29,8 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, documentFactory);
 
+  app.enableCors({origin: configService.get('FRONTEND_URL')})
+
   app.useGlobalPipes(new ValidationPipe());
   await app.listen(configService.get('GAMES_PORT'));
 

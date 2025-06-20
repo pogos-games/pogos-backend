@@ -18,7 +18,7 @@ import { ChatGateway } from '../../../../libs/tools/src/chat/chat.gateway';
 import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
-@WebSocketGateway({ namespace: 'uno', cors: '*' })
+@WebSocketGateway({ namespace: 'unot', cors: '*' })
 export class UnoGateway
   extends ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect

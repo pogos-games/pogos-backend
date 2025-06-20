@@ -2,7 +2,6 @@ import { GamePlayerResponse } from 'libs/tools/src/game/dto/response/game-player
 import { Card } from '../../../cards/model/card.interface';
 
 export interface PokerPlayerResponse extends GamePlayerResponse{
-  playerId:string,
   hand:Card[];
   balance:number,
   bet:number,

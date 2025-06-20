@@ -1,5 +1,6 @@
 export enum GatewayEventEmitter {
   GAME_UPDATE = 'GAME_UPDATE',
+  START_GAME = 'START_GAME',
   END_GAME = 'END_GAME',
   PLAYER_UPDATE = 'PLAYER_UPDATE',
 }

@@ -10,6 +10,7 @@ import { Socket } from 'socket.io';
 import { GatewayEventEmitter } from '../../../../libs/tools/src/game/enum/gateway/gateway-event-emitter.enum';
 import { BlackjackActionRequest } from './dto/request/blackjack-action-request.interface';
 import { BlackjackStartRequest } from './dto/request/blackjack-start-request.class';
+import { Card } from '../cards/model/card.interface';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({
@@ -23,7 +24,9 @@ export class BlackjackGateway extends GameGateway<
   BlackJackPlayer,
   Blackjack,
   BlackJackPlayResponse,
-  BlackjackService
+  BlackjackService,
+  BlackjackResponse,
+  Card
 > {
   constructor(private readonly blackjackService: BlackjackService) {
     super(blackjackService);
@@ -47,5 +50,9 @@ export class BlackjackGateway extends GameGateway<
 
   async handleDisconnectClientCall(client: Socket) {
     return this.handleDisconnectClient(client, Blackjack);
+  }
+
+  protected privatiseHand(gamePlayerResponse: BlackjackPlayerResponse, playerId: string): BlackjackPlayerResponse {
+    return gamePlayerResponse;
   }
 }

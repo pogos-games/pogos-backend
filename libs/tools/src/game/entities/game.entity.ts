@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { GameStatus } from '../enum/game-status.enum';
-import { Card } from 'apps/pogos-games/src/cards/model/card.interface';
+import { BaseCard } from 'apps/pogos-games/src/cards/model/card.interface';
 import { GameResponse } from '../dto/response/game-response.interface';
 import { GamePlayerResponse } from '../dto/response/game-player-response.interface';
 import { GameActionRequest } from '../dto/request/game-action-request.interface';
@@ -8,10 +8,13 @@ import { randomInt } from 'crypto';
 import { GameEndResponse } from '../dto/response/game-end-response.interface';
 import { GameStartRequest } from '../dto/request/game-start-request.class';
 import { GameMode } from '../enum/game-mode.enum';
+import { Avatar } from '../enum/avatar.enum';
 
 export abstract class Player {
   id: string;
   username: string;
+  avatar: Avatar;
+  hand: any[]
 }
 
 export abstract class Game<
@@ -19,28 +22,32 @@ export abstract class Game<
   TStartRequest extends GameStartRequest,
   TPlayer extends Player,
   TPlayerResponse extends GamePlayerResponse,
+  TCard extends BaseCard
 > {
   @Expose()
   protected readonly _id: string;
 
   @Expose()
-  @Type(() => Card)
-  protected _deck: Card[];
+  @Type(() => BaseCard)
+  protected _deck: TCard[];
 
   @Expose()
   protected readonly _leaderId: string;
 
   @Expose()
-  protected readonly _type: GameMode;
+  protected _type: GameMode;
 
   @Expose()
   @Type(() => Player)
-  protected _players: TPlayer[];
+  _players: TPlayer[];
 
   @Expose()
   protected _status: GameStatus;
 
-  constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameMode) {
+  @Expose()
+  protected _private: boolean = false
+
+  constructor(id?: string, deck?: TCard[], leaderId?: string, type?: GameMode) {
     this._id = id ?? '';
     this._status = GameStatus.WAITING;
     this._deck = deck ?? [];
@@ -65,7 +72,7 @@ export abstract class Game<
     return this._players;
   }
 
-  public get deck(): Card[] {
+  public get deck(): TCard[] {
     return this._deck;
   }
 
@@ -77,23 +84,36 @@ export abstract class Game<
     return this._type;
   }
 
-  public addUser(userId: string) {
-    if (this.status !== GameStatus.WAITING) {
-      throw new Error('Cannot add user to a game that has already started');
-    }
-    this._players.push({
-      id: userId,
-      username: 'not defined',
-    } as TPlayer);
+  public get private(): boolean {
+    return this._private;
   }
+
+  public changePrivacy(): void {
+    this._private = !this._private
+  }
+
+    public addUser(userId: string, avatar: Avatar, playerName: string) {
+        if (this.status !== GameStatus.WAITING) {
+          throw new Error('Cannot add user to a game that has already started');
+        }
+        this._players.push({
+          id: userId,
+          username: playerName,
+          avatar: avatar,
+        } as TPlayer);
+    }
 
   public removeUser(userId: string): void {
     this._players = this._players.filter((player) => player.id !== userId);
   }
 
-  public drawCard(deck: Card[]): Card {
-    return deck.pop();
-  }
+    public checkNoPlayerLeft(): boolean{
+      return this.players.length == 0
+    }
+
+    public drawCard(deck: TCard[]): TCard {
+        return deck.pop();
+    }
 
   public startGame(gameStartRequest: TStartRequest) {
     this._status = GameStatus.IN_PROGRESS;

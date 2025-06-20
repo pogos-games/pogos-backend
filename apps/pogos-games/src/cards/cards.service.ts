@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Card } from './model/card.interface';
+import { BaseCardsService } from './base-cards.service';
 
 @Injectable()
-export class CardsService {
+export class CardsService extends BaseCardsService<Card>{
 
   private getBlackjackRankValue(rank: string): number {
     if (['K', 'Q', 'J'].includes(rank)) {

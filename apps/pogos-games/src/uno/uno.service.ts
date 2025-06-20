@@ -1,14 +1,10 @@
 // uno.service.ts
-import {
-  GameEvent,
-  UnoGameEventTarget,
-} from './model/uno-game-event.interface';
+import { GameEvent, UnoGameEventTarget } from './model/uno-game-event.interface';
 import { Injectable } from '@nestjs/common';
 import { UnoGame } from './model/uno-game.class';
 import { UnoPlayer, UnoPlayerType } from './model/uno-player.interface';
 import { UnoCard, UnoCardColor } from './model/uno-card.interface';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
-import { v4 as uuidv4 } from 'uuid';
 import { UnoGatewayEventEmit } from './model/uno-gateway-event-emit.enum';
 import { Avatar } from '../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
@@ -71,19 +67,6 @@ export class UnoService {
         declaredUno: false,
       },
     ];
-
-    if (mode === GameMode.SOLO) {
-      for (let i = 1; i <= 3; i++) {
-        players.push({
-          id: uuidv4(),
-          name: `Bot ${i}`,
-          avatar: Avatar.ROBOCOP,
-          type: UnoPlayerType.BOT,
-          hand: [],
-          declaredUno: false,
-        });
-      }
-    }
 
     const game = new UnoGame(roomId, mode, players);
     this.games.set(roomId, game);
