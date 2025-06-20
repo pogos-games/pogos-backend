@@ -79,4 +79,8 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
   restartGame(clientId: string, request: GameStartRequest): Promise<PokerResponse> {
     return this.startGame(clientId, request)
   }
+
+  async persistGameToHistory(gameId: string): Promise<void> {
+    await this.persistGameHistory(gameId, Poker)
+  }
 }

@@ -142,4 +142,8 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
       currentPlayerId: game.players[game.currentTurnIndex].id
     } as UnoPlayResponse
   }
+
+  async persistGameToHistory(gameId: string): Promise<void> {
+    await this.persistGameHistory(gameId, Uno)
+  }
 }

@@ -82,4 +82,8 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
       throw new Error('Wrong game type');
     }
   }
+
+  async persistGameToHistory(gameId: string): Promise<void> {
+    await this.persistGameHistory(gameId, Blackjack)
+  }
 }
