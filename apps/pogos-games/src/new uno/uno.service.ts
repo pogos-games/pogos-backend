@@ -4,7 +4,6 @@ import { GameService } from '../../../../libs/tools/src/game/game.service';
 import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
 import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
-import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 import { UnoResponse } from './dto/response/uno-response.interface';
 import { UnoPlayerResponse } from './dto/response/uno-player-response.interface';
 import { UnoPlayer } from './entities/uno-player.interface';
@@ -16,6 +15,7 @@ import { UnoCardsService } from './uno-cards.service';
 import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enum';
 import { GameCreationRequest } from '../../../../libs/tools/src/game/dto/request/game-creation-request.class';
 import { GameJoinRequest } from '../../../../libs/tools/src/game/dto/request/game-join-request.class';
+import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @Injectable()
 export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, UnoPlayerResponse, UnoPlayer, UnoPlayResponse, UnoCard> {
@@ -51,7 +51,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   }
 
   async startGame<UnoResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(GameType).includes(request.type as GameType)) {
+    if (Object.values(GameMode).includes(request.type as GameMode)) {
       return await this.start(clientId, request.gameId, Uno, request);
     } else {
       throw new Error('Wrong game type');

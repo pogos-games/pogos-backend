@@ -9,6 +9,7 @@ import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 import { BlackjackStartRequest } from '../dto/request/blackjack-start-request.class';
 import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
+import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 
 export class BlackJackPlayer extends Player {
   hand: Card[][]

@@ -12,9 +12,9 @@ import { UnoCard } from './entities/uno-card.interface';
 import { GatewayEventsListener } from '../../../../libs/tools/src/game/enum/gateway/gateway-events-listener.enum';
 import { UnoEndAction } from '../uno/model/uno-end-action.interface';
 import { UnoEndActionType } from '../uno/model/uno-end-action-type.enum';
-import { GameType } from '../../../../libs/tools/src/game/enum/game-type.enum';
 import { GatewayEventEmitter } from '../../../../libs/tools/src/game/enum/gateway/gateway-event-emitter.enum';
 import { UnoActionRequest } from './dto/request/uno-action-request.interface';
+import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
@@ -38,7 +38,7 @@ export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, Game
         });
       }
       await this.sendGameAction(gamePlayResponse).then(() => {
-        if (gamePlayResponse.game.type === GameType.SOLO) {
+        if (gamePlayResponse.game.type === GameMode.SOLO) {
           this.gameService.startBotTurnLoop(gamePlayResponse, (event: UnoPlayResponse) => {
             this.sendGameAction(event);
             if(event.end){

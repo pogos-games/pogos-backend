@@ -2,7 +2,6 @@ import { Expose } from 'class-transformer';
 import { Game } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
-import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoResponse } from '../dto/response/uno-response.interface';
 import { UnoPlayerResponse } from '../dto/response/uno-player-response.interface';
@@ -12,6 +11,7 @@ import { UnoActionRequest } from '../dto/request/uno-action-request.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 import { UnoActionType } from '../enum/uno-action.interface';
+import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 
 export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlayerResponse, UnoCard> {
 
@@ -28,7 +28,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     id?: string,
     deck?: UnoCard[],
     leaderId?: string,
-    type?: GameType
+    type?: GameMode
   ) {
     super(id,deck,leaderId,type)
     this._status = GameStatus.WAITING
@@ -214,7 +214,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   public startGame(request: GameStartRequest) {
     super.startGame(request)
     this._type = request.type
-    if (request.type === GameType.SOLO) {
+    if (request.type === GameMode.SOLO) {
       for (let i = 1; i <= 3; i++) {
         this._players.push({
           id: uuidv4(),

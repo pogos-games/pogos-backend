@@ -13,7 +13,6 @@ import { PokerPlayResponse } from './dto/response/poker-play-response.interface'
 import { Card } from '../cards/model/card.interface';
 import { GameCreationRequest } from '../../../../libs/tools/src/game/dto/request/game-creation-request.class';
 import { GameJoinRequest } from '../../../../libs/tools/src/game/dto/request/game-join-request.class';
-import { GameResponse } from '../../../../libs/tools/src/game/dto/response/game-response.interface';
 import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
 
 @Injectable()
@@ -77,7 +76,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
     }
   }
 
-  restartGame(clientId: string, request: GameStartRequest) {
+  restartGame(clientId: string, request: GameStartRequest): Promise<PokerResponse> {
     return this.startGame(clientId, request)
   }
 }

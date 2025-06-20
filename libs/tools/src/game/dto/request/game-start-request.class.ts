@@ -1,10 +1,10 @@
 import { IsNotEmpty } from 'class-validator';
-import { GameType } from '../../enum/game-type.enum';
+import { GameMode } from '../../enum/game-mode.enum';
 
 export class GameStartRequest {
 
   @IsNotEmpty()
   gameId: string
   @IsNotEmpty()
-  type: GameType
+  type: GameMode
 }
