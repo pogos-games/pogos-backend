@@ -76,34 +76,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
       }
 
       // Gérer les effets spéciaux
-      switch (action.card.type) {
-        case UnoCardType.REVERSE:
-          this.direction =
-            this.direction === UnoGameDirection.CLOCKWISE
-              ? UnoGameDirection.COUNTERCLOCKWISE
-              : UnoGameDirection.CLOCKWISE;
-          this.advanceTurn();
-          break;
-
-        case UnoCardType.SKIP:
-          this.advanceTurn();
-          this.advanceTurn();
-          break;
-
-        case UnoCardType.DRAW_TO:
-          this.advanceTurn();
-          this.drawCards(this.players[this.currentTurnIndex], 2);
-          break;
-
-        case UnoCardType.WILD_DRAW_FOUR:
-          this.advanceTurn();
-          this.drawCards(this.players[this.currentTurnIndex], 4);
-          break;
-
-        default:
-          this.advanceTurn();
-          break;
-      }
+      this.switchCard(action.card.type)
 
       if (player.hand.length === 0) {
         this.status = GameStatus.ENDED;
@@ -146,7 +119,18 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     }
 
     // Gérer les effets spéciaux
-    switch (card.type) {
+    this.switchCard(card.type)
+
+    if (player.hand.length === 0) {
+      this.status = GameStatus.ENDED;
+      this.winnerUsername = player.username;
+    }
+
+    return true;
+  }
+
+  private switchCard(type){
+    switch (type) {
       case UnoCardType.REVERSE:
         this.direction =
           this.direction === UnoGameDirection.CLOCKWISE
@@ -174,13 +158,6 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
         this.advanceTurn();
         break;
     }
-
-    if (player.hand.length === 0) {
-      this.status = GameStatus.ENDED;
-      this.winnerUsername = player.username;
-    }
-
-    return true;
   }
 
   isCurrentPlayerABot(): boolean {
