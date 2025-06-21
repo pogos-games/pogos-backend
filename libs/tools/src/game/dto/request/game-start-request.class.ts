@@ -6,5 +6,5 @@ export class GameStartRequest {
   @IsNotEmpty()
   gameId: string
   @IsNotEmpty()
-  type: GameMode
+  mode: GameMode
 }

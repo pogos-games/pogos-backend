@@ -51,7 +51,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   }
 
   async startGame<UnoResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(GameMode).includes(request.type)) {
+    if (Object.values(GameMode).includes(request.mode)) {
       return await this.start(clientId, request.gameId, Uno, request);
     } else {
       throw new Error('Wrong game type');
@@ -146,4 +146,8 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   async persistGameToHistory(gameId: string): Promise<void> {
     await this.persistGameHistory(gameId, Uno)
   }
+
+  async getGame(gameId: string){
+    return this.findGame(gameId, Uno)
+  };
 }

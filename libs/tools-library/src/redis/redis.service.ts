@@ -59,7 +59,7 @@ export class RedisService {
     channel: string,
     callback: (message: T) => void,
   ): Promise<void> {
-    this.redis.subscribe(channel, (rawMessage: string) => {
+    await this.redis.subscribe(channel, (rawMessage: string) => {
       try {
         const parsedMessage: T = JSON.parse(rawMessage);
         callback(parsedMessage);

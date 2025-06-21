@@ -190,8 +190,8 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
 
   public startGame(request: GameStartRequest) {
     super.startGame(request)
-    this._type = request.type
-    if (request.type === GameMode.SOLO) {
+    this._mode = request.mode
+    if (request.mode === GameMode.SOLO) {
       for (let i = 1; i <= 3; i++) {
         this._players.push({
           id: uuidv4(),

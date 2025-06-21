@@ -69,7 +69,7 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
   }
 
   async startGame<PokerResponse>(clientId: string, request: GameStartRequest) {
-    if (Object.values(GameMode).includes(request.type)) {
+    if (Object.values(GameMode).includes(request.mode)) {
       return await this.start(clientId, request.gameId, Poker, request) as PokerResponse;
     } else {
       throw new Error('Wrong game type');
@@ -83,4 +83,8 @@ export class PokerService extends GameService<Poker, GameStartRequest, PokerResp
   async persistGameToHistory(gameId: string): Promise<void> {
     await this.persistGameHistory(gameId, Poker)
   }
+
+  async getGame(gameId: string){
+    return this.findGame(gameId, Poker)
+  };
 }

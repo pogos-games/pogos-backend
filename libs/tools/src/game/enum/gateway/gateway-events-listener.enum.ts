@@ -8,5 +8,6 @@ export enum GatewayEventsListener {
   QUIT_GAME = 'QUIT_GAME',
   ACTION = 'ACTION',
   DRAW_CARD = 'DRAW_CARD',
-  UNO_END_ACTION = 'UNO_END_ACTION'
+  UNO_END_ACTION = 'UNO_END_ACTION',
+  CHAT = 'CHAT'
 }

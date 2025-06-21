@@ -17,7 +17,7 @@ import { RedisChannel } from '../../../tools-library/src/redis/redis-channels.en
 import {
   GameHistoryDto,
 } from '../../../../apps/pogos-core/src/history/model/dto/response/game-history-response.interface';
-import { GameMode } from './enum/game-mode.enum';
+import { GameType } from './enum/game-type.enum';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse, TCard>,
@@ -39,8 +39,8 @@ export abstract class GameService<
 
   protected async saveGame(game: TGame): Promise<void> {
     const key = `${this.GAME_KEY_PREFIX}:${game.id}`;
-    await this.persistGameToHistory(game.id)
     await this.redisService.set<TGame>(key, game);
+    await this.persistGameToHistory(game.id)
   }
 
   abstract createGame(leaderId: string, creationRequest: GameCreationRequest);
@@ -335,8 +335,8 @@ export abstract class GameService<
     // assign player names and avatars
     const gameHistoryDto: GameHistoryDto = {
       id: game.id,
-      mode: this.GAME_KEY_PREFIX.toUpperCase() as GameMode,
-      type: game.type,
+      mode: game.mode,
+      type: this.GAME_KEY_PREFIX.toUpperCase() as GameType,
       date: new Date(),
       player1: sortedPlayers[0]
         ? {
@@ -373,4 +373,6 @@ export abstract class GameService<
       gameHistoryDto,
     );
   }
+
+  abstract getGame(gameId: string): Promise<TGame>;
 }

@@ -1,7 +1,12 @@
-import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
+import {
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
-import { ChatGateway } from '../chat/chat.gateway';
 import { GamePlayerResponse } from './dto/response/game-player-response.interface';
 import { GatewayEventsListener } from './enum/gateway/gateway-events-listener.enum';
 import { GatewayEventEmitter } from './enum/gateway/gateway-event-emitter.enum';
@@ -13,6 +18,7 @@ import { GameStartRequest } from './dto/request/game-start-request.class';
 import { GamePlayResponse } from './dto/response/game-play-response.interface';
 import { BaseCard } from '../../../../apps/pogos-games/src/cards/model/card.interface';
 import { GameJoinRequest } from './dto/request/game-join-request.class';
+import { ChatMessage } from '../chat/model/chat-message.interface';
 
 // process.env.FRONTEND_URL
 export abstract class GameGateway<
@@ -34,11 +40,9 @@ export abstract class GameGateway<
     TGameResponse extends GameResponse,
     TCard extends BaseCard
   >
-  extends ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   protected constructor(protected readonly gameService: TGameService) {
-    super();
   }
 
   @WebSocketServer()
@@ -177,5 +181,15 @@ export abstract class GameGateway<
       });
     }
     await this.sendGameAction(gamePlayResponse);
+  }
+
+  @SubscribeMessage(GatewayEventsListener.CHAT)
+  async handleChat(@MessageBody() payload: ChatMessage) {
+    console.log('chat received:', payload);
+    this.gameService.getGame(payload.gameId).then((game)=> {
+      game.players.forEach(player =>
+        this.server.to(player.id).emit(GatewayEventsListener.CHAT, payload)
+      )
+    })
   }
 }
