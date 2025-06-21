@@ -11,10 +11,9 @@ import * as PokerEvaluator from 'poker-evaluator-ts';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
+import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 
 export class PokerPlayer extends Player {
-  id: string;
-  username: string;
   hand: Card[];
   balance: number;
   bet: number;
@@ -23,12 +22,7 @@ export class PokerPlayer extends Player {
   allIn: number;
 }
 
-export class Poker extends Game<
-  PokerResponse,
-  GameStartRequest,
-  PokerPlayer,
-  PokerPlayerResponse
-> {
+export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, PokerPlayerResponse, Card> {
   public SMALL_BLIND = 5;
 
   @Expose()
@@ -37,7 +31,7 @@ export class Poker extends Game<
 
   @Expose()
   @Type(() => PokerPlayer)
-  protected _players: PokerPlayer[];
+  _players: PokerPlayer[];
 
   @Expose()
   protected _nextPlayerId: string;
@@ -67,19 +61,20 @@ export class Poker extends Game<
     return this._dealerHand;
   }
 
-  public addUser(userId: string) {
+  public addUser(userId: string, avatar: Avatar, playerName: string) {
     if (this.status !== GameStatus.WAITING) {
       throw new Error('Cannot add user to a game that has already started');
     }
     this._players.push({
+      avatar: avatar,
       id: userId,
-      username: 'not defined',
+      username: playerName,
       hand: [],
       balance: 1000,
       bet: 0,
       roundPlayed: false,
       hasFolded: false,
-      allIn: 0,
+      allIn: 0
     });
   }
 
@@ -265,16 +260,15 @@ export class Poker extends Game<
   }
 
   public toResponse(): PokerResponse {
-    const players: PokerPlayerResponse[] = this._players.map(
-      (player: PokerPlayer) => ({
-        playerId: player.id,
-        hand: player.hand,
-        balance: player.balance,
-        bet: player.bet,
-        roundPlayed: player.roundPlayed,
-        allIn: player.allIn,
-      }),
-    );
+    const players: PokerPlayerResponse[] = this._players.map((player: PokerPlayer) => ({
+      playerId: player.id,
+      avatar: player.avatar,
+      hand: player.hand,
+      balance: player.balance,
+      bet: player.bet,
+      roundPlayed: player.roundPlayed,
+      allIn: player.allIn,
+    }));
 
     return {
       gameId: this._id,

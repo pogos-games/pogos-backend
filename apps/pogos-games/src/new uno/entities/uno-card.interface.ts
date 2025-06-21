@@ -1,8 +1,10 @@
+import { BaseCard } from 'apps/pogos-games/src/cards/model/card.interface';
 
-export interface UnoCard {
+export interface UnoCard extends BaseCard{
   color: UnoCardColor;
   type: UnoCardType;
   value?: number; // Only if type is Number
+  declaredColor?: UnoCardColor;
 }
 
 export enum UnoCardType {

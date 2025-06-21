@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ToolsModule } from '../../../libs/tools-library/src';
 import { ChatModule } from '../../../libs/tools/src/chat/chat.module';
 import { PokerModule } from './poker/poker.module';
-import { UnoModule } from './uno/uno.module';
+import { NewUnoModule } from './new uno/new-uno.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { UnoModule } from './uno/uno.module';
     PokerModule,
     CardsModule,
     ToolsModule,
-    UnoModule,
+    NewUnoModule
   ],
   exports: [],
 })

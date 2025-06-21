@@ -8,12 +8,11 @@ import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
 import { BlackjackActionRequest } from '../dto/request/blackjack-action-request.interface';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 import { BlackjackStartRequest } from '../dto/request/blackjack-start-request.class';
+import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 
 export class BlackJackPlayer extends Player {
-  id: string;
-  username: string;
-  hand: Card[][];
+  hand: Card[][]
   currentHandId: number;
   balance: number;
   bet: number;
@@ -21,19 +20,14 @@ export class BlackJackPlayer extends Player {
   roundPlayed: boolean;
 }
 
-export class Blackjack extends Game<
-  BlackjackResponse,
-  BlackjackStartRequest,
-  BlackJackPlayer,
-  BlackjackPlayerResponse
-> {
+export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, BlackJackPlayer, BlackjackPlayerResponse, Card> {
   @Expose()
   @Type(() => Card)
   private _dealerHand: Card[];
 
   @Expose()
   @Type(() => BlackJackPlayer)
-  protected readonly _players: BlackJackPlayer[];
+  _players: BlackJackPlayer[];
 
   constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameMode) {
     super(id, deck, leaderId, type);
@@ -53,19 +47,21 @@ export class Blackjack extends Game<
     this._dealerHand = value;
   }
 
-  public addUser(userId: string) {
-    if (this.status !== GameStatus.WAITING) {
+
+  public addUser(userId: string, avatar: Avatar, playerName: string) {
+    if (this._status !== GameStatus.WAITING) {
       throw new Error('Cannot add user to a game that has already started');
     }
     this._players.push({
+      avatar: avatar,
       id: userId,
-      username: 'not defined',
+      username: playerName,
       hand: [],
       currentHandId: 0,
       balance: 1000,
       bet: 0,
       roundPlayed: false,
-      isStanding: false,
+      isStanding: false
     });
   }
 
@@ -155,6 +151,7 @@ export class Blackjack extends Game<
   public toResponse(): BlackjackResponse {
     const players: BlackjackPlayerResponse[] = this._players.map((player) => ({
       playerId: player.id,
+      avatar: player.avatar,
       hand: player.hand,
       currentHandId: player.currentHandId,
       balance: player.balance,

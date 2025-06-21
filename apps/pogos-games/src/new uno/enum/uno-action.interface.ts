@@ -1,4 +1,4 @@
-import { UnoCard, UnoCardColor } from './uno-card.interface';
+import { UnoCard, UnoCardColor } from '../entities/uno-card.interface';
 
 export enum UnoActionType {
   PLAY_CARD = 'PLAY_CARD',

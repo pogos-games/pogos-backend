@@ -1,4 +1,4 @@
-import { UnoEndActionType } from './uno-end-action-type.enum';
+import { UnoEndActionType } from '../../enum/uno-end-action-type.enum';
 
 export interface UnoEndAction {
   roomId: string;
