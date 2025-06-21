@@ -48,10 +48,9 @@ export class NotificationService {
     type: NotificationType,
     requestId: string,
   ): Promise<Notification> {
-    // save recipient to notification
     const recipient = new User();
     recipient.id = recipientId;
-    // save sender to notification
+
     const sender = new User();
     sender.id = senderId;
 
@@ -61,15 +60,23 @@ export class NotificationService {
     notification.message = message;
     notification.type = type;
     notification.requestId = requestId;
-    return await this.notificationRepository
-      .save(notification)
-      .then(async (notification: Notification) => {
-        await this.notificationGateway.sendNotification(
-          notification.recipient.id,
-          this.mapper.map(notification, Notification, NotificationResponse),
-        );
-        return notification;
-      });
+
+    const savedNotification =
+      await this.notificationRepository.save(notification);
+
+    const fullNotification = await this.notificationRepository.findOne({
+      where: { id: savedNotification.id },
+      relations: ['recipient', 'sender'], // ajoute ici d'autres relations si besoin
+    });
+
+    if (fullNotification) {
+      await this.notificationGateway.sendNotification(
+        fullNotification.recipient.id,
+        this.mapper.map(fullNotification, Notification, NotificationResponse),
+      );
+    }
+
+    return fullNotification;
   }
 
   async deleteNotifications(

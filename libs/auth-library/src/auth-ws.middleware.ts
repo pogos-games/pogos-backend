@@ -1,18 +1,22 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { TokenService } from '@app/auth-library/service/token.service';
-import {
-  AuthenticatedSocket
-} from '../../../apps/pogos-core/src/notification/model/gateway/authenticated-socket.interface';
+import { AuthenticatedSocket } from '../../../apps/pogos-core/src/notification/model/gateway/authenticated-socket.interface';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   constructor(private readonly tokenService: TokenService) {}
 
-  async use(socket: AuthenticatedSocket, next: (err?: Error) => void): Promise<void> {
+  async use(
+    socket: AuthenticatedSocket,
+    next: (err?: Error) => void,
+  ): Promise<void> {
     try {
-      const authHeader = socket.handshake?.headers?.authorization;
+      const authHeader = socket.handshake?.auth?.token;
+      console.log(`Auth header: ${authHeader}`);
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return next(new Error(`Authorization token must be prefixed with 'Bearer '`));
+        return next(
+          new Error(`Authorization token must be prefixed with 'Bearer '`),
+        );
       }
 
       const token = authHeader.split(' ')[1];

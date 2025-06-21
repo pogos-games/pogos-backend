@@ -11,7 +11,7 @@ import { AuthenticatedSocket } from '../model/gateway/authenticated-socket.inter
 import { NotificationEventEmitter } from '../model/gateway/notification-event-emitter.enum';
 import { NotificationResponse } from '../model/dto/response/notification-response.interface';
 
-@WebSocketGateway({ namespace: 'notifications' })
+@WebSocketGateway({ namespace: 'notifications' , cors: '*'})
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
