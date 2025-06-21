@@ -152,6 +152,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
     const players: BlackjackPlayerResponse[] = this._players.map((player) => ({
       playerId: player.id,
       avatar: player.avatar,
+      username: player.username,
       hand: player.hand,
       currentHandId: player.currentHandId,
       balance: player.balance,

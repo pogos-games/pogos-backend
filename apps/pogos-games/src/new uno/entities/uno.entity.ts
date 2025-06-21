@@ -173,6 +173,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
       playerId: player.id,
       avatar: player.avatar,
       hand: player.hand,
+      username: player.username,
       declaredUno: player.declaredUno
     }));
 

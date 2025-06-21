@@ -264,6 +264,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       playerId: player.id,
       avatar: player.avatar,
       hand: player.hand,
+      username: player.username,
       balance: player.balance,
       bet: player.bet,
       roundPlayed: player.roundPlayed,
