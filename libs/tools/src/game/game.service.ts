@@ -39,8 +39,8 @@ export abstract class GameService<
 
   protected async saveGame(game: TGame): Promise<void> {
     const key = `${this.GAME_KEY_PREFIX}:${game.id}`;
-    await this.persistGameToHistory(game.id)
     await this.redisService.set<TGame>(key, game);
+    await this.persistGameToHistory(game.id)
   }
 
   abstract createGame(leaderId: string, creationRequest: GameCreationRequest);
