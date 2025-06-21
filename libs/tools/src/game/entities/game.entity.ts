@@ -35,7 +35,7 @@ export abstract class Game<
   protected readonly _leaderId: string;
 
   @Expose()
-  protected _type: GameMode;
+  protected _mode: GameMode;
 
   @Expose()
   @Type(() => Player)
@@ -53,7 +53,7 @@ export abstract class Game<
     this._deck = deck ?? [];
     this._players = [];
     this._leaderId = leaderId ?? '';
-    this._type = type;
+    this._mode = type;
   }
 
   public get id(): string {
@@ -80,8 +80,8 @@ export abstract class Game<
     return this._leaderId;
   }
 
-  public get type(): string {
-    return this._type;
+  public get mode(): GameMode {
+    return this._mode;
   }
 
   public get private(): boolean {

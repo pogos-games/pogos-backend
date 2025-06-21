@@ -40,7 +40,7 @@ export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, Game
 
     await this.sendGameAction(gamePlayResponse);
 
-    if (gamePlayResponse.game.type !== GameMode.SOLO) return;
+    if (gamePlayResponse.game.mode !== GameMode.SOLO) return;
 
     await this.gameService.startBotTurnLoop(gamePlayResponse, (event: UnoPlayResponse) => {
       this.sendGameAction(event);

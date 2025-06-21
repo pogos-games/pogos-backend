@@ -32,7 +32,7 @@ export class HistoryService implements OnModuleInit {
 
   private initRedisListener() {
     this.redisService.subscribeToChannel<GameHistoryDto>(
-      RedisChannel.HISTORY, this.saveHistory
+      RedisChannel.HISTORY, (data) => this.saveHistory(data)
     ).then();
   }
 
