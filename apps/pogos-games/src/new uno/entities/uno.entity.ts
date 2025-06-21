@@ -43,7 +43,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   }
 
   play(player: UnoPlayer, action: UnoActionRequest): boolean {
-    this.players.map(p => {
+    this.players.forEach(p => {
       p.declaredUno = p.declaredUno && p.hand.length == 1
     })
     if (action.action === UnoActionType.DRAW_CARD) {
