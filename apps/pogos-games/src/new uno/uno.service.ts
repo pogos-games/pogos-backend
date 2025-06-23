@@ -138,6 +138,7 @@ export class UnoService extends GameService<Uno, UnoStartRequest, UnoResponse, U
   }
 
   async counterUno(client: Socket, roomId: string, targetPlayerId: string): Promise<UnoPlayResponse> {
+    await this.delay(500)
     const game = await this.redisService
       .get<Uno>(`${this.GAME_KEY_PREFIX}:${roomId}`, Uno)
       .then((game) => game);
