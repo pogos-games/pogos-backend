@@ -70,7 +70,7 @@ export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, Game
         break;
     }
     gamePlayResponse.players.forEach((playerId) => {
-      const gameResponse = gamePlayResponse.game.toResponse() as UnoResponse
+      const gameResponse = gamePlayResponse.game.toResponse()
       const sentResponse: UnoResponse = {
         ...(gameResponse),
         players: gameResponse.players.map((responsePlayer: UnoPlayerResponse) => this.privatiseHand(responsePlayer, playerId))
