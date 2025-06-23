@@ -1,7 +1,6 @@
 import { Expose } from 'class-transformer';
 import { Game } from 'libs/tools/src/game/entities/game.entity';
 import { GameStatus } from 'libs/tools/src/game/enum/game-status.enum';
-import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { UnoPlayer, UnoPlayerType } from './uno-player.interface';
 import { UnoResponse } from '../dto/response/uno-response.interface';
 import { UnoPlayerResponse } from '../dto/response/uno-player-response.interface';
@@ -14,8 +13,9 @@ import { UnoActionType } from '../enum/uno-action.interface';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
+import { UnoStartRequest } from '../../poker/dto/request/uno-start-request.class';
 
-export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlayerResponse, UnoCard> {
+export class Uno extends Game<UnoResponse, UnoStartRequest, UnoPlayer, UnoPlayerResponse, UnoCard> {
 
   @Expose()
   _players: UnoPlayer[] = [];
@@ -33,7 +33,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     id?: string,
     deck?: UnoCard[],
     leaderId?: string,
-    type?: GameMode
+    type?: GameMode,
   ) {
     super(id,deck,leaderId,type)
     this._status = GameStatus.WAITING
@@ -203,8 +203,9 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     } as UnoResponse;
   }
 
-  public startGame(request: GameStartRequest) {
+  public startGame(request: UnoStartRequest) {
     super.startGame(request)
+    this._deck = request.deck ?? this._deck
     if (this._players.length < 2 && this.mode == GameMode.MULTIPLAYER) {
       throw new Error('Insufficient players to start the game.');
     }
@@ -233,6 +234,11 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     } while (firstCard.type !== UnoCardType.NUMBER);
 
     this.discardPile.push(firstCard);
+  }
+
+  public restartGame(UnoStartRequest: UnoStartRequest) {
+    this.clearHands()
+    this.startGame(UnoStartRequest);
   }
 
   public addUser(userId: string, avatar: Avatar, playerName: string) {
@@ -357,5 +363,9 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
       return {player: player, points: points}
     });
     return { end: true, points: gains } as GameEndResponse;
+  }
+
+  clearHands() {
+    this._players.map(p => p.hand = [])
   }
 }

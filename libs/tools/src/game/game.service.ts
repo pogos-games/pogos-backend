@@ -344,8 +344,8 @@ export abstract class GameService<
   abstract getGame(gameId: string): Promise<TGame>;
   abstract createGame(leaderId: string, creationRequest: GameCreationRequest): Promise<TResponse>;
   abstract persistGameToHistory(gameId: string): Promise<void>;
-  abstract startGame(clientId: string, request: GameStartRequest): Promise<TResponse>;
-  abstract restartGame(clientId: string, request: GameStartRequest): Promise<TResponse>;
+  abstract startGame(clientId: string, request: TStartRequest): Promise<TResponse>;
+  abstract restartGame(clientId: string, request: TStartRequest): Promise<TResponse>;
   abstract join(joinRequest: GameJoinRequest, playerId: string): Promise<TResponse>;
   abstract quit(gameId: string, playerId: string): Promise<TGame>;
   abstract play(

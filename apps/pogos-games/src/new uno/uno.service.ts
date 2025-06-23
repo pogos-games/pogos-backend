@@ -3,7 +3,6 @@ import { Socket } from 'socket.io';
 import { GameService } from '../../../../libs/tools/src/game/game.service';
 import { RedisService } from '../../../../libs/tools-library/src/redis/redis.service';
 import { IdGeneratorService } from '../../../../libs/tools-library/src/id-generator.service';
-import { GameStartRequest } from '../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { UnoResponse } from './dto/response/uno-response.interface';
 import { UnoPlayerResponse } from './dto/response/uno-player-response.interface';
 import { UnoPlayer } from './entities/uno-player.interface';
@@ -16,9 +15,10 @@ import { GameStatus } from '../../../../libs/tools/src/game/enum/game-status.enu
 import { GameCreationRequest } from '../../../../libs/tools/src/game/dto/request/game-creation-request.class';
 import { GameJoinRequest } from '../../../../libs/tools/src/game/dto/request/game-join-request.class';
 import { GameMode } from '../../../../libs/tools/src/game/enum/game-mode.enum';
+import { UnoStartRequest } from '../poker/dto/request/uno-start-request.class';
 
 @Injectable()
-export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, UnoPlayerResponse, UnoPlayer, UnoPlayResponse, UnoCard> {
+export class UnoService extends GameService<Uno, UnoStartRequest, UnoResponse, UnoPlayerResponse, UnoPlayer, UnoPlayResponse, UnoCard> {
   protected GAME_KEY_PREFIX = 'uno';
 
   constructor(
@@ -50,7 +50,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
     };
   }
 
-  async startGame<UnoResponse>(clientId: string, request: GameStartRequest) {
+  async startGame<UnoResponse>(clientId: string, request: UnoStartRequest) {
     if (Object.values(GameMode).includes(request.mode)) {
       return await this.start(clientId, request.gameId, Uno, request);
     } else {
@@ -58,8 +58,9 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
     }
   }
 
-  restartGame(clientId: string, request: GameStartRequest) {
-    return this.startGame(clientId, request)
+  restartGame(clientId: string, request: UnoStartRequest) {
+    const startRequest: UnoStartRequest = { ...request, deck: this.cardsService.createDeck()} as UnoStartRequest
+    return this.startGame(clientId, startRequest)
   }
 
   private delay(ms: number): Promise<void> {
@@ -82,19 +83,19 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   async startBotTurnLoop(unoPlayResponse: UnoPlayResponse, callback: (event: UnoPlayResponse) => void){
     let continuePlaying = true;
     let unoTimeOut = 0
+    const key = `${this.GAME_KEY_PREFIX}:${unoPlayResponse.game.id}`;
 
     while (continuePlaying && unoPlayResponse.game.isCurrentPlayerABot()) {
       const unoDeclarePlayer = unoPlayResponse.game._players.find(p => p.hand.length == 1 && p.id != unoPlayResponse.currentPlayerId)
       if (unoDeclarePlayer) {
         unoTimeOut = Math.floor(Math.random() * 2001)
         await this.delay(unoTimeOut)
+        unoPlayResponse.game = await this.redisService.get<Uno>(key,Uno)
         unoPlayResponse.game.counterUno(unoDeclarePlayer.id)
         await this.saveGame(unoPlayResponse.game)
         callback(unoPlayResponse)
       }
       await this.delay(2000-unoTimeOut);
-
-      const key = `${this.GAME_KEY_PREFIX}:${unoPlayResponse.game.id}`;
       unoPlayResponse.game = await this.redisService.get<Uno>(key,Uno)
 
       const callUnoBotId = unoPlayResponse.game.playBotTurn();
@@ -113,7 +114,8 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
       callback(unoPlayResponse);
 
       if(callUnoBotId != ""){
-        await this.delay(Math.floor(Math.random() * 5001))
+        await this.delay(Math.floor(Math.random() * 3001))
+        unoPlayResponse.game = await this.redisService.get<Uno>(key,Uno)
         unoPlayResponse.game.declareUno(callUnoBotId)
         await this.saveGame(unoPlayResponse.game)
         callback(unoPlayResponse)
