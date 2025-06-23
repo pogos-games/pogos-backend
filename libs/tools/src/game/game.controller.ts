@@ -3,6 +3,7 @@ import { RedisService } from '../../../tools-library/src/redis/redis.service';
 import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/blackjack.entity';
 import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
 import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
+import { GameMode } from './enum/game-mode.enum';
 
 @Controller('game')
 export class GameController {
@@ -44,10 +45,11 @@ export class GameController {
   @Get('join-random')
   async joinRandomGame(
     @Query('clientId') clientId: string
-  ): Promise<{ success: boolean, gameId: string, gameName: string }> {
+  ): Promise<{ success: boolean, gameId: string, gameName: string, gameMode: GameMode }> {
     let cursor = 0;
     let gameId: string = ''
     let gameName: string = ''
+    let gameMode: GameMode = GameMode.MULTIPLAYER
 
     do {
       const [nextCursor, keys] = await this.redisService.scan(
@@ -59,26 +61,28 @@ export class GameController {
         if (key.includes("leaderId")) continue;
         const gamePrefix = key.split(":")[0]
         const gameFoundId = key.split(":")[1]
-        console.log(gamePrefix, gameFoundId);
         const GameClass = this.gameMap[gamePrefix];
         const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
         if (gameFoundId != gameInstance.id) continue
         if (gameInstance?.private) continue
+        if (gameInstance?._mode == GameMode.SOLO) continue
         if (gameInstance?._players.length == 4) continue
         gameId = gameInstance.id
         gameName = gameInstance._type.toLowerCase()
+        gameMode = gameInstance._mode
+        cursor = 0
         break
       }
     } while (cursor !== 0);
-    console.log(gameId, gameName);
-    return { success: gameId != "", gameId: gameId, gameName: gameName };
+    console.log(`connecting to ${gameName}, id: ${gameId}, mode: ${gameMode}`);
+    return { success: gameId != "", gameId: gameId, gameName: gameName, gameMode: gameMode };
   }
 
   @Get('find')
   async findGame(
     @Query('gameId') gameId: string,
     @Query('clientId') clientId: string
-  ): Promise<{ success: boolean; gameName: string }> {
+  ): Promise<{ success: boolean; gameName: string, gameMode: GameMode }> {
     let cursor = 0;
 
     do {
@@ -97,11 +101,11 @@ export class GameController {
 
         if (!gameInstance || gameInstance.private || gameInstance._players.length === 4) continue;
 
-        return { success: true, gameName: gamePrefix };
+        return { success: true, gameName: gamePrefix, gameMode: gameInstance.gameMode };
       }
     } while (cursor !== 0);
 
-    return { success: false, gameName: '' };
+    return { success: false, gameName: '', gameMode: GameMode.MULTIPLAYER };
   }
 
 }

@@ -216,7 +216,7 @@ export abstract class GameService<
     }
     const deck = this.cardsService.createDeck();
     const gameId =  await this.idGeneratorService.generateUniqueId('#', this.GAME_KEY_PREFIX);
-    const game = new GameClass(gameId,deck,leaderId,creationRequest.type);
+    const game = new GameClass(gameId,deck,leaderId,creationRequest.mode);
     game.addUser(leaderId,creationRequest.avatar, creationRequest.playerName)
     await this.saveGame(game);
     await this.redisService.sAdd(

@@ -36,7 +36,7 @@ export abstract class Game<
   protected readonly _leaderId: string;
 
   @Expose()
-  protected _mode: GameMode;
+  public _mode: GameMode;
 
   @Expose()
   public readonly _type: GameType;
@@ -51,13 +51,13 @@ export abstract class Game<
   @Expose()
   protected _private: boolean = false
 
-  constructor(id?: string, deck?: TCard[], leaderId?: string, type?: GameMode) {
+  constructor(id?: string, deck?: TCard[], leaderId?: string, mode?: GameMode) {
     this._id = id ?? '';
     this._status = GameStatus.WAITING;
     this._deck = deck ?? [];
     this._players = [];
     this._leaderId = leaderId ?? '';
-    this._mode = type;
+    this._mode = mode;
   }
 
   public get id(): string {
