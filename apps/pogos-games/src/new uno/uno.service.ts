@@ -81,15 +81,17 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
 
   async startBotTurnLoop(unoPlayResponse: UnoPlayResponse, callback: (event: UnoPlayResponse) => void){
     let continuePlaying = true;
+    const unoTimeOut = Math.floor(Math.random() * 2001)
 
     while (continuePlaying && unoPlayResponse.game.isCurrentPlayerABot()) {
-      const unoDeclarePlayer = unoPlayResponse.game._players.find(p => p.hand.length == 1)
+      const unoDeclarePlayer = unoPlayResponse.game._players.find(p => p.hand.length == 1 && p.id != unoPlayResponse.currentPlayerId)
       if (unoDeclarePlayer) {
-        await this.delay(Math.floor(Math.random() * 5001))
+        await this.delay(unoTimeOut)
         unoPlayResponse.game.counterUno(unoDeclarePlayer.id)
+        await this.saveGame(unoPlayResponse.game)
         callback(unoPlayResponse)
       }
-      await this.delay(2000);
+      await this.delay(2000-unoTimeOut);
 
       const key = `${this.GAME_KEY_PREFIX}:${unoPlayResponse.game.id}`;
       unoPlayResponse.game = await this.redisService.get<Uno>(key,Uno)
@@ -112,6 +114,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
       if(callUnoBotId != ""){
         await this.delay(Math.floor(Math.random() * 5001))
         unoPlayResponse.game.declareUno(callUnoBotId)
+        await this.saveGame(unoPlayResponse.game)
         callback(unoPlayResponse)
       }
     }
