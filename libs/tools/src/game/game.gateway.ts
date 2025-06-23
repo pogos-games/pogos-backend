@@ -79,9 +79,10 @@ export abstract class GameGateway<
       .to(gamePlayResponse.currentPlayerId)
       .emit(GatewayEventEmitter.PLAYER_UPDATE, gamePlayResponse.response);
     gamePlayResponse.players.forEach((playerId) => {
+      const gameResponse = gamePlayResponse.game.toResponse() as TResponse
       const sentResponse: TResponse = {
-        ...(gamePlayResponse.game.toResponse() as TResponse),
-        players: gamePlayResponse.game.toResponse().players.map((responsePlayer: TPlayerResponse) => this.privatiseHand(responsePlayer, playerId))
+        ...(gameResponse),
+        players: gameResponse.players.map((responsePlayer: TPlayerResponse) => this.privatiseHand(responsePlayer, playerId))
       }
       this.server
         .to(playerId)
@@ -90,8 +91,9 @@ export abstract class GameGateway<
   }
 
   protected privatiseHand(gamePlayerResponse: GamePlayerResponse, playerId: string): GamePlayerResponse {
-    gamePlayerResponse.hand = gamePlayerResponse.playerId === playerId ? gamePlayerResponse.hand : gamePlayerResponse.hand.map(() => null)
-    return gamePlayerResponse;
+    const playerCopy = JSON.parse(JSON.stringify(gamePlayerResponse));
+    playerCopy.hand = playerCopy.playerId === playerId ? playerCopy.hand : playerCopy.hand.map(() => null)
+    return playerCopy;
   }
 
   @SubscribeMessage(GatewayEventsListener.END_GAME)
