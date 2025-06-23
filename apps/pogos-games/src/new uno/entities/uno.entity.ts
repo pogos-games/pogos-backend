@@ -53,6 +53,13 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
       return false
     }
     if (action.action === UnoActionType.PLAY_CARD) {
+      const currentPlayer: UnoPlayer = this._players[this.currentTurnIndex]
+      if (!currentPlayer) {
+        throw new Error('Player not found');
+      }
+      if (player != currentPlayer) {
+        throw new Error('You are not allowed to play right now');
+      }
       const topCard = this.discardPile.at(-1);
       if (!topCard || !this.isCardPlayable(action.card, topCard)) return false;
 
