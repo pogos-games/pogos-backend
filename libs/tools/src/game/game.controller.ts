@@ -44,6 +44,7 @@ export class GameController {
   }
   @Get('join-random')
   async joinRandomGame(
+    @Query('gameName') gameAskedName: string,
     @Query('clientId') clientId: string
   ): Promise<{ success: boolean, gameId: string, gameName: string, gameMode: GameMode }> {
     let cursor = 0;
@@ -54,13 +55,14 @@ export class GameController {
     do {
       const [nextCursor, keys] = await this.redisService.scan(
         cursor,
-        `*:*`
+        `${gameAskedName}:*`
       );
       cursor = nextCursor;
       for (const key of keys) {
         if (key.includes("leaderId")) continue;
         const gamePrefix = key.split(":")[0]
         const gameFoundId = key.split(":")[1]
+        console.log(`gameFound: ${gamePrefix}, id: ${gameFoundId}`);
         const GameClass = this.gameMap[gamePrefix];
         const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
         if (gameFoundId != gameInstance.id) continue
@@ -70,7 +72,6 @@ export class GameController {
         gameId = gameInstance.id
         gameName = gameInstance._type.toLowerCase()
         gameMode = gameInstance._mode
-        cursor = 0
         break
       }
     } while (cursor !== 0);
