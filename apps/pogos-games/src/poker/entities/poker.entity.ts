@@ -12,6 +12,7 @@ import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response
 import { GameStartRequest } from '../../../../../libs/tools/src/game/dto/request/game-start-request.class';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class PokerPlayer extends Player {
   hand: Card[];
@@ -32,6 +33,9 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   @Expose()
   @Type(() => PokerPlayer)
   _players: PokerPlayer[] = [];
+
+  @Expose()
+  public readonly _type: GameType = GameType.POKER;
 
   @Expose()
   protected _nextPlayerId: string;

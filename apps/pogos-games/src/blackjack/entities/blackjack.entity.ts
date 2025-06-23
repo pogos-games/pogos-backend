@@ -10,6 +10,7 @@ import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response
 import { BlackjackStartRequest } from '../dto/request/blackjack-start-request.class';
 import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class BlackJackPlayer extends Player {
   hand: Card[][]
@@ -28,6 +29,9 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
   @Expose()
   @Type(() => BlackJackPlayer)
   _players: BlackJackPlayer[];
+
+  @Expose()
+  public readonly _type: GameType = GameType.BLACKJACK;
 
   constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameMode) {
     super(id, deck, leaderId, type);

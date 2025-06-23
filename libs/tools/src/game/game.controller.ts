@@ -43,29 +43,35 @@ export class GameController {
   }
   @Get('join-random')
   async joinRandomGame(
-    @Query('gamePrefix') gamePrefix: string,
     @Query('clientId') clientId: string
-  ): Promise<{ success: boolean, gameId: string }> {
+  ): Promise<{ success: boolean, gameId: string, gameName: string }> {
     let cursor = 0;
     let gameId: string = ''
+    let gameName: string = ''
 
     do {
       const [nextCursor, keys] = await this.redisService.scan(
         cursor,
-        `${gamePrefix}:*`
+        `*:*`
       );
       cursor = nextCursor;
       for (const key of keys) {
-        const GameClass = this.gameMap[gamePrefix];
         if (key.includes("leaderId")) continue;
+        const gamePrefix = key.split(":")[0]
+        const gameFoundId = key.split(":")[1]
+        console.log(gamePrefix, gameFoundId);
+        const GameClass = this.gameMap[gamePrefix];
         const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
+        if (gameFoundId != gameInstance.id) continue
         if (gameInstance?.private) continue
         if (gameInstance?._players.length == 4) continue
         gameId = gameInstance.id
+        gameName = gameInstance._type.toLowerCase()
         break
       }
     } while (cursor !== 0);
-    return { success: gameId != "", gameId: gameId };
+    console.log(gameId, gameName);
+    return { success: gameId != "", gameId: gameId, gameName: gameName };
   }
 
   @Get('find')

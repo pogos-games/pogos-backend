@@ -12,11 +12,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 import { UnoActionType } from '../enum/uno-action.interface';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
+import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
 
 export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlayerResponse, UnoCard> {
 
   @Expose()
   _players: UnoPlayer[] = [];
+
+  @Expose()
+  public readonly _type: GameType = GameType.UNO;
 
   public discardPile: UnoCard[] = [];
   public currentTurnIndex = 0;
