@@ -166,6 +166,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
       dealerHand: this._dealerHand,
       players: players,
       status: this._status,
+      mode: this.mode
     } as BlackjackResponse;
   }
 

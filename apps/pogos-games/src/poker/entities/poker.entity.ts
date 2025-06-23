@@ -154,24 +154,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     }
     player.roundPlayed = true;
 
-    const nextPlayer = this._players.find((player) => !player.roundPlayed);
-    if (nextPlayer) {
-      this._nextPlayerId = nextPlayer.id;
-    } else {
-      if (this.dealerHand.length == 5) {
-        return true;
-      } else if (this.dealerHand.length == 0) {
-        this._dealerHand.push(this.drawCard(this.deck));
-        this._dealerHand.push(this.drawCard(this.deck));
-      }
-      this._dealerHand.push(this.drawCard(this.deck));
-      this._nextPlayerId = this._players[0].id;
-      this._players.forEach((player) => {
-        player.roundPlayed = false;
-        this._pot += player.bet;
-      });
-    }
-    return false;
+    return this.continuePlaying();
   }
 
   private raise(player: PokerPlayer, bet: number) {
@@ -217,6 +200,33 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   private check(player: PokerPlayer) {
     this._lastBet = 0;
     player.roundPlayed = true;
+  }
+
+  private continuePlaying(){
+    const nextPlayer = this._players.find((player) => !player.roundPlayed);
+    if (nextPlayer) {
+      this._nextPlayerId = nextPlayer.id;
+    } else {
+      if (this.dealerHand.length == 5) {
+        return true;
+      } else if (this.dealerHand.length == 0) {
+        this._dealerHand.push(this.drawCard(this.deck));
+        this._dealerHand.push(this.drawCard(this.deck));
+      }
+      this._dealerHand.push(this.drawCard(this.deck));
+      this._nextPlayerId = this._players[0].id;
+      this._players.forEach((player) => {
+        player.roundPlayed = false;
+        this._pot += player.bet;
+      });
+    }
+    return false
+  }
+  public removeUser(userId: string): void {
+    if (this._nextPlayerId == userId){
+      this.continuePlaying()
+    }
+    this._players = this._players.filter((player) => player.id !== userId);
   }
 
   public endRound() {
@@ -279,6 +289,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       lastBet: this._lastBet,
       status: this._status,
       nextPlayerId: this._nextPlayerId,
+      mode: this.mode
     } as PokerResponse;
   }
 }

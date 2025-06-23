@@ -269,10 +269,11 @@ export abstract class GameService<
           throw new NotFoundException(`Game hasn't started`);
         }
         let end = game.play(player, gameAction);
-        this.saveGame(game);
         if (end) {
           end = this.checkEnd(game);
+          game.status = GameStatus.ENDED;
         }
+        this.saveGame(game);
         const players = game._players.map((player) => player.id);
 
         const response = mapResponse(player, players)

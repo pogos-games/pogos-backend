@@ -67,7 +67,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   }
 
   protected checkEnd(game: Uno): boolean {
-    return game.winnerUsername != "" && game._players[game.currentTurnIndex].hand.length == 0;
+    return game.winnerUsername != "" && game._players.some(p => p.hand.length == 0);
   }
 
   play(client: Socket, gameAction: UnoActionRequest): Promise<UnoPlayResponse> {

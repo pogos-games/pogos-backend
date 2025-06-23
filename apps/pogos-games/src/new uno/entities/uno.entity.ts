@@ -13,6 +13,7 @@ import { Avatar } from '../../../../../libs/tools/src/game/enum/avatar.enum';
 import { UnoActionType } from '../enum/uno-action.interface';
 import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum';
 import { GameType } from '../../../../../libs/tools/src/game/enum/game-type.enum';
+import { GameEndResponse } from '../../../../../libs/tools/src/game/dto/response/game-end-response.interface';
 
 export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlayerResponse, UnoCard> {
 
@@ -78,7 +79,6 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
       this.switchCard(action.card.type)
 
       if (player.hand.length === 0) {
-        this.status = GameStatus.ENDED;
         this.winnerUsername = player.username;
         return true
       }
@@ -163,6 +163,13 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     return this._players[this.currentTurnIndex].type === UnoPlayerType.BOT;
   }
 
+  public removeUser(userId: string): void {
+    this._players = this._players.filter((player) => player.id !== userId);
+    if (this.currentTurnIndex == this._players.length){
+      this.advanceTurn()
+    }
+  }
+
   public checkNoPlayerLeft(): boolean{
     return this._players.length == 0 || this._players.every(p => p.type == UnoPlayerType.BOT)
   }
@@ -184,13 +191,14 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
       deck: this.deck.map(() => null),
       currentTurnPlayerId: this._players[this.currentTurnIndex].id,
       direction: this.direction,
-      winnerUsername: this.winnerUsername
+      winnerUsername: this.winnerUsername,
+      mode: this.mode
     } as UnoResponse;
   }
 
   public startGame(request: GameStartRequest) {
     super.startGame(request)
-    if (this._players.length < 2) {
+    if (this._players.length < 2 && this.mode == GameMode.MULTIPLAYER) {
       throw new Error('Insufficient players to start the game.');
     }
     this._mode = request.mode
@@ -330,5 +338,17 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     if (target && target.hand.length === 1 && !target.declaredUno) {
       target.hand.push(this.deck.pop(), this.deck.pop());
     }
+  }
+
+  endRound(): GameEndResponse {
+    this.clearHands();
+    const gains = this._players.map((player: UnoPlayer) => {
+      let points = 0
+      if(player.hand.length == 0){
+        points = 150
+      }
+      return {player: player, points: points}
+    });
+    return { end: true, points: gains } as GameEndResponse;
   }
 }

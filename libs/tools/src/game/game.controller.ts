@@ -4,6 +4,7 @@ import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/b
 import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
 import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
 import { GameMode } from './enum/game-mode.enum';
+import { GameStatus } from './enum/game-status.enum';
 
 @Controller('game')
 export class GameController {
@@ -65,10 +66,9 @@ export class GameController {
         console.log(`gameFound: ${gamePrefix}, id: ${gameFoundId}`);
         const GameClass = this.gameMap[gamePrefix];
         const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
-        if (gameFoundId != gameInstance.id) continue
-        if (gameInstance?.private) continue
-        if (gameInstance?._mode == GameMode.SOLO) continue
-        if (gameInstance?._players.length == 4) continue
+        if (gameFoundId != gameInstance.id || gameInstance?.private ||
+          gameInstance?._mode == GameMode.SOLO || gameInstance?._players.length == 4 ||
+         gameInstance.status != GameStatus.WAITING) continue
         gameId = gameInstance.id
         gameName = gameInstance._type.toLowerCase()
         gameMode = gameInstance._mode
