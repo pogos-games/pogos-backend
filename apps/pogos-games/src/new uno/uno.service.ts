@@ -81,11 +81,12 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
 
   async startBotTurnLoop(unoPlayResponse: UnoPlayResponse, callback: (event: UnoPlayResponse) => void){
     let continuePlaying = true;
-    const unoTimeOut = Math.floor(Math.random() * 2001)
+    let unoTimeOut = 0
 
     while (continuePlaying && unoPlayResponse.game.isCurrentPlayerABot()) {
       const unoDeclarePlayer = unoPlayResponse.game._players.find(p => p.hand.length == 1 && p.id != unoPlayResponse.currentPlayerId)
       if (unoDeclarePlayer) {
+        unoTimeOut = Math.floor(Math.random() * 2001)
         await this.delay(unoTimeOut)
         unoPlayResponse.game.counterUno(unoDeclarePlayer.id)
         await this.saveGame(unoPlayResponse.game)
