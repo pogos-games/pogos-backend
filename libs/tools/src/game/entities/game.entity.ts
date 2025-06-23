@@ -9,6 +9,7 @@ import { GameEndResponse } from '../dto/response/game-end-response.interface';
 import { GameStartRequest } from '../dto/request/game-start-request.class';
 import { GameMode } from '../enum/game-mode.enum';
 import { Avatar } from '../enum/avatar.enum';
+import { GameType } from '../enum/game-type.enum';
 
 export abstract class Player {
   id: string;
@@ -36,6 +37,9 @@ export abstract class Game<
 
   @Expose()
   protected _mode: GameMode;
+
+  @Expose()
+  public readonly _type: GameType;
 
   @Expose()
   @Type(() => Player)
