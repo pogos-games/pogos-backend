@@ -39,7 +39,7 @@ export abstract class Game<
 
   @Expose()
   @Type(() => Player)
-  _players: TPlayer[];
+  _players: TPlayer[] = [];
 
   @Expose()
   protected _status: GameStatus;
@@ -92,16 +92,16 @@ export abstract class Game<
     this._private = !this._private
   }
 
-    public addUser(userId: string, avatar: Avatar, playerName: string) {
-        if (this.status !== GameStatus.WAITING) {
-          throw new Error('Cannot add user to a game that has already started');
-        }
-        this._players.push({
-          id: userId,
-          username: playerName,
-          avatar: avatar,
-        } as TPlayer);
-    }
+  public addUser(userId: string, avatar: Avatar, playerName: string) {
+      if (this.status !== GameStatus.WAITING) {
+        throw new Error('Cannot add user to a game that has already started');
+      }
+      this._players.push({
+        id: userId,
+        username: playerName,
+        avatar: avatar,
+      } as TPlayer);
+  }
 
   public removeUser(userId: string): void {
     this._players = this._players.filter((player) => player.id !== userId);

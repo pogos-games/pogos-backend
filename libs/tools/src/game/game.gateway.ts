@@ -37,7 +37,6 @@ export abstract class GameGateway<
       TPlayResponse,
       TCard
     >,
-    TGameResponse extends GameResponse,
     TCard extends BaseCard
   >
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -57,7 +56,7 @@ export abstract class GameGateway<
     this.handleDisconnectClientCall(client).then();
   }
 
-  abstract handleDisconnectClientCall(client: Socket);
+  abstract handleDisconnectClientCall(client: Socket): Promise<void>;
   async handleDisconnectClient(client: Socket,
                          GameClass: new (
                            id?: string,
@@ -112,8 +111,8 @@ export abstract class GameGateway<
 
   @SubscribeMessage(GatewayEventsListener.CREATE_GAME)
   async handleCreateGame(client: Socket, request: GameCreationRequest) {
-    const game : TGameResponse = await this.gameService.createGame(client.id, request);
-    const sentResponse: TGameResponse = {
+    const game : TResponse = await this.gameService.createGame(client.id, request);
+    const sentResponse: TResponse = {
       ...game,
       players: game.players?.map((responsePlayer: TPlayerResponse) => this.privatiseHand(responsePlayer, client.id))
     }

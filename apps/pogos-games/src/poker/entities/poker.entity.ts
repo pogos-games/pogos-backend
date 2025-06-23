@@ -31,7 +31,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
 
   @Expose()
   @Type(() => PokerPlayer)
-  _players: PokerPlayer[];
+  _players: PokerPlayer[] = [];
 
   @Expose()
   protected _nextPlayerId: string;
@@ -47,10 +47,6 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     this._dealerHand = [];
     this._players = [];
     this._pot = 0;
-  }
-
-  public get players(): PokerPlayer[] {
-    return this._players;
   }
 
   public get nextPlayerId() {
@@ -263,6 +259,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
     const players: PokerPlayerResponse[] = this._players.map((player: PokerPlayer) => ({
       playerId: player.id,
       avatar: player.avatar,
+      username: player.username,
       hand: player.hand,
       balance: player.balance,
       bet: player.bet,

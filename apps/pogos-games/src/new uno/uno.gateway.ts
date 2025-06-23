@@ -18,7 +18,7 @@ import { UnoEndAction } from './dto/request/uno-end-action.interface';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'uno', cors: '*' })
-export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, GameStartRequest, UnoPlayer, Uno, UnoPlayResponse, UnoService, UnoResponse, UnoCard> {
+export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, GameStartRequest, UnoPlayer, Uno, UnoPlayResponse, UnoService, UnoCard> {
   constructor(private readonly unoService: UnoService) {
     super(unoService);
   }

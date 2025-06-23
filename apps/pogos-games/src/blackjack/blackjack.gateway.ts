@@ -25,7 +25,6 @@ export class BlackjackGateway extends GameGateway<
   Blackjack,
   BlackJackPlayResponse,
   BlackjackService,
-  BlackjackResponse,
   Card
 > {
   constructor(private readonly blackjackService: BlackjackService) {

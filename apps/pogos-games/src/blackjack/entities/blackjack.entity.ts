@@ -35,10 +35,6 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
     this._players = [];
   }
 
-  public get players(): BlackJackPlayer[] {
-    return this._players;
-  }
-
   private get dealerHand() {
     return this._dealerHand;
   }
@@ -152,6 +148,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
     const players: BlackjackPlayerResponse[] = this._players.map((player) => ({
       playerId: player.id,
       avatar: player.avatar,
+      username: player.username,
       hand: player.hand,
       currentHandId: player.currentHandId,
       balance: player.balance,
