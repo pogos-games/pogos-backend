@@ -205,7 +205,7 @@ export class Uno extends Game<UnoResponse, UnoStartRequest, UnoPlayer, UnoPlayer
 
   public startGame(request: UnoStartRequest) {
     super.startGame(request)
-    this._deck = request.deck ?? this._deck
+    this._deck = this.shuffle(request.deck ?? this._deck)
     if (this._players.length < 2 && this.mode == GameMode.MULTIPLAYER) {
       throw new Error('Insufficient players to start the game.');
     }
