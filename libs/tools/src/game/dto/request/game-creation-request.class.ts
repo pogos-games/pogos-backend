@@ -7,5 +7,5 @@ export class GameCreationRequest {
   playerName: string
   avatar: Avatar
   @IsNotEmpty()
-  type: GameMode;
+  mode: GameMode;
 }
