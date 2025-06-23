@@ -83,10 +83,10 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
     let continuePlaying = true;
 
     while (continuePlaying && unoPlayResponse.game.isCurrentPlayerABot()) {
-      const unoDeclarePlayerId = unoPlayResponse.game._players.find(p => p.hand.length == 1).id
-      if (unoDeclarePlayerId) {
+      const unoDeclarePlayer = unoPlayResponse.game._players.find(p => p.hand.length == 1)
+      if (unoDeclarePlayer) {
         await this.delay(Math.floor(Math.random() * 5001))
-        unoPlayResponse.game.counterUno(unoDeclarePlayerId)
+        unoPlayResponse.game.counterUno(unoDeclarePlayer.id)
         callback(unoPlayResponse)
       }
       await this.delay(2000);
