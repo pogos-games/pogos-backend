@@ -75,7 +75,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
   }
 
   public restartGame(request: BlackjackStartRequest) {
-    if (this.players.some((player) => player.balance < request.bet)) {
+    if (this._players.some((player) => player.balance < request.bet)) {
       throw new Error("Some users doesn't have enough balance");
     }
     this.startGame(request);
@@ -187,7 +187,7 @@ export class Blackjack extends Game<BlackjackResponse, BlackjackStartRequest, Bl
   }
 
   public endRound(): GameEndResponse {
-    const playerResponse = this.players.map((player) => {
+    const playerResponse = this._players.map((player) => {
       let totalWin = 0;
       const eachBet = player.bet / player.hand.length;
 

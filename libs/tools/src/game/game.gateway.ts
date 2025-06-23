@@ -65,7 +65,7 @@ export abstract class GameGateway<
                            type?: string
                          ) => TGame): Promise<void>{
     return this.gameService.disconnectClient(client.id, GameClass).then(games => {
-      games.forEach(game => game.players.forEach((player) => {
+      games.forEach(game => game._players.forEach((player) => {
         this.server
           .to(player.id)
           .emit(GatewayEventEmitter.GAME_UPDATE, game.toResponse());
@@ -102,7 +102,7 @@ export abstract class GameGateway<
     GameClass: new () => TGame,
   ) {
     const game = await this.gameService.endGame(client, gameId, GameClass);
-    game.players.forEach((player) => {
+    game._players.forEach((player) => {
       this.server.to(player.id).emit(GatewayEventEmitter.END_GAME, player);
       this.server
         .to(player.id)
@@ -162,7 +162,7 @@ export abstract class GameGateway<
   async handleQuitGame(client: Socket, gameId: {gameId: string}) {
     const game = await this.gameService.quit(gameId.gameId, client.id);
     client.emit(GatewayEventEmitter.GAME_UPDATE, gameId.gameId);
-    game.players.forEach((player) => {
+    game._players.forEach((player) => {
       if (player.id != client.id) {
         this.server
           .to(player.id)
@@ -188,7 +188,7 @@ export abstract class GameGateway<
   async handleChat(@MessageBody() payload: ChatMessage) {
     console.log('chat received:', payload);
     this.gameService.getGame(payload.gameId).then((game)=> {
-      game.players.forEach(player =>
+      game._players.forEach(player =>
         this.server.to(player.id).emit(GatewayEventsListener.CHAT, payload)
       )
     })
