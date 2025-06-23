@@ -34,12 +34,8 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     this._status = GameStatus.WAITING
   }
 
-  public set players(players: UnoPlayer[]){
-    this._players = players
-  }
-
   play(player: UnoPlayer, action: UnoActionRequest): boolean {
-    this.players.forEach(p => {
+    this._players.forEach(p => {
       p.declaredUno = p.declaredUno && p.hand.length == 1
     })
     if (action.action === UnoActionType.DRAW_CARD) {
@@ -91,7 +87,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     card: UnoCard,
     declaredColor?: UnoCardColor,
   ): boolean {
-    const player = this.players.find((p) => p.id === playerId);
+    const player = this._players.find((p) => p.id === playerId);
     if (!player) return false;
 
     const topCard = this.discardPile.at(-1);
@@ -145,12 +141,12 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
 
       case UnoCardType.DRAW_TO:
         this.advanceTurn();
-        this.drawCards(this.players[this.currentTurnIndex], 2);
+        this.drawCards(this._players[this.currentTurnIndex], 2);
         break;
 
       case UnoCardType.WILD_DRAW_FOUR:
         this.advanceTurn();
-        this.drawCards(this.players[this.currentTurnIndex], 4);
+        this.drawCards(this._players[this.currentTurnIndex], 4);
         break;
 
       default:
@@ -160,11 +156,11 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   }
 
   isCurrentPlayerABot(): boolean {
-    return this.players[this.currentTurnIndex].type === UnoPlayerType.BOT;
+    return this._players[this.currentTurnIndex].type === UnoPlayerType.BOT;
   }
 
   public checkNoPlayerLeft(): boolean{
-    return this.players.length == 0 || this.players.every(p => p.type == UnoPlayerType.BOT)
+    return this._players.length == 0 || this._players.every(p => p.type == UnoPlayerType.BOT)
   }
 
   toResponse(): UnoResponse {
@@ -190,6 +186,9 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
 
   public startGame(request: GameStartRequest) {
     super.startGame(request)
+    if (this._players.length < 2) {
+      throw new Error('Insufficient players to start the game.');
+    }
     this._mode = request.mode
     if (request.mode === GameMode.SOLO) {
       for (let i = 1; i <= 3; i++) {
@@ -245,8 +244,8 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   private advanceTurn() {
     const delta = this.direction === UnoGameDirection.CLOCKWISE ? 1 : -1;
     this.currentTurnIndex =
-      (this.currentTurnIndex + delta + this.players.length) %
-      this.players.length;
+      (this.currentTurnIndex + delta + this._players.length) %
+      this._players.length;
   }
 
   private drawCards(player: UnoPlayer, count: number) {
@@ -259,7 +258,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   }
 
   playBotTurn(){
-    const player = this.players[this.currentTurnIndex];
+    const player = this._players[this.currentTurnIndex];
     if (player.type !== UnoPlayerType.BOT) {
       return
     }
@@ -318,12 +317,12 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   }
 
   declareUno(playerId: string) {
-    const player = this.players.find((p) => p.id === playerId);
+    const player = this._players.find((p) => p.id === playerId);
     if (player?.hand.length === 1) player.declaredUno = true;
   }
 
   counterUno(targetPlayerId: string) {
-    const target = this.players.find((p) => p.id === targetPlayerId);
+    const target = this._players.find((p) => p.id === targetPlayerId);
     if (target && target.hand.length === 1 && !target.declaredUno) {
       target.hand.push(this.deck.pop(), this.deck.pop());
     }

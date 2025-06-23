@@ -67,7 +67,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
   }
 
   protected checkEnd(game: Uno): boolean {
-    return game.winnerUsername != "" && game.players[game.currentTurnIndex].hand.length == 0;
+    return game.winnerUsername != "" && game._players[game.currentTurnIndex].hand.length == 0;
   }
 
   play(client: Socket, gameAction: UnoActionRequest): Promise<UnoPlayResponse> {
@@ -135,8 +135,8 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
 
     await this.saveGame(game)
 
-    const players = game.players.map((player) => player.id);
-    const player = game.players.find(p => p.id === client.id)
+    const players = game._players.map((player) => player.id);
+    const player = game._players.find(p => p.id === client.id)
 
     const response = this.mapResponse(player, players)
     return {
@@ -144,7 +144,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
       end: false,
       response: response.response,
       game: game,
-      currentPlayerId: game.players[game.currentTurnIndex].id
+      currentPlayerId: game._players[game.currentTurnIndex].id
     } as UnoPlayResponse
   }
 

@@ -59,7 +59,7 @@ export abstract class GameService<
         if (key.includes(this.LEADER_KEY_PREFIX)) continue;
 
         let game = await this.redisService.get<TGame>(key, GameClass);
-        if (game?.players?.some((p) => p.id === clientId)) {
+        if (game?._players?.some((p) => p.id === clientId)) {
           game = await this.quitGame(game.id, clientId, GameClass);
           games.push(game);
         }
@@ -261,7 +261,7 @@ export abstract class GameService<
         if (!game) {
           throw new NotFoundException(`Game id ${gameAction.gameId} not found`);
         }
-        const player = game.players.find((player) => player.id === client.id);
+        const player = game._players.find((player) => player.id === client.id);
         if (!player) {
           throw new NotFoundException(`Player id ${client.id} not found`);
         }
@@ -273,7 +273,7 @@ export abstract class GameService<
         if (end) {
           end = this.checkEnd(game);
         }
-        const players = game.players.map((player) => player.id);
+        const players = game._players.map((player) => player.id);
 
         const response = mapResponse(player, players)
         return { players:response.players, end:end, response: response.response , game: game, currentPlayerId: client.id} as TPlayResponse;

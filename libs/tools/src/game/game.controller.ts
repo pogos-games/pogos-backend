@@ -4,7 +4,7 @@ import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/b
 import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
 import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
 
-@Controller('game/')
+@Controller('game')
 export class GameController {
   private readonly gameMap: Record<string, any> = {
     blackjack: Blackjack,
@@ -60,7 +60,7 @@ export class GameController {
         if (key.includes("leaderId")) continue;
         const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
         if (gameInstance?.private) continue
-        if (gameInstance?.players.length == 4) continue
+        if (gameInstance?._players.length == 4) continue
         gameId = gameInstance.id
         break
       }
@@ -89,7 +89,7 @@ export class GameController {
 
         const gameInstance = await this.redisService.get<typeof GameClass>(key, GameClass);
 
-        if (!gameInstance || gameInstance.private || gameInstance.players.length === 4) continue;
+        if (!gameInstance || gameInstance.private || gameInstance._players.length === 4) continue;
 
         return { success: true, gameName: gamePrefix };
       }

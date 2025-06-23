@@ -68,10 +68,6 @@ export abstract class Game<
     this._status = value;
   }
 
-  public get players(): TPlayer[] {
-    return this._players;
-  }
-
   public get deck(): TCard[] {
     return this._deck;
   }
@@ -108,7 +104,7 @@ export abstract class Game<
   }
 
     public checkNoPlayerLeft(): boolean{
-      return this.players.length == 0
+      return this._players.length == 0
     }
 
     public drawCard(deck: TCard[]): TCard {

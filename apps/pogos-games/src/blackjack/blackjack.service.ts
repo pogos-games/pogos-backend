@@ -37,7 +37,7 @@ export class BlackjackService extends GameService<Blackjack, BlackjackStartReque
   }
 
   protected checkEnd(game: Blackjack): boolean {
-    return game.players.every(player => player.isStanding);
+    return game._players.every(player => player.isStanding);
   }
 
   async play(
