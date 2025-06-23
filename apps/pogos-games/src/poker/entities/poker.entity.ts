@@ -41,10 +41,13 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   protected _nextPlayerId: string;
 
   @Expose()
-  private _pot;
+  private _pot: number;
 
   @Expose()
-  private _lastBet;
+  private _lastBet: number;
+
+  @Expose()
+  private _roundPot: number;
 
   constructor(id?: string, deck?: Card[], leaderId?: string, type?: GameMode) {
     super(id, deck, leaderId, type);
@@ -176,16 +179,22 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       );
     }
     player.roundPlayed = true;
-    this._lastBet = bet + player.bet;
     player.bet += bet;
+    this._lastBet = player.bet;
+    this._roundPot += bet;
+    this._pot += bet
     player.balance -= bet;
     player.allIn += bet;
   }
 
   private allIn(player: PokerPlayer) {
     player.allIn += player.balance;
+    player.bet += player.balance;
     player.balance = 0;
     player.roundPlayed = true;
+    this._lastBet = player.bet;
+    this._roundPot += player.bet;
+    this._pot += player.bet;
   }
 
   private call(player: PokerPlayer) {
@@ -198,7 +207,9 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
   }
 
   private check(player: PokerPlayer) {
-    this._lastBet = 0;
+    if(this._lastBet > 0){
+      throw new BadRequestException('Impossible de check si un bet déjà existant');
+    }
     player.roundPlayed = true;
   }
 
@@ -215,9 +226,11 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       }
       this._dealerHand.push(this.drawCard(this.deck));
       this._nextPlayerId = this._players[0].id;
+      this._roundPot = 0
+      this._lastBet = 0
       this._players.forEach((player) => {
         player.roundPlayed = false;
-        this._pot += player.bet;
+        player.bet = 0
       });
     }
     return false
@@ -286,6 +299,7 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
       dealerHand: this._dealerHand,
       players: players,
       pot: this._pot,
+      roundPot: this._roundPot,
       lastBet: this._lastBet,
       status: this._status,
       nextPlayerId: this._nextPlayerId,

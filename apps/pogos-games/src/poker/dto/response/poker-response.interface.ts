@@ -4,6 +4,7 @@ import { Card } from '../../../cards/model/card.interface';
 export interface PokerResponse extends GameResponse {
   dealerHand: Card[],
   pot: number,
+  roundPot: number,
   lastBet: number,
   nextPlayerId: string,
 }
