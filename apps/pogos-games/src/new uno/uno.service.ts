@@ -88,7 +88,7 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
       const key = `${this.GAME_KEY_PREFIX}:${unoPlayResponse.game.id}`;
       unoPlayResponse.game = await this.redisService.get<Uno>(key,Uno)
 
-      unoPlayResponse.game.playBotTurn();
+      const callUnoBotId = unoPlayResponse.game.playBotTurn();
 
       // 🏁 Vérification si le bot a gagné
       if (this.checkEnd(unoPlayResponse.game)) {
@@ -102,6 +102,12 @@ export class UnoService extends GameService<Uno, GameStartRequest, UnoResponse, 
       }
       await this.saveGame(unoPlayResponse.game);
       callback(unoPlayResponse);
+
+      if(callUnoBotId != ""){
+        await this.delay(Math.floor(Math.random() * 5001))
+        unoPlayResponse.game.declareUno(callUnoBotId)
+        callback(unoPlayResponse)
+      }
     }
 
   }

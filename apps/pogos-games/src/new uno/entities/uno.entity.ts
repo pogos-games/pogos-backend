@@ -276,10 +276,10 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
     }
   }
 
-  playBotTurn(){
+  playBotTurn(): string{
     const player = this._players[this.currentTurnIndex];
     if (player.type !== UnoPlayerType.BOT) {
-      return
+      return ""
     }
 
     const topCard = this.discardPile.at(-1);
@@ -300,14 +300,14 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
         declaredColor = this.getMostFrequentColor(hand);
       }
 
-      if (this.playCard(player.id, playableCard, declaredColor)) return;
+      if (this.playCard(player.id, playableCard, declaredColor)) return player.hand.length == 1 ? player.id : "";
     } else {
       // Aucune carte jouable → on pioche une seule carte, et on ne la joue pas
       const drawnCard = this.deck.pop();
       if (drawnCard) {
         player.hand.push(drawnCard);
         this.advanceTurn();
-        return
+        return ""
       }
     }
 
