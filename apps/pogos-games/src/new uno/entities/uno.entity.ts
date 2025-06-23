@@ -16,7 +16,7 @@ import { GameMode } from '../../../../../libs/tools/src/game/enum/game-mode.enum
 export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlayerResponse, UnoCard> {
 
   @Expose()
-  _players: UnoPlayer[];
+  _players: UnoPlayer[] = [];
 
   public discardPile: UnoCard[] = [];
   public currentTurnIndex = 0;
@@ -36,10 +36,6 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
 
   public set players(players: UnoPlayer[]){
     this._players = players
-  }
-
-  public get players(): UnoPlayer[]{
-    return this._players
   }
 
   play(player: UnoPlayer, action: UnoActionRequest): boolean {
@@ -174,6 +170,7 @@ export class Uno extends Game<UnoResponse, GameStartRequest, UnoPlayer, UnoPlaye
   toResponse(): UnoResponse {
     const players: UnoPlayerResponse[] = this._players.map((player) => ({
       playerId: player.id,
+      username: player.username,
       avatar: player.avatar,
       hand: player.hand,
       declaredUno: player.declaredUno

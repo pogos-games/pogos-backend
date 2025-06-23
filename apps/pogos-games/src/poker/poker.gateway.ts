@@ -11,7 +11,7 @@ import { Card } from '../cards/model/card.interface';
 
 // process.env.FRONTEND_URL
 @WebSocketGateway({ namespace: 'poker', cors: '*' })
-export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse, GameStartRequest, PokerPlayer, Poker, PokerPlayResponse, PokerService, PokerResponse, Card> {
+export class PokerGateway extends GameGateway<PokerResponse, PokerPlayerResponse, GameStartRequest, PokerPlayer, Poker, PokerPlayResponse, PokerService, Card> {
   constructor(private readonly pokerService: PokerService) {
     super(pokerService);
   }

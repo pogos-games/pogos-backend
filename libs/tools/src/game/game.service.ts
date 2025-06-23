@@ -18,6 +18,7 @@ import {
   GameHistoryDto,
 } from '../../../../apps/pogos-core/src/history/model/dto/response/game-history-response.interface';
 import { GameType } from './enum/game-type.enum';
+import { plainToInstance } from 'class-transformer';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse, TCard>,
@@ -37,36 +38,34 @@ export abstract class GameService<
   protected GAME_KEY_PREFIX: string;
   protected readonly LEADER_KEY_PREFIX = 'leaderId';
 
-  protected async saveGame(game: TGame): Promise<void> {
-    const key = `${this.GAME_KEY_PREFIX}:${game.id}`;
-    await this.redisService.set<TGame>(key, game);
-    await this.persistGameToHistory(game.id)
-  }
+  async disconnectClient(clientId: string,
+                         GameClass: new (
+                           id?: string,
+                           deck?: TCard[],
+                           leaderId?: string,
+                           type?: string
+                         ) => TGame): Promise<TGame[]> {
+    let cursor = 0;
+    let games: TGame[] = [];
 
-  abstract createGame(leaderId: string, creationRequest: GameCreationRequest);
+    do {
+      const [nextCursor, keys] = await this.redisService.scan(
+        cursor,
+        `${this.GAME_KEY_PREFIX}:*`,
+      );
+      cursor = nextCursor;
 
-  protected async create(
-    leaderId: string,
-    creationRequest: GameCreationRequest,
-    GameClass: new(id?: string,
-                     deck?: TCard[],
-                     leaderId?: string,
-                     type?: string) => TGame
-  ) {
-    const leaderGames = await this.findByLeaderId(leaderId, GameClass);
-    if(leaderGames.length > 0) {
-      throw new UnauthorizedException(`Leader ${leaderId} already has an active game`);
-    }
-    const deck = this.cardsService.createDeck();
-    const gameId =  await this.idGeneratorService.generateUniqueId('#', this.GAME_KEY_PREFIX);
-    const game = new GameClass(gameId,deck,leaderId,creationRequest.type);
-    game.addUser(leaderId,creationRequest.avatar, creationRequest.playerName)
-    await this.saveGame(game);
-    await this.redisService.sAdd(
-      `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`,
-      [gameId],
-    );
-    return game;
+      for (const key of keys) {
+        if (key.includes(this.LEADER_KEY_PREFIX)) continue;
+
+        let game = await this.redisService.get<TGame>(key, GameClass);
+        if (game?.players?.some((p) => p.id === clientId)) {
+          game = await this.quitGame(game.id, clientId, GameClass);
+          games.push(game);
+        }
+      }
+    } while (cursor !== 0);
+    return games
   }
 
   async deleteGame(game: TGame) {
@@ -75,30 +74,12 @@ export abstract class GameService<
       `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${game.leaderId}`,
     );
   }
-  protected async findByLeaderId(leaderId: string,
-                                 GameClass: new(id?: string,
-                                                  deck?: TCard[],
-                                                  leaderId?: string,
-                                                  type?: string) => TGame ){
-    const leaderKey = `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`;
-    const gameIds = await this.redisService.getSet(leaderKey);
-
-    return await Promise.all(
-      gameIds.map((gameId) =>
-        this.redisService.get(`${this.GAME_KEY_PREFIX}:${gameId}`, GameClass),
-      ),
-    );
-  }
-
-  abstract join(joinRequest: GameJoinRequest, playerId: string): Promise<TResponse>;
-
-  abstract quit(gameId: string, playerId: string): Promise<TGame>;
 
   async joinGame(joinRequest: GameJoinRequest, playerId: string,
                  GameClass: new(id?: string,
-                                  deck?: TCard[],
-                                  leaderId?: string,
-                                  type?: string) =>  TGame){
+                                deck?: TCard[],
+                                leaderId?: string,
+                                type?: string) =>  TGame){
     const key = `${this.GAME_KEY_PREFIX}:${joinRequest.gameId}`;
     const game = await this.redisService.get<TGame>(key,GameClass)
       .then((game) => {
@@ -135,15 +116,130 @@ export abstract class GameService<
       });
   }
 
-  abstract play(
-    client: Socket,
-    gameAction: GameActionRequest,
-  ): Promise<TPlayResponse>;
+  /**
+   * End the game
+   * @param client the client that is ending the game
+   * @param gameId id of the game to end
+   * @param GameClass
+   * @returns list of player ids
+   */
+  async endGame(client: Socket, gameId: string,
+                GameClass: new(id?: string,
+                               deck?: TCard[],
+                               leaderId?: string,
+                               type?: string) => TGame ): Promise<TGame> {
+    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
+    const game = await this.redisService.get<TGame>(key, GameClass);
+    if (!game) {
+      throw new NotFoundException(`Game id ${gameId} not found`);
+    }
+    if (game.leaderId !== client.id) {
+      throw new UnauthorizedException(`Only the leader can end the game`);
+    }
+    game.status = GameStatus.ENDED;
+    return game;
+  }
 
-  abstract mapResponse(
-    player: TPlayer,
-    players: string[],
-  ): { players: string[]; response: TPlayerResponse };
+  async persistGameHistory(gameId: string,
+                           GameClass: new(id?: string,
+                                          deck?: TCard[],
+                                          leaderId?: string,
+                                          type?: string) => TGame ) {
+    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
+    const game = plainToInstance(GameClass, (await this.redisService.get<TGame>(key, GameClass)));
+    if (!game) {
+      console.error(`Game with ID ${gameId} not found.`);
+      return;
+    }
+    // Order players by the number of cards in their hand
+    const sortedPlayers = game._players.sort((a, b) => a.hand.length - b.hand.length);
+
+    // assign player names and avatars
+    const gameHistoryDto: GameHistoryDto = {
+      id: game.id,
+      mode: game.mode,
+      type: this.GAME_KEY_PREFIX.toUpperCase() as GameType,
+      date: new Date(),
+      player1: sortedPlayers[0]
+        ? {
+          id: sortedPlayers[0].id,
+          username: sortedPlayers[0].username,
+          avatar: sortedPlayers[0].avatar,
+        }
+        : null,
+      player2: sortedPlayers[1]
+        ? {
+          id: sortedPlayers[1].id,
+          username: sortedPlayers[1].username,
+          avatar: sortedPlayers[1].avatar,
+        }
+        : null,
+      player3: sortedPlayers[2]
+        ? {
+          id: sortedPlayers[2].id,
+          username: sortedPlayers[2].username,
+          avatar: sortedPlayers[2].avatar,
+        }
+        : null,
+      player4: sortedPlayers[3]
+        ? {
+          id: sortedPlayers[3].id,
+          username: sortedPlayers[3].username,
+          avatar: sortedPlayers[3].avatar,
+        }
+        : null,
+    } as GameHistoryDto;
+
+    await this.redisService.publishToChannel<GameHistoryDto>(
+      RedisChannel.HISTORY,
+      gameHistoryDto,
+    );
+  }
+
+  protected async saveGame(game: TGame): Promise<void> {
+    const key = `${this.GAME_KEY_PREFIX}:${game.id}`;
+    await this.redisService.set<TGame>(key, game);
+    await this.persistGameToHistory(game.id)
+  }
+
+  protected async create(
+    leaderId: string,
+    creationRequest: GameCreationRequest,
+    GameClass: new(id?: string,
+                     deck?: TCard[],
+                     leaderId?: string,
+                     type?: string) => TGame
+  ) {
+    const leaderGames = await this.findByLeaderId(leaderId, GameClass);
+    if(leaderGames.length > 0) {
+      throw new UnauthorizedException(`Leader ${leaderId} already has an active game`);
+    }
+    const deck = this.cardsService.createDeck();
+    const gameId =  await this.idGeneratorService.generateUniqueId('#', this.GAME_KEY_PREFIX);
+    const game = new GameClass(gameId,deck,leaderId,creationRequest.type);
+    game.addUser(leaderId,creationRequest.avatar, creationRequest.playerName)
+    await this.saveGame(game);
+    await this.redisService.sAdd(
+      `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`,
+      [gameId],
+    );
+    return game;
+  }
+
+  protected async findByLeaderId(leaderId: string,
+                                 GameClass: new(id?: string,
+                                                  deck?: TCard[],
+                                                  leaderId?: string,
+                                                  type?: string) => TGame ): Promise<Awaited<TGame>[]>{
+    const leaderKey = `${this.GAME_KEY_PREFIX}:${this.LEADER_KEY_PREFIX}:${leaderId}`;
+    const gameIds = await this.redisService.getSet(leaderKey);
+
+    return await Promise.all(
+      gameIds.map((gameId) =>
+        this.redisService.get(`${this.GAME_KEY_PREFIX}:${gameId}`, GameClass),
+      ),
+    );
+  }
 
   protected async playAction<TPlayResponse>(
     client: Socket,
@@ -186,54 +282,6 @@ export abstract class GameService<
 
   protected checkEnd(game: TGame): boolean {
     return true;
-  }
-
-  protected endRound(gameId: string,GameClass: new(id?: string,
-                                    deck?: TCard[],
-                                    leaderId?: string,
-                                    type?: string) => TGame){
-    return this.redisService
-      .get<TGame>(`${this.GAME_KEY_PREFIX}:${gameId}`, GameClass)
-      .then((game) => {
-        if (!game) {
-          throw new NotFoundException(`Game id ${gameId} not found`);
-        }
-        return game.endRound();
-      });
-  }
-
-  abstract startGame(clientId: string, request: GameStartRequest): Promise<TResponse>;
-
-  abstract restartGame(clientId: string, request: GameStartRequest): Promise<TResponse>;
-
-  async disconnectClient(clientId: string,
-                        GameClass: new (
-                        id?: string,
-                          deck?: TCard[],
-                          leaderId?: string,
-                          type?: string
-                      ) => TGame): Promise<TGame[]> {
-    let cursor = 0;
-    let games: TGame[] = [];
-
-    do {
-      const [nextCursor, keys] = await this.redisService.scan(
-        cursor,
-        `${this.GAME_KEY_PREFIX}:*`,
-      );
-      cursor = nextCursor;
-
-      for (const key of keys) {
-        if (key.includes(this.LEADER_KEY_PREFIX)) continue;
-
-        let game = await this.redisService.get<TGame>(key, GameClass);
-        if (game?.players?.some((p) => p.id === clientId)) {
-          game = await this.quitGame(game.id, clientId, GameClass);
-          games.push(game);
-        }
-      }
-    } while (cursor !== 0);
-    return games
   }
 
   protected async start(clientId: string, gameId:string,
@@ -292,87 +340,19 @@ export abstract class GameService<
     return game;
   }
 
-  /**
-   * End the game
-   * @param client the client that is ending the game
-   * @param gameId id of the game to end
-   * @param GameClass
-   * @returns list of player ids
-   */
-  async endGame(client: Socket, gameId: string,
-                                GameClass: new(id?: string,
-                                                 deck?: TCard[],
-                                                 leaderId?: string,
-                                                 type?: string) => TGame ): Promise<TGame> {
-    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
-    const game = await this.redisService.get<TGame>(key, GameClass);
-    if (!game) {
-      throw new NotFoundException(`Game id ${gameId} not found`);
-    }
-    if (game.leaderId !== client.id) {
-      throw new UnauthorizedException(`Only the leader can end the game`);
-    }
-    game.status = GameStatus.ENDED;
-    return game;
-  }
-
-  abstract persistGameToHistory(gameId: string): Promise<void>;
-  async persistGameHistory(gameId: string,
-                           GameClass: new(id?: string,
-                                          deck?: TCard[],
-                                          leaderId?: string,
-                                          type?: string) => TGame ) {
-    const key = `${this.GAME_KEY_PREFIX}:${gameId}`;
-    const game = await this.redisService.get<TGame>(key, GameClass);
-    if (!game) {
-      console.error(`Game with ID ${gameId} not found.`);
-      return;
-    }
-
-    // Order players by the number of cards in their hand
-    const sortedPlayers = [...game.players].sort((a, b) => a.hand.length - b.hand.length);
-
-    // assign player names and avatars
-    const gameHistoryDto: GameHistoryDto = {
-      id: game.id,
-      mode: game.mode,
-      type: this.GAME_KEY_PREFIX.toUpperCase() as GameType,
-      date: new Date(),
-      player1: sortedPlayers[0]
-        ? {
-          id: sortedPlayers[0].id,
-          username: sortedPlayers[0].username,
-          avatar: sortedPlayers[0].avatar,
-        }
-        : null,
-      player2: sortedPlayers[1]
-        ? {
-          id: sortedPlayers[1].id,
-          username: sortedPlayers[1].username,
-          avatar: sortedPlayers[1].avatar,
-        }
-        : null,
-      player3: sortedPlayers[2]
-        ? {
-          id: sortedPlayers[2].id,
-          username: sortedPlayers[2].username,
-          avatar: sortedPlayers[2].avatar,
-        }
-        : null,
-      player4: sortedPlayers[3]
-        ? {
-          id: sortedPlayers[3].id,
-          username: sortedPlayers[3].username,
-          avatar: sortedPlayers[3].avatar,
-        }
-        : null,
-    } as GameHistoryDto;
-
-    await this.redisService.publishToChannel<GameHistoryDto>(
-      RedisChannel.HISTORY,
-      gameHistoryDto,
-    );
-  }
-
   abstract getGame(gameId: string): Promise<TGame>;
+  abstract createGame(leaderId: string, creationRequest: GameCreationRequest): Promise<TResponse>;
+  abstract persistGameToHistory(gameId: string): Promise<void>;
+  abstract startGame(clientId: string, request: GameStartRequest): Promise<TResponse>;
+  abstract restartGame(clientId: string, request: GameStartRequest): Promise<TResponse>;
+  abstract join(joinRequest: GameJoinRequest, playerId: string): Promise<TResponse>;
+  abstract quit(gameId: string, playerId: string): Promise<TGame>;
+  abstract play(
+    client: Socket,
+    gameAction: GameActionRequest,
+  ): Promise<TPlayResponse>;
+  abstract mapResponse(
+    player: TPlayer,
+    players: string[],
+  ): { players: string[]; response: TPlayerResponse };
 }
