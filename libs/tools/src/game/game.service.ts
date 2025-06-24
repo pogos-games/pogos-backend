@@ -19,6 +19,9 @@ import {
 } from '../../../../apps/pogos-core/src/history/model/dto/response/game-history-response.interface';
 import { GameType } from './enum/game-type.enum';
 import { plainToInstance } from 'class-transformer';
+import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/blackjack.entity';
+import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
+import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse, TCard>,
@@ -63,6 +66,40 @@ export abstract class GameService<
           game = await this.quitGame(game.id, clientId, GameClass);
           games.push(game);
         }
+      }
+    } while (cursor !== 0);
+    return games
+  }
+
+  async disconnectAllGame(clientId){
+    const gameMap: Record<string, any> = {
+      blackjack: Blackjack,
+      poker: Poker,
+      uno: Uno
+    };
+    let cursor = 0;
+
+    let games: Game<any, any, any, any, any>[]= []
+    do {
+      const [nextCursor, keys] = await this.redisService.scan(
+        cursor,
+        `*`,
+      );
+      cursor = nextCursor;
+      for (const key of keys) {
+        if (key.includes(this.LEADER_KEY_PREFIX)) continue;
+
+        console.log(key);
+        const [gamePrefix] = key.split(':');
+        if (!(gamePrefix in gameMap)) continue;
+        const GameClass = gameMap[gamePrefix];
+
+        if (!GameClass) continue;
+        const game: typeof GameClass = await this.redisService.get<typeof GameClass>(key,GameClass)
+        if (!game) {
+          continue
+        }
+        games.push(...await this.disconnectClient(clientId, GameClass))
       }
     } while (cursor !== 0);
     return games

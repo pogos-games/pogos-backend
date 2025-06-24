@@ -23,10 +23,6 @@ export class UnoGateway extends GameGateway<UnoResponse, UnoPlayerResponse, Game
     super(unoService);
   }
 
-  async handleDisconnectClientCall(client: Socket) {
-    return this.handleDisconnectClient(client, Uno);
-  }
-
   @SubscribeMessage(GatewayEventsListener.ACTION)
   async handleAction(client: Socket, gameAction: UnoActionRequest) {
     const gamePlayResponse = await this.gameService.play(client, gameAction);

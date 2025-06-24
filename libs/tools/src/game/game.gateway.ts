@@ -53,10 +53,14 @@ export abstract class GameGateway<
 
   async handleDisconnect(client: Socket) {
     console.log('Client disconnected');
-    this.handleDisconnectClientCall(client).then();
+    this.gameService.disconnectAllGame(client.id).then(games => {
+      games.forEach(game => game._players.forEach((player) => {
+        this.server
+          .to(player.id)
+          .emit(GatewayEventEmitter.GAME_UPDATE, game.toResponse());
+      }));
+    })
   }
-
-  abstract handleDisconnectClientCall(client: Socket): Promise<void>;
   async handleDisconnectClient(client: Socket,
                          GameClass: new (
                            id?: string,

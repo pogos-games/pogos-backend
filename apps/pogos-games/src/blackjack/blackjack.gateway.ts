@@ -47,10 +47,6 @@ export class BlackjackGateway extends GameGateway<
     await this.sendGameAction(gamePlayResponse);
   }
 
-  async handleDisconnectClientCall(client: Socket) {
-    return this.handleDisconnectClient(client, Blackjack);
-  }
-
   protected privatiseHand(gamePlayerResponse: BlackjackPlayerResponse, playerId: string): BlackjackPlayerResponse {
     return gamePlayerResponse;
   }
