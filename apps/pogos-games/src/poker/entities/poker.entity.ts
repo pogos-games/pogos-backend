@@ -178,23 +178,23 @@ export class Poker extends Game<PokerResponse, GameStartRequest, PokerPlayer, Po
         'Le bet doit être supérieur ou égal au last bet',
       );
     }
-    player.roundPlayed = true;
-    player.bet += bet;
+    player.bet = player.bet + bet;
     this._lastBet = player.bet;
     this._roundPot += bet;
     this._pot += bet
-    player.balance -= bet;
-    player.allIn += bet;
+    player.balance = player.balance - bet;
+    player.allIn = player.allIn + bet;
+    this._players.map(p => p.roundPlayed = p.bet == this._lastBet || p.hasFolded || p.balance === 0)
   }
 
   private allIn(player: PokerPlayer) {
-    player.allIn += player.balance;
     player.bet += player.balance;
-    player.balance = 0;
-    player.roundPlayed = true;
     this._lastBet = player.bet;
     this._roundPot += player.bet;
     this._pot += player.bet;
+    player.balance = 0;
+    player.allIn += player.bet;
+    this._players.map(p => p.roundPlayed = p.bet == this._lastBet || p.hasFolded || p.balance === 0)
   }
 
   private call(player: PokerPlayer) {
