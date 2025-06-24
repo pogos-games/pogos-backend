@@ -174,6 +174,7 @@ export abstract class GameService<
       throw new UnauthorizedException(`Only the leader can end the game`);
     }
     game.status = GameStatus.ENDED;
+    await this.persistGameToHistory(game.id)
     return game;
   }
 
@@ -236,7 +237,6 @@ export abstract class GameService<
   protected async saveGame(game: TGame): Promise<void> {
     const key = `${this.GAME_KEY_PREFIX}:${game.id}`;
     await this.redisService.set<TGame>(key, game);
-    await this.persistGameToHistory(game.id)
   }
 
   protected async create(
