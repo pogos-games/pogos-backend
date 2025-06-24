@@ -21,7 +21,7 @@ import { GameType } from './enum/game-type.enum';
 import { plainToInstance } from 'class-transformer';
 import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/blackjack.entity';
 import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
-import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
+import { Uno } from '../../../../apps/pogos-games/src/uno/entities/uno.entity';
 
 export abstract class GameService<
   TGame extends Game<TResponse, TStartRequest, TPlayer, TPlayerResponse, TCard>,

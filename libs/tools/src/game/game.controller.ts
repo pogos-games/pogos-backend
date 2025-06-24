@@ -2,9 +2,9 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { RedisService } from '../../../tools-library/src/redis/redis.service';
 import { Blackjack } from '../../../../apps/pogos-games/src/blackjack/entities/blackjack.entity';
 import { Poker } from '../../../../apps/pogos-games/src/poker/entities/poker.entity';
-import { Uno } from '../../../../apps/pogos-games/src/new uno/entities/uno.entity';
 import { GameMode } from './enum/game-mode.enum';
 import { GameStatus } from './enum/game-status.enum';
+import { Uno } from '../../../../apps/pogos-games/src/uno/entities/uno.entity';
 
 @Controller('game')
 export class GameController {

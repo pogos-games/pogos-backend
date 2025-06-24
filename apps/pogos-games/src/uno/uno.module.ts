@@ -11,4 +11,4 @@ import { UnoCardsService } from './uno-cards.service';
   providers: [UnoService, UnoGateway, UnoCardsService],
   controllers: [GameController],
 })
-export class NewUnoModule {}
+export class UnoModule {}
